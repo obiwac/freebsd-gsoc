@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-2-Clause
-# Copyright (c) 2022 Aymeric Wibo <obiwac@freebsd.org>
+# Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
 
 DEVBATMANADVDIR=	${SRCTOP}/sys/contrib/dev/batman-adv
 
@@ -15,6 +15,8 @@ SRCS=	bat_v.c
 
 CFLAGS+=	-DKBUILD_MODNAME='"batman-adv"'
 CFLAGS+=	-I${DEVBATMANADVDIR}
+
+CFLAGS+=	-DCONFIG_BATMAN_ADV_BATMAN_V
 
 # Linux KPI sources/flags.
 

@@ -1,6 +1,6 @@
 /*-
 * SPDX-License-Identifier: BSD-2-Clause
-* Copyright (c) 2022 Aymeric Wibo <obiwac@freebsd.org>
+* Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
 */
 #ifndef _LINUXKPI_LINUX_GFP_TYPES_H_
 #define _LINUXKPI_LINUX_GFP_TYPES_H_
@@ -46,5 +46,4 @@
 CTASSERT((__GFP_DMA32 & GFP_NATIVE_MASK) == 0);
 CTASSERT((__GFP_BITS_MASK & GFP_NATIVE_MASK) == GFP_NATIVE_MASK);
 
-
-#endif /* __LINUX_GFP_TYPES_H */
+#endif /* _LINUXKPI_LINUX_GFP_TYPES_H_ */
