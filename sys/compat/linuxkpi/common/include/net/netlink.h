@@ -31,7 +31,14 @@
 struct nla_policy {
 };
 
+struct netlink_skb_parms {
+	__u32	portid;
+};
+
 struct netlink_callback {
+	struct sk_buff	*skb;
+	const struct nlmsghdr	*nlh;
+	unsigned int	seq;
 	int		args[8];
 };
 

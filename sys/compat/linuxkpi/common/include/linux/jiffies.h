@@ -52,6 +52,8 @@
 #define	time_before_eq(a, b)	time_after_eq(b, a)
 #define	time_in_range(a,b,c)	\
 	(time_after_eq(a,b) && time_before_eq(a,c))
+#define	time_is_before_eq_jiffies(a) time_before_eq(a, jiffies)
+#define	time_is_before_jiffies(a) time_before(a, jiffies)
 #define	time_is_after_eq_jiffies(a) time_after_eq(a, jiffies)
 #define	time_is_after_jiffies(a) time_after(a, jiffies)
 

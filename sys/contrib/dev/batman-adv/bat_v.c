@@ -25,10 +25,10 @@
 #include <linux/stddef.h>
 #include <linux/types.h>
 #include <linux/workqueue.h>
-#include <net/genetlink.h>
 #include <net/netlink.h>
 #include <uapi/linux/batadv_packet.h>
 #include <uapi/linux/batman_adv.h>
+#include <netlink/netlink_generic.h>
 
 #include "bat_algo.h"
 #include "bat_v_elp.h"
@@ -40,6 +40,30 @@
 #include "log.h"
 #include "netlink.h"
 #include "originator.h"
+
+// TODO
+static void *genlmsg_put(struct sk_buff *skb, u32 portid, u32 seq,
+		  const struct genl_family *family, int flags, u8 cmd) { return 0; }
+
+// TODO
+static inline int nla_put_string(struct sk_buff *skb, int attrtype,
+				 const char *str) { return 0; }
+
+// TODO
+static inline int nla_put_u32(struct sk_buff *skb, int attrtype, u32 value) { return 0; }
+
+// TODO
+static inline int nla_put_flag(struct sk_buff *skb, int attrtype) { return 0; }
+
+// TODO
+static inline void genlmsg_end(struct sk_buff *skb, void *hdr) {}
+
+// TODO
+static inline void genlmsg_cancel(struct sk_buff *skb, void *hdr) {}
+
+// TODO
+static inline void genl_dump_check_consistent(struct netlink_callback *cb,
+					      void *user_hdr) {}
 
 static void batadv_v_iface_activate(struct batadv_hard_iface *hard_iface)
 {

@@ -147,6 +147,8 @@ struct net_device {
 	TAILQ_HEAD(, napi_struct)	napi_head;
 	struct taskqueue		*napi_tq;
 
+	int	ifindex;
+
 	/* Must stay last. */
 	uint8_t				drv_priv[0] __aligned(CACHE_LINE_SIZE);
 };
@@ -468,5 +470,24 @@ netdev_priv(const struct net_device *ndev)
 #define	rtnl_lock()		do { } while(0)
 #define	rtnl_unlock()		do { } while(0)
 #define	rcu_dereference_rtnl(x)	READ_ONCE(x)
+
+typedef struct {} netdevice_tracker;
+
+struct packet_type {
+	__be16			type;	/* This is really htons(ether_type). */
+	bool			ignore_outgoing;
+	struct net_device	*dev;	/* NULL is wildcarded here	     */
+	netdevice_tracker	dev_tracker;
+	int			(*func) (struct sk_buff *,
+					 struct net_device *,
+					 struct packet_type *,
+					 struct net_device *);
+	void			(*list_func) (struct list_head *,
+					      struct packet_type *,
+					      struct net_device *);
+	struct net		*af_packet_net;
+	void			*af_packet_priv;
+	struct list_head	list;
+};
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */

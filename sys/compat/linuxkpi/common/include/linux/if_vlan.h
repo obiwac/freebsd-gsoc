@@ -39,6 +39,7 @@
 #include <net/if_vlan_var.h>
 #include <net/if_types.h>
 
+#define VLAN_VID_MASK	0x0fff
 #define VLAN_N_VID	4096
 
 static inline int

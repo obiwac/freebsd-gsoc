@@ -9,7 +9,6 @@
 #include <linux/errno.h>
 #include <linux/list.h>
 #include <linux/moduleparam.h>
-#include <linux/netlink.h>
 #include <linux/printk.h>
 #include <linux/skbuff.h>
 #include <linux/stddef.h>
