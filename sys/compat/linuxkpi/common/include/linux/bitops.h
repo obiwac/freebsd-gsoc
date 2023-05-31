@@ -114,161 +114,12 @@ ror32(uint32_t word, unsigned int shift)
 
 static inline int get_count_order(unsigned int count)
 {
-        int order;
+	int order;
 
-        order = fls(count) - 1;
-        if (count & (count - 1))
-                order++;
-        return order;
-}
-
-static inline unsigned long
-find_first_bit(const unsigned long *addr, unsigned long size)
-{
-	long mask;
-	int bit;
-
-	for (bit = 0; size >= BITS_PER_LONG;
-	    size -= BITS_PER_LONG, bit += BITS_PER_LONG, addr++) {
-		if (*addr == 0)
-			continue;
-		return (bit + __ffsl(*addr));
-	}
-	if (size) {
-		mask = (*addr) & BITMAP_LAST_WORD_MASK(size);
-		if (mask)
-			bit += __ffsl(mask);
-		else
-			bit += size;
-	}
-	return (bit);
-}
-
-static inline unsigned long
-find_first_zero_bit(const unsigned long *addr, unsigned long size)
-{
-	long mask;
-	int bit;
-
-	for (bit = 0; size >= BITS_PER_LONG;
-	    size -= BITS_PER_LONG, bit += BITS_PER_LONG, addr++) {
-		if (~(*addr) == 0)
-			continue;
-		return (bit + __ffsl(~(*addr)));
-	}
-	if (size) {
-		mask = ~(*addr) & BITMAP_LAST_WORD_MASK(size);
-		if (mask)
-			bit += __ffsl(mask);
-		else
-			bit += size;
-	}
-	return (bit);
-}
-
-static inline unsigned long
-find_last_bit(const unsigned long *addr, unsigned long size)
-{
-	long mask;
-	int offs;
-	int bit;
-	int pos;
-
-	pos = size / BITS_PER_LONG;
-	offs = size % BITS_PER_LONG;
-	bit = BITS_PER_LONG * pos;
-	addr += pos;
-	if (offs) {
-		mask = (*addr) & BITMAP_LAST_WORD_MASK(offs);
-		if (mask)
-			return (bit + __flsl(mask));
-	}
-	while (pos--) {
-		addr--;
-		bit -= BITS_PER_LONG;
-		if (*addr)
-			return (bit + __flsl(*addr));
-	}
-	return (size);
-}
-
-static inline unsigned long
-find_next_bit(const unsigned long *addr, unsigned long size, unsigned long offset)
-{
-	long mask;
-	int offs;
-	int bit;
-	int pos;
-
-	if (offset >= size)
-		return (size);
-	pos = offset / BITS_PER_LONG;
-	offs = offset % BITS_PER_LONG;
-	bit = BITS_PER_LONG * pos;
-	addr += pos;
-	if (offs) {
-		mask = (*addr) & ~BITMAP_LAST_WORD_MASK(offs);
-		if (mask)
-			return (bit + __ffsl(mask));
-		if (size - bit <= BITS_PER_LONG)
-			return (size);
-		bit += BITS_PER_LONG;
-		addr++;
-	}
-	for (size -= bit; size >= BITS_PER_LONG;
-	    size -= BITS_PER_LONG, bit += BITS_PER_LONG, addr++) {
-		if (*addr == 0)
-			continue;
-		return (bit + __ffsl(*addr));
-	}
-	if (size) {
-		mask = (*addr) & BITMAP_LAST_WORD_MASK(size);
-		if (mask)
-			bit += __ffsl(mask);
-		else
-			bit += size;
-	}
-	return (bit);
-}
-
-static inline unsigned long
-find_next_zero_bit(const unsigned long *addr, unsigned long size,
-    unsigned long offset)
-{
-	long mask;
-	int offs;
-	int bit;
-	int pos;
-
-	if (offset >= size)
-		return (size);
-	pos = offset / BITS_PER_LONG;
-	offs = offset % BITS_PER_LONG;
-	bit = BITS_PER_LONG * pos;
-	addr += pos;
-	if (offs) {
-		mask = ~(*addr) & ~BITMAP_LAST_WORD_MASK(offs);
-		if (mask)
-			return (bit + __ffsl(mask));
-		if (size - bit <= BITS_PER_LONG)
-			return (size);
-		bit += BITS_PER_LONG;
-		addr++;
-	}
-	for (size -= bit; size >= BITS_PER_LONG;
-	    size -= BITS_PER_LONG, bit += BITS_PER_LONG, addr++) {
-		if (~(*addr) == 0)
-			continue;
-		return (bit + __ffsl(~(*addr)));
-	}
-	if (size) {
-		mask = ~(*addr) & BITMAP_LAST_WORD_MASK(size);
-		if (mask)
-			bit += __ffsl(mask);
-		else
-			bit += size;
-	}
-	return (bit);
+	order = fls(count) - 1;
+	if (count & (count - 1))
+		order++;
+	return order;
 }
 
 #define	__set_bit(i, a)							\
@@ -400,16 +251,6 @@ done:
         return ret;
 }
 
-#define for_each_set_bit(bit, addr, size) \
-	for ((bit) = find_first_bit((addr), (size));		\
-	     (bit) < (size);					\
-	     (bit) = find_next_bit((addr), (size), (bit) + 1))
-
-#define	for_each_clear_bit(bit, addr, size) \
-	for ((bit) = find_first_zero_bit((addr), (size));		\
-	     (bit) < (size);						\
-	     (bit) = find_next_zero_bit((addr), (size), (bit) + 1))
-
 static inline uint64_t
 sign_extend64(uint64_t value, int index)
 {
@@ -424,6 +265,20 @@ sign_extend32(uint32_t value, int index)
 	uint8_t shift = 31 - index;
 
 	return ((int32_t)(value << shift) >> shift);
+}
+
+static inline unsigned long fns(unsigned long word, unsigned int n)
+{
+	unsigned int bit;
+
+	while (word) {
+		bit = __ffs(word);
+		if (n-- == 0)
+			return bit;
+		__clear_bit(bit, &word);
+	}
+
+	return BITS_PER_LONG;
 }
 
 #endif	/* _LINUXKPI_LINUX_BITOPS_H_ */
