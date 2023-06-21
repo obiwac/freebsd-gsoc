@@ -11,7 +11,8 @@ KMOD=	batman_adv
 
 # batman-adv sources/flags.
 
-SRCS=	bat_v.c \
+SRCS=	bat_algo.c \
+		bat_v.c \
 		bitarray.c \
 		gateway_common.c \
 		hash.c \
