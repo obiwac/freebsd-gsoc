@@ -78,4 +78,12 @@ prandom_u32_max(u32 max)
 	return (arc4random_uniform(max));
 }
 
+static inline u32
+get_random_u32_below(u32 ceil)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return 0;
+}
+
 #endif /* _LINUXKPI_LINUX_RANDOM_H_ */

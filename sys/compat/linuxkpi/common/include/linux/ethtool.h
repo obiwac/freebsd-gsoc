@@ -56,4 +56,27 @@ struct ethtool_ops {
 	void(*get_drvinfo)(struct net_device *, struct ethtool_drvinfo *);
 };
 
+#define	SPEED_UNKNOWN	-1
+
+#define	DUPLEX_HALF	0x00
+#define	DUPLEX_FULL	0x01
+#define	DUPLEX_UNKNOWN	0xFF
+
+struct ethtool_link_settings {
+	uint32_t	speed;
+	uint8_t	duplex;
+};
+
+struct ethtool_link_ksettings {
+	struct ethtool_link_settings	base;
+};
+
+static inline int
+__ethtool_get_link_ksettings(struct net_device *dev, struct ethtool_link_ksettings *link_ksettings)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (0);
+}
+
 #endif	/* _LINUXKPI_LINUX_ETHTOOL_H_ */

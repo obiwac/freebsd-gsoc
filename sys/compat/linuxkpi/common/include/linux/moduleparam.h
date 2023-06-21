@@ -137,6 +137,8 @@
 
 #define	module_param_array(var, type, addr_argc, mode)
 
+// TODO
+
 #define	module_param_cb(name, ops, args, perm) \
 	static void* __attribute__((unused)) ___[] = { __DECONST(void*, ops), __DECONST(void*, args) };
 
