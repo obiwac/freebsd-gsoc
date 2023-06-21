@@ -51,7 +51,28 @@ nla_put(struct sk_buff *skb, int attr, size_t len, void *data)
 }
 
 static __inline int
-nla_put_u16(struct sk_buff *skb, int attr, uint32_t val)
+nla_put_string(struct sk_buff *skb, int attr, char const *str)
+{
+
+	return (nla_put(skb, attr, strlen(str) + 1, __DECONST(void*, str)));
+}
+
+static __inline int
+nla_put_flag(struct sk_buff *skb, int attr)
+{
+
+	return (nla_put(skb, attr, 0, NULL));
+}
+
+static __inline int
+nla_put_u16(struct sk_buff *skb, int attr, uint16_t val)
+{
+
+	return (nla_put(skb, attr, sizeof(uint16_t), &val));
+}
+
+static __inline int
+nla_put_u32(struct sk_buff *skb, int attr, uint32_t val)
 {
 
 	return (nla_put(skb, attr, sizeof(uint32_t), &val));
