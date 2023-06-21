@@ -137,8 +137,40 @@
 
 #define	module_param_array(var, type, addr_argc, mode)
 
+#define	module_param_cb(name, ops, args, perm) \
+	static void* __attribute__((unused)) ___[] = { __DECONST(void*, ops), __DECONST(void*, args) };
+
 #define	MODULE_PARM_DESC(name, desc) \
 	const char LINUXKPI_PARAM_DESC(name)[] = { desc }
+
+struct kernel_param {
+};
+
+struct kernel_param_ops {
+	int (*set) (char const *val, struct kernel_param const *kp);
+	int (*get) (char *buffer, struct kernel_param const *kp);
+};
+
+struct kparam_string {
+	unsigned int maxlen;
+	char *string;
+};
+
+static __inline int
+param_set_copystring(char const *val, struct kernel_param const *kp)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return 0;
+}
+
+static __inline int
+param_get_string(char *buffer, struct kernel_param const *kp)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return 0;
+}
 
 #define	kernel_param_lock(...) do {} while (0)
 #define	kernel_param_unlock(...) do {} while (0)
