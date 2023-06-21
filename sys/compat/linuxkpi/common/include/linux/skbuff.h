@@ -1100,4 +1100,14 @@ skb_cow_head(struct sk_buff *skb, unsigned int headroom)
 #define	SKB_WITH_OVERHEAD(_s)						\
 	(_s) - ALIGN(sizeof(struct skb_shared_info), CACHE_LINE_SIZE)
 
+static inline struct sk_buff *
+skb_copy_expand(struct sk_buff const *skb, int newheadroom, int newtailroom, gfp_t priority)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+#define	NET_IP_ALIGN	2
+
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */

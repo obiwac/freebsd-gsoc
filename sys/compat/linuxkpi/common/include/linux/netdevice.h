@@ -469,6 +469,13 @@ netdev_priv(const struct net_device *ndev)
 	return (__DECONST(void *, ndev->drv_priv));
 }
 
+static __inline void
+dev_put(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
 /* -------------------------------------------------------------------------- */
 /* This is really rtnetlink and probably belongs elsewhere. */
 
@@ -494,5 +501,8 @@ struct packet_type {
 	void			*af_packet_priv;
 	struct list_head	list;
 };
+
+#define	NET_RX_SUCCESS	0
+#define	NET_RX_DROP	1
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */

@@ -530,9 +530,10 @@ struct station_del_parameters {
 
 struct station_info {
 	/* TODO FIXME */
-	int     assoc_req_ies_len, connected_time;
+	int	assoc_req_ies_len, connected_time;
 	int	generation, inactive_time, rx_bytes, rx_dropped_misc, rx_packets, signal, tx_bytes, tx_packets;
-	int     filled, rx_beacon, rx_beacon_signal_avg, signal_avg;
+	int	filled, rx_beacon, rx_beacon_signal_avg, signal_avg;
+	uint32_t	expected_throughput;
 	int	rx_duration, tx_duration, tx_failed, tx_retries;
 	int	ack_signal, avg_ack_signal;
 
@@ -2001,5 +2002,18 @@ ieee80211_get_eht_iftype_cap(const struct ieee80211_supported_band *band,
 #endif
 
 #include <net/mac80211.h>
+
+static __inline int
+cfg80211_get_station(struct net_device *dev, const uint8_t *mac_addr, struct station_info *sinfo)
+{
+	TODO();
+	return (0);
+}
+
+static __inline void
+cfg80211_sinfo_release_content(struct station_info *sinfo)
+{
+	TODO();
+}
 
 #endif	/* _LINUXKPI_NET_CFG80211_H */
