@@ -11,12 +11,18 @@ KMOD=	batman_adv
 
 # batman-adv sources/flags.
 
-SRCS=	bat_v.c
+SRCS=	bat_v.c \
+		bitarray.c \
+		gateway_common.c \
+		hash.c \
+		log.c \
+		trace.c
 
 CFLAGS+=	-DKBUILD_MODNAME='"batman-adv"'
 CFLAGS+=	-I${DEVBATMANADVDIR}
 
 CFLAGS+=	-DCONFIG_BATMAN_ADV_BATMAN_V
+CFLAGS+=	-DCONFIG_BATMAN_ADV_DEBUG
 
 # Linux KPI sources/flags.
 
