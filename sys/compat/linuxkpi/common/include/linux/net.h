@@ -86,4 +86,9 @@ net_ratelimit(void)
 	return (linuxkpi_net_ratelimit());
 }
 
+#define	net_ratelimited_function(fn, ...) do {	\
+	if (net_ratelimit())			\
+		fn(__VA_ARGS__);		\
+} while (0)
+
 #endif	/* _LINUXKPI_LINUX_NET_H_ */

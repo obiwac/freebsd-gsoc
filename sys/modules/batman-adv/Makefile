@@ -30,7 +30,8 @@ SRCS=	bat_algo.c \
 	originator.c \
 	routing.c \
 	send.c \
-	trace.c
+	trace.c \
+	translation-table.c
 
 CFLAGS+=	-DKBUILD_MODNAME='"batman-adv"'
 CFLAGS+=	-I${DEVBATMANADVDIR}
