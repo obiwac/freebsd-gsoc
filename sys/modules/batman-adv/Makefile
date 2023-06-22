@@ -25,6 +25,7 @@ SRCS=	bat_algo.c \
 	log.c \
 	originator.c \
 	routing.c \
+	send.c \
 	trace.c
 
 CFLAGS+=	-DKBUILD_MODNAME='"batman-adv"'
