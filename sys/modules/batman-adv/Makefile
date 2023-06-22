@@ -12,6 +12,7 @@ KMOD=	batman_adv
 # batman-adv sources/flags.
 
 SRCS=	bat_algo.c \
+	bat_iv_ogm.c \
 	bat_v.c \
 	bat_v_elp.c \
 	bat_v_ogm.c \
@@ -43,6 +44,7 @@ CFLAGS+=	-DCONFIG_BATMAN_ADV_DEBUG
 CFLAGS+=	-DCONFIG_BATMAN_ADV_BLA # bridge loop avoidance
 CFLAGS+=	-DCONFIG_BATMAN_ADV_DAT # distributed ARP table
 CFLAGS+=	-DCONFIG_BATMAN_ADV_MCAST # multicast
+# CFLAGS+=	-DCONFIG_BATMAN_ADV_NC # XXX network coding (need to add network-coding.c to $SRCS)
 
 # Linux KPI sources/flags.
 

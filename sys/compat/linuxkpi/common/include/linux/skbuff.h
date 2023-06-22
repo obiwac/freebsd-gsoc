@@ -723,11 +723,11 @@ skb_queue_prev(struct sk_buff_head *q, struct sk_buff *skb)
 /* -------------------------------------------------------------------------- */
 
 static inline struct sk_buff *
-skb_copy(struct sk_buff *skb, gfp_t gfp)
+skb_copy(struct sk_buff const *skb, gfp_t gfp)
 {
 	struct sk_buff *new;
 
-	new = linuxkpi_skb_copy(skb, gfp);
+	new = linuxkpi_skb_copy(__DECONST(struct sk_buff *, skb), gfp);
 	SKB_TRACE2(skb, new);
 	return (new);
 }
