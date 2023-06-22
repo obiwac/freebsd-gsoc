@@ -30,6 +30,7 @@ SRCS=	bat_algo.c \
 	originator.c \
 	routing.c \
 	send.c \
+	tp_meter.c \
 	trace.c \
 	translation-table.c
 
