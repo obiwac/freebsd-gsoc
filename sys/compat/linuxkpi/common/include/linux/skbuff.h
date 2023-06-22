@@ -979,9 +979,17 @@ csum_unfold(__sum16 sum)
 	return (sum);
 }
 
-static __inline void
-skb_postpush_rcsum(struct sk_buff *skb, const void *data, size_t len)
+static inline void
+skb_postpull_rcsum(struct sk_buff *skb, void const *start, unsigned int len)
 {
+
+	SKB_TODO();
+}
+
+static inline void
+skb_postpush_rcsum(struct sk_buff *skb, void const *start, unsigned int len)
+{
+
 	SKB_TODO();
 }
 
@@ -1173,6 +1181,14 @@ skb_has_frag_list(struct sk_buff const *skb)
 {
 
 	return (skb_shinfo(__DECONST(struct sk_buff *, skb))->frag_list != NULL);
+}
+
+static inline int
+skb_cow(struct sk_buff *skb, unsigned int headroom)
+{
+
+	SKB_TODO();
+	return (-1);
 }
 
 static inline int

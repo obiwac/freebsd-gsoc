@@ -80,6 +80,7 @@ struct wireless_dev;		/* net/cfg80211.h */
 
 enum netdev_tx {
 	NETDEV_TX_OK		= 0,
+	NETDEV_TX_BUSY		= 1,
 };
 typedef	enum netdev_tx		netdev_tx_t;
 
