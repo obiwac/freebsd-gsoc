@@ -3,6 +3,7 @@
  * Copyright (c) 2010 iX Systems, Inc.
  * Copyright (c) 2010 Panasas, Inc.
  * Copyright (c) 2013-2016 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,8 +82,7 @@
 #define	prefetch(x)
 #endif
 
-#define LIST_HEAD_INIT(name) { &(name), &(name) }
-
+#define LINUX_LIST_HEAD_INIT(name) { &(name), &(name) }
 #define LINUX_LIST_HEAD(name) \
 	struct list_head name = LINUX_LIST_HEAD_INIT(name)
 
