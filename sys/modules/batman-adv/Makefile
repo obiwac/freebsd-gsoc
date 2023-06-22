@@ -34,7 +34,8 @@ SRCS=	bat_algo.c \
 	soft-interface.c \
 	tp_meter.c \
 	trace.c \
-	translation-table.c
+	translation-table.c \
+	tvlv.c
 
 CFLAGS+=	-DKBUILD_MODNAME='"batman-adv"'
 CFLAGS+=	-I${DEVBATMANADVDIR}
