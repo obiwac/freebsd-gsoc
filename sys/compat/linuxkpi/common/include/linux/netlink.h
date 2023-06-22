@@ -8,4 +8,7 @@
 
 #include <net/netlink.h>
 
+struct netlink_ext_ack {
+};
+
 #endif	/* _LINUXKPI_LINUX_NETLINK_H */

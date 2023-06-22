@@ -21,6 +21,7 @@ SRCS=	bat_algo.c \
 	fragmentation.c \
 	gateway_client.c \
 	gateway_common.c \
+	hard-interface.c \
 	hash.c \
 	log.c \
 	originator.c \
