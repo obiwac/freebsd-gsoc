@@ -140,6 +140,7 @@ nla_get_u32(struct nlattr const *nla)
 
 enum {
 	NLA_STRING,
+	NLA_NUL_STRING,
 	NLA_FLAG,
 	NLA_U8,
 	NLA_U16,

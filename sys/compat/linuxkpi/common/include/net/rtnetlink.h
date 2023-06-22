@@ -6,10 +6,20 @@
 #ifndef	_LINUXKPI_NET_RTNETLINK_H
 #define	_LINUXKPI_NET_RTNETLINK_H
 
+#include <linux/netdevice.h>
+
 struct net_device;
 
 struct rtnl_link_ops {
-	struct net	*(*get_link_net)(struct net_device const *dev);
+	struct net		*(*get_link_net)(struct net_device const *);
+	char const		*kind;
+	size_t			priv_size;
+	void			(*setup)(struct net_device *);
+	unsigned int		maxtype;
+	struct nla_policy const	*policy;
+	int			(*validate)(struct nlattr *[], struct nlattr *[], struct netlink_ext_ack *);
+	int			(*newlink)(struct net *, struct net_device *, struct nlattr *[], struct nlattr *[], struct netlink_ext_ack *);
+	void			(*dellink)(struct net_device *, struct list_head *);
 };
 
 static inline int

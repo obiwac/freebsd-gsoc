@@ -80,8 +80,8 @@ struct wireless_dev;		/* net/cfg80211.h */
 #define	NET_NAME_UNKNOWN	0
 
 enum netdev_tx {
-	NETDEV_TX_OK		= 0,
-	NETDEV_TX_BUSY		= 1,
+	NETDEV_TX_OK		= 0x00,
+	NETDEV_TX_BUSY		= 0x10,
 };
 typedef	enum netdev_tx		netdev_tx_t;
 
@@ -101,11 +101,31 @@ enum net_device_reg_state {
 };
 
 struct net_device_ops {
-	int (*ndo_open)(struct net_device *);
-	int (*ndo_stop)(struct net_device *);
-	int (*ndo_set_mac_address)(struct net_device *,  void *);
-	netdev_tx_t (*ndo_start_xmit)(struct sk_buff *, struct net_device *);
-	void (*ndo_set_rx_mode)(struct net_device *);
+	int			(*ndo_open)(struct net_device *);
+	int			(*ndo_stop)(struct net_device *);
+	int			(*ndo_set_mac_address)(struct net_device *,  void *);
+	netdev_tx_t		(*ndo_start_xmit)(struct sk_buff *, struct net_device *);
+	void			(*ndo_set_rx_mode)(struct net_device *);
+	int			(*ndo_init)(struct net_device *);
+	struct net_device_stats	*(*ndo_get_stats)(struct net_device *);
+	int			(*ndo_vlan_rx_add_vid)(struct net_device *, __be16, u16);
+	int			(*ndo_vlan_rx_kill_vid)(struct net_device *, __be16, u16);
+	int			(*ndo_change_mtu)(struct net_device *, int);
+	int			(*ndo_validate_addr)(struct net_device *);
+	int			(*ndo_add_slave)(struct net_device *, struct net_device *, struct netlink_ext_ack *);
+	int			(*ndo_del_slave)(struct net_device *, struct net_device *);
+};
+
+struct net_device_stats {
+	unsigned long		multicast;
+
+	unsigned long		rx_bytes;
+	unsigned long		rx_errors;
+	unsigned long		rx_packets;
+	unsigned long		tx_bytes;
+	unsigned long		tx_dropped;
+	unsigned long		tx_errors;
+	unsigned long		tx_packets;
 };
 
 struct net_device {
@@ -116,24 +136,14 @@ struct net_device {
 	uint8_t				dev_addr[ETH_ALEN];
 	struct netdev_hw_addr_list	mc;
 	netdev_features_t		features;
-	struct {
-		unsigned long		multicast;
-
-		unsigned long		rx_bytes;
-		unsigned long		rx_errors;
-		unsigned long		rx_packets;
-		unsigned long		tx_bytes;
-		unsigned long		tx_dropped;
-		unsigned long		tx_errors;
-		unsigned long		tx_packets;
-	} stats;
+	struct net_device_stats		stats;
 	enum net_device_reg_state	reg_state;
 	const struct ethtool_ops	*ethtool_ops;
 	const struct net_device_ops	*netdev_ops;
 
 	bool				needs_free_netdev;
 	/* Not properly typed as-of now. */
-	int		flags, type;
+	int		flags, priv_flags, type;
 	unsigned short	hard_header_len;
 	unsigned int	mtu;
 	int		name_assign_type;
@@ -435,6 +445,13 @@ unregister_netdev(struct net_device *ndev)
 	pr_debug("%s: TODO\n", __func__);
 }
 
+static inline void
+unregister_netdevice_queue(struct net_device *dev, struct list_head *head)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
 static __inline void
 unregister_netdevice(struct net_device *ndev)
 {
@@ -629,5 +646,31 @@ dev_remove_pack(struct packet_type *pt)
 
 	pr_debug("%s: TODO\n", __func__);
 }
+
+static inline void
+netif_start_queue(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline void
+netif_trans_update(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+struct netdev_queue {
+};
+
+static inline void
+netdev_for_each_tx_queue(struct net_device *dev, void (*fn)(struct net_device *, struct netdev_queue *, void *), void *arg)
+{
+
+	pr_debug("%s: TODO -- tx_queues\n", __func__);
+}
+
+#define	IFF_NO_QUEUE	IFF_DRV_OACTIVE
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */

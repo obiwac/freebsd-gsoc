@@ -177,6 +177,8 @@ struct sk_buff {
 	uint8_t			*end;			/* End of buffer. */
 
 	struct skb_shared_info	*shinfo;
+	int			skb_iif;
+	uint32_t		mark;
 
 	/* FreeBSD specific bandaid (see linuxkpi_kfree_skb). */
 	void			*m;
@@ -1223,6 +1225,21 @@ skb_seq_read(unsigned int consumed, u8 const **data, struct skb_seq_state *st)
 
 	SKB_TODO();
 	return (0);
+}
+
+static inline void *
+skb_pull_rcsum(struct sk_buff *skb, unsigned int len)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline void
+nf_reset_ct(struct sk_buff *skb)
+{
+
+	SKB_TODO();
 }
 
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */

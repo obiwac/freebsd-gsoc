@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 2015-2016 Mellanox Technologies, Ltd. All rights reserved.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -138,6 +139,28 @@ eth_type_trans(struct sk_buff *skb, struct net_device *dev)
 
 	pr_debug("%s: TODO\n", __func__);
 	return (0);
+}
+
+static inline void
+eth_hw_addr_set(struct net_device *dev, u8 const *addr)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline int
+eth_validate_addr(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (-1);
+}
+
+static inline void
+eth_hw_addr_random(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
 }
 
 #endif					/* _LINUXKPI_LINUX_ETHERDEVICE_H_ */

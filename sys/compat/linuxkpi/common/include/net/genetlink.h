@@ -47,9 +47,9 @@ struct genl_family {
 };
 
 enum genl_validate_flags {
-	GENL_DONT_VALIDATE_STRICT	= 0,
-	GENL_DONT_VALIDATE_DUMP		= 1,
-	GENL_DONT_VALIDATE_DUMP_STRICT	= 2,
+	GENL_DONT_VALIDATE_STRICT	= BIT(0),
+	GENL_DONT_VALIDATE_DUMP		= BIT(1),
+	GENL_DONT_VALIDATE_DUMP_STRICT	= BIT(2),
 };
 
 static inline void *

@@ -94,4 +94,11 @@ vlan_eth_hdr(struct sk_buff const *skb)
 	return (struct vlan_ethhdr *)skb_mac_header(skb);
 }
 
+static inline struct vlan_ethhdr *
+skb_vlan_eth_hdr(struct sk_buff const *skb)
+{
+
+	return __DECONST(struct vlan_ethhdr *, skb->data);
+}
+
 #endif	/* _LINUXKPI_LINUX_IF_VLAN_H_ */
