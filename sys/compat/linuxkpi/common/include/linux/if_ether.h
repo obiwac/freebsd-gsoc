@@ -34,6 +34,7 @@
 #define	_LINUXKPI_LINUX_IF_ETHER_H_
 
 #include <linux/types.h>
+#include <linux/skbuff.h>
 
 #include <net/ethernet.h>
 
@@ -68,5 +69,13 @@ struct ethhdr {
 	uint8_t		h_source[ETH_ALEN];
 	uint16_t	h_proto;
 } __packed;
+
+static inline struct ethhdr *
+eth_hdr(struct sk_buff const *skb)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
 
 #endif	/* _LINUXKPI_LINUX_IF_ETHER_H_ */

@@ -801,7 +801,7 @@ batadv_v_ogm_process_per_outif(struct batadv_priv *bat_priv,
 	if (seqno_age > 0 && if_outgoing == BATADV_IF_DEFAULT)
 		batadv_tvlv_containers_process(bat_priv, BATADV_OGM2, orig_node,
 					       NULL,
-					       (unsigned char *)(ogm2 + 1),
+					       __DECONST(unsigned char *, ogm2 + 1),
 					       ntohs(ogm2->tvlv_len));
 
 	/* if the metric update went through, update routes if needed */
