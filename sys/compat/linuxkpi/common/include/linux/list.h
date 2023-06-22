@@ -81,7 +81,7 @@
 #define	prefetch(x)
 #endif
 
-#define LINUX_LIST_HEAD_INIT(name) { &(name), &(name) }
+#define LIST_HEAD_INIT(name) { &(name), &(name) }
 
 #define LINUX_LIST_HEAD(name) \
 	struct list_head name = LINUX_LIST_HEAD_INIT(name)

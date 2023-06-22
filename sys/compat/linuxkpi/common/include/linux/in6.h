@@ -31,6 +31,4 @@
 #ifndef	_LINUXKPI_LINUX_IN6_H_
 #define	_LINUXKPI_LINUX_IN6_H_
 
-#include "opt_inet6.h"
-
 #endif	/* _LINUXKPI_LINUX_IN6_H_ */

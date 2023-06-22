@@ -48,7 +48,7 @@ struct iphdr {
 #else
 	uint8_t		ihl:4, version:4;
 #endif
-	uint8_t		ip_tos;			/* (u) */
+	uint8_t		tos;
 	uint16_t	ip_len;			/* (u) */
 	uint16_t	id;
 	uint16_t	ip_off;			/* (u) */

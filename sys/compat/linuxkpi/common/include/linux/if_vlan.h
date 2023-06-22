@@ -44,6 +44,12 @@
 
 #define VLAN_VID_MASK	0x0fff
 #define VLAN_N_VID	4096
+#define VLAN_PRIO_MASK	0xe000
+#define	VLAN_PRIO_SHIFT	13
+
+#define	VLAN_HLEN       4		/* The additional bytes (on top of the Ethernet header)
+					 * that VLAN requires. */
+#define	VLAN_ETH_HLEN	18
 
 static inline int
 is_vlan_dev(struct ifnet *ifp)

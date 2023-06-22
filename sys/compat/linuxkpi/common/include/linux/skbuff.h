@@ -1199,4 +1199,30 @@ skb_cow_head(struct sk_buff *skb, unsigned int headroom)
 	return (-1);
 }
 
+static inline struct sk_buff *
+skb_share_check(struct sk_buff *skb, gfp_t pri)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+struct skb_seq_state {
+};
+
+static inline void
+skb_prepare_seq_read(struct sk_buff *skb, unsigned int from, unsigned int to, struct skb_seq_state *st)
+{
+
+	SKB_TODO();
+}
+
+static inline unsigned int
+skb_seq_read(unsigned int consumed, u8 const **data, struct skb_seq_state *st)
+{
+
+	SKB_TODO();
+	return (0);
+}
+
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */

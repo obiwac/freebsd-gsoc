@@ -3,8 +3,8 @@
  * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  */
 
-#ifndef	_LINUXKPI_NET_GENETLINK_H
-#define	_LINUXKPI_NET_GENETLINK_H
+#ifndef	_LINUXKPI_NET_RTNETLINK_H
+#define	_LINUXKPI_NET_RTNETLINK_H
 
 struct net_device;
 
@@ -23,4 +23,19 @@ rtnl_is_locked(void)
 #define	ASSERT_RTNL()	\
 	WARN_ONCE(!rtnl_is_locked(), "RTNL: assertion failed at %s:%d\n", __FILE__, __LINE__)
 
-#endif	/* _LINUXKPI_NET_GENETLINK_H */
+static inline int
+rtnl_link_register(struct rtnl_link_ops *ops)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (-1);
+}
+
+static inline void
+rtnl_link_unregister(struct rtnl_link_ops *ops)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+#endif	/* _LINUXKPI_NET_RTNETLINK_H */

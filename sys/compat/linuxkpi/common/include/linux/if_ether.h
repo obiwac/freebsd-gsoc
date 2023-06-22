@@ -51,8 +51,6 @@
 #define	ETH_FCS_LEN     4		/* Octets in the FCS */
 #define	ETH_FRAME_LEN	(ETHER_MAX_LEN - ETHER_CRC_LEN)
 #define	ETH_MIN_MTU	68
-#define	VLAN_HLEN       4		/* The additional bytes (on top of the Ethernet header)
-					 * that VLAN requires. */
 /*
  * defined Ethernet Protocol ID's.
  */

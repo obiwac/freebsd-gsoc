@@ -608,6 +608,14 @@ netdev_upper_dev_unlink(struct net_device *dev, struct net_device *upper_dev)
 	pr_debug("%s: TODO\n", __func__);
 }
 
+static inline struct net_device *
+netdev_master_upper_dev_get_rcu(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
+
 static inline void
 dev_add_pack(struct packet_type *pt)
 {

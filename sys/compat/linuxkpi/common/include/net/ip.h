@@ -31,8 +31,6 @@
 #ifndef _LINUXKPI_NET_IP_H_
 #define	_LINUXKPI_NET_IP_H_
 
-#include "opt_inet.h"
-
 #include <sys/types.h>
 #include <sys/socket.h>
 
