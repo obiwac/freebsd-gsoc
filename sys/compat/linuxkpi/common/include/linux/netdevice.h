@@ -520,8 +520,27 @@ dev_get_by_index(struct net *net, int ifindex)
 
 #define	HH_DATA_MOD	16
 
+// TODO rewrite this
+
 #define	LL_RESERVED_SPACE(dev)						\
 	((((dev)->hard_header_len + READ_ONCE((dev)->needed_headroom))	\
 	& ~(HH_DATA_MOD - 1)) + HH_DATA_MOD)
+
+static inline int
+dev_queue_xmit(struct sk_buff *skb)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (-1);
+}
+
+static inline int
+net_xmit_eval(int e)
+{
+
+	if (e == NET_XMIT_CN)
+		return (0);
+	return (e);
+}
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */
