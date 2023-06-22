@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 2020,2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,7 +42,7 @@ struct netlink_callback {
 	struct sk_buff	*skb;
 	const struct nlmsghdr	*nlh;
 	unsigned int	seq;
-	int		args[8];
+	long		args[8];
 };
 
 static __inline int

@@ -24,6 +24,7 @@ SRCS=	bat_algo.c \
 	hard-interface.c \
 	hash.c \
 	log.c \
+	multicast.c \
 	originator.c \
 	routing.c \
 	send.c \
@@ -36,6 +37,7 @@ CFLAGS+=	-DCONFIG_BATMAN_ADV_BATMAN_V
 CFLAGS+=	-DCONFIG_BATMAN_ADV_DEBUG
 CFLAGS+=	-DCONFIG_BATMAN_ADV_BLA # bridge loop avoidance
 CFLAGS+=	-DCONFIG_BATMAN_ADV_DAT # distributed ARP table
+CFLAGS+=	-DCONFIG_BATMAN_ADV_MCAST # multicast
 
 # Linux KPI sources/flags.
 
