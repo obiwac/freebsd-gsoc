@@ -1507,7 +1507,11 @@ void __init batadv_netlink_register(void)
 {
 	int ret;
 
+#if	defined(__FreeBSD__)
+	ret = genl_register_family(batadv_netlink_family.name, batadv_netlink_family.hdrsize, batadv_netlink_family.version, batadv_netlink_family.maxattr);
+#else
 	ret = genl_register_family(&batadv_netlink_family);
+#endif
 	if (ret)
 		pr_warn("unable to register netlink family");
 }
@@ -1517,5 +1521,9 @@ void __init batadv_netlink_register(void)
  */
 void batadv_netlink_unregister(void)
 {
+#if	defined(__FreeBSD__)
+	genl_unregister_family(batadv_netlink_family.name);
+#else
 	genl_unregister_family(&batadv_netlink_family);
+#endif
 }
