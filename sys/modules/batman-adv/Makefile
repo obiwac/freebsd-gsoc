@@ -11,16 +11,19 @@ KMOD=	batman_adv
 
 # batman-adv sources/flags.
 
-SRCS=	bat_algo.c \
-		bat_v.c \
-		bat_v_elp.c \
-		bat_v_ogm.c \
-		bitarray.c \
-		bridge_loop_avoidance.c \
-		gateway_common.c \
-		hash.c \
-		log.c \
-		trace.c
+#SRCS=	bat_algo.c \
+#		bat_v.c \
+#		bat_v_elp.c \
+#		bat_v_ogm.c \
+#		bitarray.c \
+#		bridge_loop_avoidance.c \
+#		distributed-arp-table.c \
+#		gateway_common.c \
+#		hash.c \
+#		log.c \
+#		trace.c
+
+SRCS=	distributed-arp-table.c
 
 CFLAGS+=	-DKBUILD_MODNAME='"batman-adv"'
 CFLAGS+=	-I${DEVBATMANADVDIR}
@@ -28,6 +31,7 @@ CFLAGS+=	-I${DEVBATMANADVDIR}
 CFLAGS+=	-DCONFIG_BATMAN_ADV_BATMAN_V
 CFLAGS+=	-DCONFIG_BATMAN_ADV_DEBUG
 CFLAGS+=	-DCONFIG_BATMAN_ADV_BLA # bridge loop avoidance
+CFLAGS+=	-DCONFIG_BATMAN_ADV_DAT # distributed ARP table
 
 # Linux KPI sources/flags.
 
