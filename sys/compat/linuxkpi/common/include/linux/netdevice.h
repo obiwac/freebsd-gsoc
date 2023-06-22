@@ -54,12 +54,13 @@
 #include <net/if_var.h>
 #include <net/if_dl.h>
 
-#include <linux/kernel.h>
 #include <linux/bitops.h>
-#include <linux/list.h>
 #include <linux/device.h>
-#include <linux/net.h>
 #include <linux/if_ether.h>
+#include <linux/kernel.h>
+#include <linux/list.h>
+#include <linux/net.h>
+#include <linux/netlink.h>
 #include <linux/notifier.h>
 #include <linux/random.h>
 #include <linux/rcupdate.h>
@@ -153,6 +154,9 @@ struct net_device {
 	struct taskqueue		*napi_tq;
 
 	int	ifindex;
+
+	struct rtnl_link_ops const	*rtnl_link_ops;
+	unsigned char			addr_len;
 
 	/* Must stay last. */
 	uint8_t				drv_priv[0] __aligned(CACHE_LINE_SIZE);
@@ -541,6 +545,81 @@ net_xmit_eval(int e)
 	if (e == NET_XMIT_CN)
 		return (0);
 	return (e);
+}
+
+static inline int
+dev_get_iflink(struct net_device const *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (-1);
+}
+
+static inline struct net *
+dev_net(struct net_device const *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
+
+static inline struct net_device *
+__dev_get_by_index(struct net *net, int ifindex)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
+
+static inline void
+dev_hold(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+enum netdev_cmd {
+	NETDEV_CHANGE,
+	NETDEV_UP,
+	NETDEV_DOWN,
+	NETDEV_REGISTER,
+	NETDEV_UNREGISTER,
+	NETDEV_CHANGEADDR,
+	NETDEV_CHANGEIFADDR,
+	NETDEV_GOING_DOWN,
+	NETDEV_PRE_TYPE_CHANGE,
+	NETDEV_POST_TYPE_CHANGE,
+	NETDEV_CHANGEMTU,
+	NETDEV_CHANGEUPPER,
+};
+
+static inline int
+netdev_master_upper_dev_link(struct net_device *dev, struct net_device *upper_dev, void *upper_priv, void *upper_info, struct netlink_ext_ack *extack)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (-1);
+}
+
+static inline void
+netdev_upper_dev_unlink(struct net_device *dev, struct net_device *upper_dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline void
+dev_add_pack(struct packet_type *pt)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline void
+dev_remove_pack(struct packet_type *pt)
+{
+
+	pr_debug("%s: TODO\n", __func__);
 }
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */

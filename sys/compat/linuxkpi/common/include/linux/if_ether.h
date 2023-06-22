@@ -5,6 +5,7 @@
  * Copyright (c) 2013 Mellanox Technologies, Ltd.
  * All rights reserved.
  * Copyright (c) 2021-2022 The FreeBSD Foundation
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Portions of this software were developed by Björn Zeeb
  * under sponsorship from the FreeBSD Foundation.
@@ -40,13 +41,17 @@
 
 #include <net/ethernet.h>
 
-#define ETH_HLEN	ETHER_HDR_LEN   /* Total octets in header. */
-#ifndef ETH_ALEN
-#define ETH_ALEN	ETHER_ADDR_LEN
+#define	ETH_HLEN	ETHER_HDR_LEN   /* Total octets in header. */
+#ifndef	ETH_ALEN
+#define	ETH_ALEN	ETHER_ADDR_LEN
 #endif
+#define	ETH_DATA_LEN	ETHERMTU
 #define	ETH_FRAME_LEN	(ETHER_MAX_LEN - ETHER_CRC_LEN)
-#define ETH_FCS_LEN     4		/* Octets in the FCS */
-#define VLAN_HLEN       4		/* The additional bytes (on top of the Ethernet header)
+#define	ETH_MIN_MTU	68
+#define	ETH_FCS_LEN     4		/* Octets in the FCS */
+#define	ETH_FRAME_LEN	(ETHER_MAX_LEN - ETHER_CRC_LEN)
+#define	ETH_MIN_MTU	68
+#define	VLAN_HLEN       4		/* The additional bytes (on top of the Ethernet header)
 					 * that VLAN requires. */
 /*
  * defined Ethernet Protocol ID's.

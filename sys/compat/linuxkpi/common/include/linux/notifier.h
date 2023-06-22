@@ -39,22 +39,10 @@
 #define	NOTIFY_STOP_MASK	0x8000
 #define	NOTIFY_BAD		(NOTIFY_STOP_MASK | 0x0002)
 
-enum {
-	NETDEV_CHANGE,
-	NETDEV_UP,
-	NETDEV_DOWN,
-	NETDEV_REGISTER,
-	NETDEV_UNREGISTER,
-	NETDEV_CHANGEADDR,
-	NETDEV_CHANGEIFADDR,
-	LINUX_NOTIFY_TAGS		/* must be last */
-};
-
 struct notifier_block {
 	int     (*notifier_call) (struct notifier_block *, unsigned long, void *);
 	struct notifier_block *next;
 	int	priority;
-	eventhandler_tag tags[LINUX_NOTIFY_TAGS];
 };
 
 #endif					/* _LINUXKPI_LINUX_NOTIFIER_H_ */
