@@ -14,6 +14,7 @@ KMOD=	batman_adv
 SRCS=	bat_algo.c \
 		bat_v.c \
 		bat_v_elp.c \
+		bat_v_ogm.c \
 		bitarray.c \
 		gateway_common.c \
 		hash.c \

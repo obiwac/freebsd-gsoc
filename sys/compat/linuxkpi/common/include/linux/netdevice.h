@@ -131,6 +131,7 @@ struct net_device {
 	bool				needs_free_netdev;
 	/* Not properly typed as-of now. */
 	int	flags, type;
+	unsigned int	mtu;
 	int	name_assign_type, needed_headroom;
 	int	threaded;
 

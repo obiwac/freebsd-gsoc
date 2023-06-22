@@ -1083,4 +1083,27 @@ skb_copy_expand(struct sk_buff const *skb, int newheadroom, int newtailroom, gfp
 
 #define	NET_IP_ALIGN	2
 
+static inline void
+skb_reset_network_header(struct sk_buff *skb)
+{
+
+	SKB_TODO();
+}
+
+static inline struct sk_buff *
+netdev_alloc_skb_ip_align(struct net_device *dev, unsigned int length)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline struct sk_buff *
+skb_clone(struct sk_buff *skb, gfp_t priority)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */
