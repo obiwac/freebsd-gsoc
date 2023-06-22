@@ -3,6 +3,7 @@
  * Copyright (c) 2010 iX Systems, Inc.
  * Copyright (c) 2010 Panasas, Inc.
  * Copyright (c) 2013, 2014 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,5 +39,7 @@
 #define	L1_CACHE_ALIGN(x)	ALIGN(x, CACHE_LINE_SIZE)
 
 #define	SMP_CACHE_BYTES		L1_CACHE_BYTES
+
+#define	__ro_after_init	__section(".data..ro_after_init")
 
 #endif	/* _LINUXKPI_LINUX_CACHE_H_ */

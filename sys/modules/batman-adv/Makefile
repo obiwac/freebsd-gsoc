@@ -25,6 +25,7 @@ SRCS=	bat_algo.c \
 	hash.c \
 	log.c \
 	multicast.c \
+	netlink.c \
 	originator.c \
 	routing.c \
 	send.c \
