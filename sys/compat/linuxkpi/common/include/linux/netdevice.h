@@ -131,10 +131,12 @@ struct net_device {
 
 	bool				needs_free_netdev;
 	/* Not properly typed as-of now. */
-	int	flags, type;
+	int		flags, type;
+	unsigned short	hard_header_len;
 	unsigned int	mtu;
-	int	name_assign_type, needed_headroom;
-	int	threaded;
+	int		name_assign_type;
+	int		needed_headroom, needed_tailroom;
+	int		threaded;
 
 	void (*priv_destructor)(struct net_device *);
 
@@ -514,5 +516,11 @@ dev_get_by_index(struct net *net, int ifindex)
 #define	NET_XMIT_DROP	0x01
 #define	NET_XMIT_CN	0x02
 #define	NET_XMIT_MASK	0x0F
+
+#define	HH_DATA_MOD	16
+
+#define	LL_RESERVED_SPACE(dev)						\
+	((((dev)->hard_header_len + READ_ONCE((dev)->needed_headroom))	\
+	& ~(HH_DATA_MOD - 1)) + HH_DATA_MOD)
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */

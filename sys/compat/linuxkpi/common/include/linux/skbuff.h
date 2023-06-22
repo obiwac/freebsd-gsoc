@@ -1161,4 +1161,26 @@ skb_transport_offset(struct sk_buff const *skb)
 	return (skb_transport_header(__DECONST(struct sk_buff *, skb)) - skb->data);
 }
 
+static inline void
+skb_split(struct sk_buff *skb, struct sk_buff *skb1, u32 len)
+{
+
+	SKB_TODO();
+}
+
+static inline bool
+skb_has_frag_list(struct sk_buff const *skb)
+{
+
+	return (skb_shinfo(__DECONST(struct sk_buff *, skb))->frag_list != NULL);
+}
+
+static inline int
+skb_cow_head(struct sk_buff *skb, unsigned int headroom)
+{
+
+	SKB_TODO();
+	return (-1);
+}
+
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */
