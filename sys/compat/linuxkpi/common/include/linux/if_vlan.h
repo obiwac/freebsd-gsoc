@@ -32,6 +32,7 @@
 #ifndef	_LINUXKPI_LINUX_IF_VLAN_H_
 #define	_LINUXKPI_LINUX_IF_VLAN_H_
 
+#include <linux/if_ether.h>
 #include <net/ethernet.h>
 #include <net/if.h>
 #include <net/if_types.h>
@@ -68,7 +69,23 @@ vlan_insert_tag(struct sk_buff *skb, __be16 vlan_proto, uint16_t vlan_tci)
 }
 
 struct vlan_hdr {
+	__be16	h_vlan_TCI;
 	__be16	h_vlan_encapsulated_proto;
 };
+
+struct vlan_ethhdr {
+	unsigned char	h_dest[ETH_ALEN];
+	unsigned char	h_source[ETH_ALEN];
+	__be16		h_vlan_proto;
+	__be16		h_vlan_TCI;
+	__be16		h_vlan_encapsulated_proto;
+};
+
+static inline struct vlan_ethhdr *
+vlan_eth_hdr(struct sk_buff const *skb)
+{
+
+	return (struct vlan_ethhdr *)skb_mac_header(skb);
+}
 
 #endif	/* _LINUXKPI_LINUX_IF_VLAN_H_ */

@@ -12,17 +12,18 @@ KMOD=	batman_adv
 # batman-adv sources/flags.
 
 SRCS=	bat_algo.c \
-		bat_v.c \
-		bat_v_elp.c \
-		bat_v_ogm.c \
-		bitarray.c \
-		bridge_loop_avoidance.c \
-		distributed-arp-table.c \
-		fragmentation.c \
-		gateway_common.c \
-		hash.c \
-		log.c \
-		trace.c
+	bat_v.c \
+	bat_v_elp.c \
+	bat_v_ogm.c \
+	bitarray.c \
+	bridge_loop_avoidance.c \
+	distributed-arp-table.c \
+	fragmentation.c \
+	gateway_client.c \
+	gateway_common.c \
+	hash.c \
+	log.c \
+	trace.c
 
 CFLAGS+=	-DKBUILD_MODNAME='"batman-adv"'
 CFLAGS+=	-I${DEVBATMANADVDIR}
