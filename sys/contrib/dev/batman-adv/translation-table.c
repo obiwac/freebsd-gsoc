@@ -3785,7 +3785,7 @@ static void batadv_tt_update_orig(struct batadv_priv *bat_priv,
 	bool full_table = true;
 	bool has_tt_init;
 
-	tt_vlan = (struct batadv_tvlv_tt_vlan_data *)tt_buff;
+	tt_vlan = __DECONST(struct batadv_tvlv_tt_vlan_data *, tt_buff);
 	has_tt_init = test_bit(BATADV_ORIG_CAPA_HAS_TT,
 			       &orig_node->capa_initialized);
 
