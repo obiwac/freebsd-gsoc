@@ -510,4 +510,9 @@ dev_get_by_index(struct net *net, int ifindex)
 	return (NULL);
 }
 
+#define	NET_XMIT_SUCCESS	0x00
+#define	NET_XMIT_DROP	0x01
+#define	NET_XMIT_CN	0x02
+#define	NET_XMIT_MASK	0x0F
+
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */

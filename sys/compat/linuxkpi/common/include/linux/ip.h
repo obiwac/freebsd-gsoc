@@ -43,7 +43,7 @@
 
 /* (u) unconfirmed structure field names; using FreeBSD's meanwhile. */
 struct iphdr {
-	uint8_t		ip_hl:4, ip_ver:4;	/* (u) */
+	uint8_t		ihl:4, version:4;
 	uint8_t		ip_tos;			/* (u) */
 	uint16_t	ip_len;			/* (u) */
 	uint16_t	id;

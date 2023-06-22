@@ -67,17 +67,31 @@ nla_put_flag(struct sk_buff *skb, int attr)
 }
 
 static __inline int
-nla_put_u16(struct sk_buff *skb, int attr, uint16_t val)
+nla_put_u16(struct sk_buff *skb, int attr, u16 val)
 {
 
-	return (nla_put(skb, attr, sizeof(uint16_t), &val));
+	return (nla_put(skb, attr, sizeof(val), &val));
 }
 
 static __inline int
-nla_put_u32(struct sk_buff *skb, int attr, uint32_t val)
+nla_put_u32(struct sk_buff *skb, int attr, u16 val)
 {
 
-	return (nla_put(skb, attr, sizeof(uint32_t), &val));
+	return (nla_put(skb, attr, sizeof(val), &val));
+}
+
+static __inline int
+nla_put_be32(struct sk_buff *skb, int attr, __be32 val)
+{
+
+	return (nla_put(skb, attr, sizeof(val), &val));
+}
+
+static __inline int
+nla_put_in_addr(struct sk_buff *skb, int attr, __be32 addr)
+{
+
+	return (nla_put_be32(skb, attr, addr));
 }
 
 #endif	/* _LINUXKPI_NET_NETLINK_H */

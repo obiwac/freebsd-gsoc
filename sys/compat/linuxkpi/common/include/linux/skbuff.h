@@ -1123,4 +1123,42 @@ pskb_may_pull(struct sk_buff *skb, unsigned int len)
 	return (false);
 }
 
+static inline struct sk_buff *
+pskb_copy_for_clone(struct sk_buff *skb, gfp_t gfp_mask)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline void
+skb_set_network_header(struct sk_buff *skb, int offset)
+{
+
+	skb_reset_network_header(skb);
+	SKB_TODO();
+}
+
+static inline int
+skb_network_offset(struct sk_buff const *skb)
+{
+
+	return (skb_network_header(__DECONST(struct sk_buff *, skb)) - skb->data);
+}
+
+static inline void
+skb_set_transport_header(struct sk_buff *skb, int offset)
+{
+
+	skb_reset_transport_header(skb);
+	SKB_TODO();
+}
+
+static inline int
+skb_transport_offset(struct sk_buff const *skb)
+{
+
+	return (skb_transport_header(__DECONST(struct sk_buff *, skb)) - skb->data);
+}
+
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */
