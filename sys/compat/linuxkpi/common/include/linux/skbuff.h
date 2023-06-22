@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2020-2023 The FreeBSD Foundation
  * Copyright (c) 2021-2023 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -1104,6 +1105,22 @@ skb_clone(struct sk_buff *skb, gfp_t priority)
 
 	SKB_TODO();
 	return (NULL);
+}
+
+static inline void * __must_check
+skb_header_pointer(struct sk_buff const *skb, int offset, int len, void *buffer)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline bool
+pskb_may_pull(struct sk_buff *skb, unsigned int len)
+{
+
+	SKB_TODO();
+	return (false);
 }
 
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */

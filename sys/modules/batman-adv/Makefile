@@ -16,6 +16,7 @@ SRCS=	bat_algo.c \
 		bat_v_elp.c \
 		bat_v_ogm.c \
 		bitarray.c \
+		bridge_loop_avoidance.c \
 		gateway_common.c \
 		hash.c \
 		log.c \
@@ -26,6 +27,7 @@ CFLAGS+=	-I${DEVBATMANADVDIR}
 
 CFLAGS+=	-DCONFIG_BATMAN_ADV_BATMAN_V
 CFLAGS+=	-DCONFIG_BATMAN_ADV_DEBUG
+CFLAGS+=	-DCONFIG_BATMAN_ADV_BLA # bridge loop avoidance
 
 # Linux KPI sources/flags.
 

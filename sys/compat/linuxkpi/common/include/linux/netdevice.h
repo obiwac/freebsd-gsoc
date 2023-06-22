@@ -6,6 +6,7 @@
  * All rights reserved.
  * Copyright (c) 2020-2021 The FreeBSD Foundation
  * Copyright (c) 2020-2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Portions of this software were developed by Björn Zeeb
  * under sponsorship from the FreeBSD Foundation.
@@ -500,5 +501,13 @@ struct packet_type {
 
 #define	NET_RX_SUCCESS	0
 #define	NET_RX_DROP	1
+
+static inline struct net_device *
+dev_get_by_index(struct net *net, int ifindex)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */

@@ -27,8 +27,9 @@
 #ifndef _LINUXKPI_LINUX_ETHERDEVICE_H_
 #define	_LINUXKPI_LINUX_ETHERDEVICE_H_
 
-#include <linux/types.h>
 #include <linux/device.h>
+#include <linux/skbuff.h>
+#include <linux/types.h>
 
 #include <sys/random.h>
 #include <sys/libkern.h>
@@ -129,6 +130,14 @@ device_get_mac_address(struct device *dev, char *dst)
 
 	/* XXX get mac address from FDT? */
 	return (-ENOENT);
+}
+
+static inline __be16
+eth_type_trans(struct sk_buff *skb, struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (0);
 }
 
 #endif					/* _LINUXKPI_LINUX_ETHERDEVICE_H_ */

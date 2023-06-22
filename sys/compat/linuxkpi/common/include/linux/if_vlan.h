@@ -3,6 +3,7 @@
  * Copyright (c) 2010 iX Systems, Inc.
  * Copyright (c) 2010 Panasas, Inc.
  * Copyright (c) 2013-2016 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,13 +32,14 @@
 #ifndef	_LINUXKPI_LINUX_IF_VLAN_H_
 #define	_LINUXKPI_LINUX_IF_VLAN_H_
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <net/if.h>
 #include <net/ethernet.h>
+#include <net/if.h>
+#include <net/if_types.h>
 #include <net/if_var.h>
 #include <net/if_vlan_var.h>
-#include <net/if_types.h>
+#include <sys/endian.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #define VLAN_VID_MASK	0x0fff
 #define VLAN_N_VID	4096
@@ -56,5 +58,17 @@ vlan_dev_vlan_id(struct ifnet *ifp)
 		return (vtag);
 	return (0);
 }
+
+static inline struct sk_buff *
+vlan_insert_tag(struct sk_buff *skb, __be16 vlan_proto, uint16_t vlan_tci)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
+
+struct vlan_hdr {
+	__be16	h_vlan_encapsulated_proto;
+};
 
 #endif	/* _LINUXKPI_LINUX_IF_VLAN_H_ */
