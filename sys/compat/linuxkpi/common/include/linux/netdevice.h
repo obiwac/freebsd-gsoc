@@ -527,7 +527,7 @@ struct packet_type {
 #define	NET_RX_DROP	1
 
 static inline struct net_device *
-dev_get_by_index(struct net *net, int ifindex)
+linux_dev_get_by_index(struct net *net, int ifindex)
 {
 
 	pr_debug("%s: TODO\n", __func__);

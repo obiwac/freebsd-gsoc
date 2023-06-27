@@ -2247,7 +2247,11 @@ int batadv_bla_claim_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;
@@ -2417,7 +2421,11 @@ int batadv_bla_backbone_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;

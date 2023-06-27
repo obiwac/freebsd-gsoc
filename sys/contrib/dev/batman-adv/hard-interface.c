@@ -245,7 +245,11 @@ static struct net_device *batadv_get_real_netdevice(struct net_device *netdev)
 		goto out;
 	}
 
+#if defined(__FreeBSD__)
+	real_netdev = linux_dev_get_by_index(real_net, iflink);
+#else
 	real_netdev = dev_get_by_index(real_net, iflink);
+#endif
 
 out:
 	batadv_hardif_put(hard_iface);
