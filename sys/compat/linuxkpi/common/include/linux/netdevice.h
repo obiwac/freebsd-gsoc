@@ -595,21 +595,6 @@ dev_hold(struct net_device *dev)
 	pr_debug("%s: TODO\n", __func__);
 }
 
-enum netdev_cmd {
-	NETDEV_CHANGE,
-	NETDEV_UP,
-	NETDEV_DOWN,
-	NETDEV_REGISTER,
-	NETDEV_UNREGISTER,
-	NETDEV_CHANGEADDR,
-	NETDEV_CHANGEIFADDR,
-	NETDEV_GOING_DOWN,
-	NETDEV_PRE_TYPE_CHANGE,
-	NETDEV_POST_TYPE_CHANGE,
-	NETDEV_CHANGEMTU,
-	NETDEV_CHANGEUPPER,
-};
-
 static inline int
 netdev_master_upper_dev_link(struct net_device *dev, struct net_device *upper_dev, void *upper_priv, void *upper_info, struct netlink_ext_ack *extack)
 {
