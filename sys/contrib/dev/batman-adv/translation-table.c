@@ -651,7 +651,11 @@ bool batadv_tt_local_add(struct net_device *soft_iface, const u8 *addr,
 	u32 match_mark;
 
 	if (ifindex != BATADV_NULL_IFINDEX)
+#if defined(__FreeBSD__)
+		in_dev = linux_dev_get_by_index(net, ifindex);
+#else
 		in_dev = dev_get_by_index(net, ifindex);
+#endif
 
 	if (in_dev)
 		in_hardif = batadv_hardif_get_by_netdev(in_dev);
@@ -1179,7 +1183,11 @@ int batadv_tt_local_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;
@@ -1956,7 +1964,11 @@ int batadv_tt_global_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;
