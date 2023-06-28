@@ -21,6 +21,9 @@ __in_dev_get_rcu(struct net_device const *dev)
 	return (NULL);
 }
 
-#define	IN_DEV_MFORWARD(in_dev)	pr_debug("IN_DEV_MFORWARD: TODO\n")
+#define	IN_DEV_MFORWARD(in_dev)	({		\
+	pr_debug("IN_DEV_MFORWARD: TODO\n");	\
+	0;					\
+})
 
 #endif	/* _LINUXKPI_LINUX_INETDEVICE_H_ */
