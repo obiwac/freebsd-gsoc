@@ -55,6 +55,8 @@
 #include <rdma/ib_user_verbs.h>
 #include <rdma/ib_umem.h>
 #include <rdma/ib_cache.h>
+#include <rdma/ib_addr_freebsd.h>
+
 #include "osdep.h"
 #include "irdma_defs.h"
 #include "irdma_hmc.h"

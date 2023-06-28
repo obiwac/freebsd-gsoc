@@ -36,7 +36,7 @@
 #include "mlxfw_mfa2_tlv_multi.h"
 
 #define MLXFW_MFA2_TLV_TOTAL_SIZE(tlv) \
-	NLA_ALIGN(sizeof(*(tlv)) + be16_to_cpu((tlv)->len))
+	MLX_NLA_ALIGN(sizeof(*(tlv)) + be16_to_cpu((tlv)->len))
 
 const struct mlxfw_mfa2_tlv *
 mlxfw_mfa2_tlv_multi_child(const struct mlxfw_mfa2_file *mfa2_file,
@@ -44,7 +44,7 @@ mlxfw_mfa2_tlv_multi_child(const struct mlxfw_mfa2_file *mfa2_file,
 {
 	size_t multi_len;
 
-	multi_len = NLA_ALIGN(sizeof(struct mlxfw_mfa2_tlv_multi));
+	multi_len = MLX_NLA_ALIGN(sizeof(struct mlxfw_mfa2_tlv_multi));
 	return mlxfw_mfa2_tlv_get(mfa2_file, (const u8 *) multi + multi_len);
 }
 
@@ -62,7 +62,7 @@ mlxfw_mfa2_tlv_next(const struct mlxfw_mfa2_file *mfa2_file,
 		multi = mlxfw_mfa2_tlv_multi_get(mfa2_file, tlv);
 		if (!multi)
 			return NULL;
-		tlv_len = NLA_ALIGN(tlv_len + be16_to_cpu(multi->total_len));
+		tlv_len = MLX_NLA_ALIGN(tlv_len + be16_to_cpu(multi->total_len));
 	}
 
 	next = (const u8 *) tlv + tlv_len;

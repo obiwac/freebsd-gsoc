@@ -631,7 +631,7 @@ static int batadv_v_ogm_metric_update(struct batadv_priv *bat_priv,
 			   "Drop packet: packet within window protection time from %pM\n",
 			   ogm2->orig);
 		batadv_dbg(BATADV_DBG_BATMAN, bat_priv,
-			   "Last reset: %ld, %ld\n",
+			   "Last reset: %ld, %d\n",
 			   orig_ifinfo->batman_seqno_reset, jiffies);
 		goto out;
 	}

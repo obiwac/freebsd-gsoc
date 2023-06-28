@@ -36,8 +36,8 @@
 
 #include <sys/firmware.h>
 
-#define NLA_ALIGNTO		4
-#define NLA_ALIGN(len)		(((len) + NLA_ALIGNTO - 1) & ~(NLA_ALIGNTO - 1))
+#define MLX_NLA_ALIGNTO		4
+#define MLX_NLA_ALIGN(len)	(((len) + MLX_NLA_ALIGNTO - 1) & ~(MLX_NLA_ALIGNTO - 1))
 
 enum mlxfw_fsm_state {
 	MLXFW_FSM_STATE_IDLE,

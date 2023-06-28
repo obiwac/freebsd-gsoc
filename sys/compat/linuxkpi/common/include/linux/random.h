@@ -32,6 +32,7 @@
 #ifndef _LINUXKPI_LINUX_RANDOM_H_
 #define	_LINUXKPI_LINUX_RANDOM_H_
 
+#include <linux/kernel.h>
 #include <linux/types.h>
 #include <sys/random.h>
 #include <sys/libkern.h>

@@ -7,6 +7,7 @@
 #endif
 
 #include <linux/bitops.h>
+#include <linux/compiler.h>
 #include <asm-generic/bitsperlong.h>
 
 unsigned long _find_next_bit(const unsigned long *addr1, unsigned long nbits,
