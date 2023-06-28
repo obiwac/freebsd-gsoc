@@ -29,12 +29,8 @@
 #ifndef	_LINUXKPI_LINUX_IN_H_
 #define	_LINUXKPI_LINUX_IN_H_
 
-<<<<<<< HEAD
 #include "opt_inet.h"
 
-=======
-#include <sys/cdefs.h>
->>>>>>> 578c9a11a78 (batman: Get distributed ARP table to build)
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <netinet/in.h>
