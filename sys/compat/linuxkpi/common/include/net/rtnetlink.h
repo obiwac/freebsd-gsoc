@@ -22,7 +22,13 @@ struct rtnl_link_ops {
 	int			(*newlink)(struct net *, struct net_device *, struct nlattr *[], struct nlattr *[], struct netlink_ext_ack *);
 	void			(*dellink)(struct net_device *, struct list_head *);
 
-	/* FreeBSD specific fields. */
+	/*
+	 * FreeBSD specific fields.
+	 * When you use this structure, you must populate the ifc_addreq field with a
+	 * struct if_clone_addreq_v2 which contains function pointer to wrappers
+	 * around the function pointers in this structure.
+	 * An example may be found in sys/contrib/dev/batman-adv/soft-interface.c
+	 */
 
 	struct if_clone_addreq_v2	*ifc_addreq;
 	struct if_clone			*ifc;
@@ -50,7 +56,7 @@ rtnl_link_register(struct rtnl_link_ops *ops)
 		return (-1);
 	}
 
-	/* Locking is done by if_clone_attach, we don't have to worry about it. */
+	/* Locking is done by if_clone_attach; we don't have to worry about it. */
 
 	ifc = ifc_attach_cloner(name, (struct if_clone_addreq *)ops->ifc_addreq);
 	if (ifc == NULL)
