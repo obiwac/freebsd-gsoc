@@ -1136,8 +1136,15 @@ struct rtnl_link_ops batadv_link_ops __read_mostly = {
 #if defined(__FreeBSD__)
 static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
 {
-	pr_debug("%s: TODO\n", __func__);
-	return 0;
+	if (strncmp(name, "bat", 3) != 0)
+		return 0;
+
+	for (char const *cp = name + 3; *cp != '\0'; cp++) {
+		if (*cp < '0' || *cp > '9')
+			return 0;
+	}
+
+	return 1;
 }
 
 static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len,
