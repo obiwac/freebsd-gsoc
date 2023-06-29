@@ -7,6 +7,7 @@
 #define	_LINUXKPI_NET_RTNETLINK_H
 
 #include <linux/netdevice.h>
+#include <net/if_clone.h>
 
 struct net_device;
 
@@ -20,6 +21,11 @@ struct rtnl_link_ops {
 	int			(*validate)(struct nlattr *[], struct nlattr *[], struct netlink_ext_ack *);
 	int			(*newlink)(struct net *, struct net_device *, struct nlattr *[], struct nlattr *[], struct netlink_ext_ack *);
 	void			(*dellink)(struct net_device *, struct list_head *);
+
+	/* FreeBSD specific fields. */
+
+	struct if_clone_addreq_v2	*ifc_addreq;
+	struct if_clone			*ifc;
 };
 
 static inline int
@@ -36,16 +42,32 @@ rtnl_is_locked(void)
 static inline int
 rtnl_link_register(struct rtnl_link_ops *ops)
 {
+	char const *const name = ops->kind;
+	struct if_clone *ifc;
 
-	pr_debug("%s: TODO\n", __func__);
-	return (-1);
+	if (ops->ifc_addreq == NULL) {
+		pr_debug("ifc_addreq field of struct rtnl_link_ops must be populated on FreeBSD\n");
+		return (-1);
+	}
+
+	/* Locking is done by if_clone_attach, we don't have to worry about it. */
+
+	ifc = ifc_attach_cloner(name, (struct if_clone_addreq *)ops->ifc_addreq);
+	if (ifc == NULL)
+		return (-1);
+
+	ops->ifc = ifc;
+	return (0);
 }
 
 static inline void
 rtnl_link_unregister(struct rtnl_link_ops *ops)
 {
 
-	pr_debug("%s: TODO\n", __func__);
+	if (ops->ifc == NULL)
+		pr_debug("ifc field of struct rtnl_link_ops is NULL\n");
+	else
+		ifc_detach_cloner(ops->ifc);
 }
 
 #endif	/* _LINUXKPI_NET_RTNETLINK_H */
