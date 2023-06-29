@@ -1,4 +1,3 @@
-
 /*-
  * SPDX-License-Identifier: BSD-2-Clause
  * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
@@ -21,7 +20,7 @@ __alloc_percpu(size_t size, size_t align)
 {
 
 	pr_debug("TODO: %s\n", __func__);
-	return NULL;
+	return (NULL);
 }
 
 #endif	/* _LINUXKPI_LINUX_PERCPU_H */

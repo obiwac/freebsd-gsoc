@@ -29,6 +29,7 @@
 #ifndef _LINUXKPI_LINUX_BITMAP_H_
 #define	_LINUXKPI_LINUX_BITMAP_H_
 
+#include <linux/pr_debug.h>
 #include <linux/bitops.h>
 #include <linux/find.h>
 #include <linux/slab.h>
@@ -402,132 +403,11 @@ bitmap_free(const unsigned long *bitmap)
 	kfree(bitmap);
 }
 
-static inline bool __bitmap_or_equal(const unsigned long *bitmap1,
-		       const unsigned long *bitmap2,
-		       const unsigned long *bitmap3,
-		       unsigned int bits)
+static inline void
+bitmap_shift_left(unsigned long *dst, unsigned long const *src, unsigned int shift, unsigned int nbits)
 {
-	unsigned int k, lim = bits / BITS_PER_LONG;
-	unsigned long tmp;
 
-	for (k = 0; k < lim; ++k) {
-		if ((bitmap1[k] | bitmap2[k]) != bitmap3[k])
-			return false;
-	}
-
-	if (!(bits % BITS_PER_LONG))
-		return true;
-
-	tmp = (bitmap1[k] | bitmap2[k]) ^ bitmap3[k];
-	return (tmp & BITMAP_LAST_WORD_MASK(bits)) == 0;
-}
-
-static inline bool bitmap_or_equal(const unsigned long *src1,
-				   const unsigned long *src2,
-				   const unsigned long *src3,
-				   unsigned int nbits)
-{
-	if (!small_const_nbits(nbits))
-		return __bitmap_or_equal(src1, src2, src3, nbits);
-
-	return !(((*src1 | *src2) ^ *src3) & BITMAP_LAST_WORD_MASK(nbits));
-}
-
-static inline bool __bitmap_intersects(const unsigned long *bitmap1,
-			 const unsigned long *bitmap2, unsigned int bits)
-{
-	unsigned int k, lim = bits/BITS_PER_LONG;
-	for (k = 0; k < lim; ++k)
-		if (bitmap1[k] & bitmap2[k])
-			return true;
-
-	if (bits % BITS_PER_LONG)
-		if ((bitmap1[k] & bitmap2[k]) & BITMAP_LAST_WORD_MASK(bits))
-			return true;
-	return false;
-}
-
-static inline bool bitmap_intersects(const unsigned long *src1,
-				     const unsigned long *src2,
-				     unsigned int nbits)
-{
-	if (small_const_nbits(nbits))
-		return ((*src1 & *src2) & BITMAP_LAST_WORD_MASK(nbits)) != 0;
-	else
-		return __bitmap_intersects(src1, src2, nbits);
-}
-
-static inline void __bitmap_shift_right(unsigned long *dst, const unsigned long *src,
-			unsigned shift, unsigned nbits)
-{
-	unsigned k, lim = BITS_TO_LONGS(nbits);
-	unsigned off = shift/BITS_PER_LONG, rem = shift % BITS_PER_LONG;
-	unsigned long mask = BITMAP_LAST_WORD_MASK(nbits);
-	for (k = 0; off + k < lim; ++k) {
-		unsigned long upper, lower;
-
-		/*
-		 * If shift is not word aligned, take lower rem bits of
-		 * word above and make them the top rem bits of result.
-		 */
-		if (!rem || off + k + 1 >= lim)
-			upper = 0;
-		else {
-			upper = src[off + k + 1];
-			if (off + k + 1 == lim - 1)
-				upper &= mask;
-			upper <<= (BITS_PER_LONG - rem);
-		}
-		lower = src[off + k];
-		if (off + k == lim - 1)
-			lower &= mask;
-		lower >>= rem;
-		dst[k] = lower | upper;
-	}
-	if (off)
-		memset(&dst[lim - off], 0, off*sizeof(unsigned long));
-}
-
-static inline void bitmap_shift_right(unsigned long *dst, const unsigned long *src,
-				unsigned int shift, unsigned int nbits)
-{
-	if (small_const_nbits(nbits))
-		*dst = (*src & BITMAP_LAST_WORD_MASK(nbits)) >> shift;
-	else
-		__bitmap_shift_right(dst, src, shift, nbits);
-}
-
-static inline void __bitmap_shift_left(unsigned long *dst, const unsigned long *src,
-			unsigned int shift, unsigned int nbits)
-{
-	int k;
-	unsigned int lim = BITS_TO_LONGS(nbits);
-	unsigned int off = shift/BITS_PER_LONG, rem = shift % BITS_PER_LONG;
-	for (k = lim - off - 1; k >= 0; --k) {
-		unsigned long upper, lower;
-
-		/*
-		 * If shift is not word aligned, take upper rem bits of
-		 * word below and make them the bottom rem bits of result.
-		 */
-		if (rem && k > 0)
-			lower = src[k - 1] >> (BITS_PER_LONG - rem);
-		else
-			lower = 0;
-		upper = src[k] << rem;
-		dst[k + off] = lower | upper;
-	}
-	if (off)
-		memset(dst, 0, off*sizeof(unsigned long));
-}
-
-static inline void bitmap_shift_left(unsigned long *dst, const unsigned long *src,
-				unsigned int shift, unsigned int nbits)
-{
-	if (small_const_nbits(nbits))
-		*dst = (*src << shift) & BITMAP_LAST_WORD_MASK(nbits);
-	else
-		__bitmap_shift_left(dst, src, shift, nbits);
+	pr_debug("TODO: %s\n", __func__);
 }
 
 #endif					/* _LINUXKPI_LINUX_BITMAP_H_ */
