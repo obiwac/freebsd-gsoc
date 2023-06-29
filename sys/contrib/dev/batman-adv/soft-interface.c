@@ -1115,6 +1115,10 @@ static const struct nla_policy batadv_ifla_policy[IFLA_BATADV_MAX + 1] = {
 	[IFLA_BATADV_ALGO_NAME]	= { .type = NLA_NUL_STRING },
 };
 
+#if defined(__FreeBSD__)
+static struct if_clone_addreq_v2 batadv_ifc_addreq;
+#endif
+
 struct rtnl_link_ops batadv_link_ops __read_mostly = {
 	.kind		= "batadv",
 	.priv_size	= sizeof(struct batadv_priv),
@@ -1124,4 +1128,57 @@ struct rtnl_link_ops batadv_link_ops __read_mostly = {
 	.validate	= batadv_softif_validate,
 	.newlink	= batadv_softif_newlink,
 	.dellink	= batadv_softif_destroy_netlink,
+#if defined(__FreeBSD__)
+	.ifc_addreq	= &batadv_ifc_addreq,
+#endif
 };
+
+#if defined(__FreeBSD__)
+static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
+{
+	pr_debug("%s: TODO\n", __func__);
+	return 0;
+}
+
+static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len,
+				    struct ifc_data *ifd, struct ifnet **ifpp)
+{
+	pr_debug("%s: TODO\n", __func__);
+	return -1;
+}
+
+static int batadv_softif_ifc_destroy(struct if_clone *ifc, struct ifnet *ifp,
+				     uint32_t flags)
+{
+	pr_debug("%s: TODO\n", __func__);
+	return -1;
+}
+
+static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
+				       size_t len, struct ifc_data_nl *ifd)
+{
+	pr_debug("%s: TODO\n", __func__);
+	return -1;
+}
+
+static int batadv_softif_ifc_modify_nl(struct ifnet *ifp, struct ifc_data_nl *ifd)
+{
+	pr_debug("%s: TODO\n", __func__);
+	return -1;
+}
+
+static void batadv_softif_ifc_dump_nl(struct ifnet *ifp, struct nl_writer *nw)
+{
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static struct if_clone_addreq_v2 batadv_ifc_addreq = {
+	.version = 2, /* For netlink callbacks. */
+	.match_f = batadv_softif_ifc_match,
+	.create_f = batadv_softif_ifc_create,
+	.destroy_f = batadv_softif_ifc_destroy,
+	.create_nl_f = batadv_softif_ifc_create_nl,
+	.modify_nl_f = batadv_softif_ifc_modify_nl,
+	.dump_nl_f = batadv_softif_ifc_dump_nl,
+};
+#endif
