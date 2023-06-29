@@ -5,6 +5,7 @@
 
 #if defined(__amd64__) || defined(__i386__)
 
+#include <x86/specialreg.h>
 #include <sys/types.h>
 #include <machine/md_var.h>
 

@@ -40,6 +40,7 @@
 #include <sys/syslog.h>
 #include <sys/time.h>
 
+#include <linux/pr_debug.h>
 #include <linux/bitops.h>
 #include <linux/build_bug.h>
 #include <linux/compiler.h>
@@ -166,27 +167,6 @@ scnprintf(char *buf, size_t size, const char *fmt, ...)
 
 	return (i);
 }
-
-/*
- * The "pr_debug()" and "pr_devel()" macros should produce zero code
- * unless DEBUG is defined:
- */
-
-// #ifdef DEBUG
-extern int linuxkpi_debug;
-#define pr_debug(fmt, ...)					\
-	do {							\
-		if (linuxkpi_debug)				\
-			log(LOG_DEBUG, fmt, ##__VA_ARGS__);	\
-	} while (0)
-#define pr_devel(fmt, ...) \
-	log(LOG_DEBUG, pr_fmt(fmt), ##__VA_ARGS__)
-// #else
-// #define pr_debug(fmt, ...) \
-// 	({ if (0) log(LOG_DEBUG, fmt, ##__VA_ARGS__); 0; })
-// #define pr_devel(fmt, ...) \
-// 	({ if (0) log(LOG_DEBUG, pr_fmt(fmt), ##__VA_ARGS__); 0; })
-// #endif
 
 #ifndef pr_fmt
 #define pr_fmt(fmt) fmt
