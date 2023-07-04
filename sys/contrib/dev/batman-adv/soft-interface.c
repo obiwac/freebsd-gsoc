@@ -4,6 +4,10 @@
  * Marek Lindner, Simon Wunderlich
  */
 
+#if defined(__FreeBSD__)
+#include "opt_netlink.h"
+#endif
+
 #include "soft-interface.h"
 #include "main.h"
 
@@ -736,12 +740,13 @@ static int batadv_softif_init_late(struct net_device *dev)
 	batadv_set_lockdep_class(dev);
 
 	bat_priv = netdev_priv(dev);
+
 	bat_priv->soft_iface = dev;
 
 	/* batadv_interface_stats() needs to be available as soon as
 	 * register_netdevice() has been called
 	 */
-	bat_priv->bat_counters = __alloc_percpu(cnt_len, __alignof__(u64));
+	bat_priv->bat_counters = kmalloc(cnt_len, GFP_KERNEL); // TODO __alloc_percpu(cnt_len, __alignof__(u64));
 	if (!bat_priv->bat_counters)
 		return -ENOMEM;
 
@@ -1105,7 +1110,17 @@ static void batadv_softif_destroy_netlink(struct net_device *soft_iface,
  */
 bool batadv_softif_is_valid(const struct net_device *net_dev)
 {
-	if (net_dev->netdev_ops->ndo_start_xmit == batadv_interface_tx)
+	// always return valid for now, because net_dev is actually a struct ifnet *
+	// here's the traceback:
+	// #18 0xffffffff81b605d2 in batadv_softif_is_valid (net_dev=net_dev@entry=0xfffff80002772000) at sys/contrib/dev/batman-adv/soft-interface.c:1108
+	// #19 0xffffffff81b5815d in batadv_hard_if_event (this=<optimized out>, event=3, ptr=0xfffffe0084178a90) at sys/contrib/dev/batman-adv/hard-interface.c:950
+	// #20 0xffffffff80953f3b in linux_handle_ifnet_arrival_event (arg=0xfffff80002772000, ifp=<optimized out>) at sys/compat/linuxkpi/common/src/linux_compat.c:2484
+	// #21 0xffffffff808142be in if_attach_internal (ifp=ifp@entry=0xfffff80002772000, vmove=<optimized out>) at sys/net/if.c:958
+	// #22 0xffffffff80813eeb in if_attach (ifp=ifp@entry=0xfffff80002772000) at sys/net/if.c:773
+	// #23 0xffffffff81b6115d in batadv_softif_ifc_create (ifpp=0xfffffe0084178c80, ifc=<optimized out>, name=<optimized out>, len=<optimized out>, ifd=<optimized out>)
+	// 			    at sys/contrib/dev/batman-adv/soft-interface.c:1158
+
+	if (1 /* net_dev->netdev_ops->ndo_start_xmit == batadv_interface_tx */)
 		return true;
 
 	return false;
@@ -1150,8 +1165,24 @@ static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
 static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len,
 				    struct ifc_data *ifd, struct ifnet **ifpp)
 {
-	pr_debug("%s: TODO\n", __func__);
-	return -1;
+	struct net_device *const dev =
+		alloc_netdev(batadv_link_ops.priv_size, name, 0, batadv_link_ops.setup);
+
+	if (dev->netdev_ops->ndo_init(dev) < 0)
+		return ENOSPC;
+
+	struct ifnet *const ifp = if_alloc(IFT_BATMAN);
+	if (ifp == NULL)
+		return ENOSPC;
+
+	if_initname(ifp, "bat", ifd->unit);
+	if_setsoftc(ifp, dev);
+
+	if_attach(ifp);
+
+	*ifpp = ifp;
+
+	return 0;
 }
 
 static int batadv_softif_ifc_destroy(struct if_clone *ifc, struct ifnet *ifp,
@@ -1161,11 +1192,31 @@ static int batadv_softif_ifc_destroy(struct if_clone *ifc, struct ifnet *ifp,
 	return -1;
 }
 
+#include <netlink/route/route_var.h>
+
 static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 				       size_t len, struct ifc_data_nl *ifd)
 {
-	pr_debug("%s: TODO\n", __func__);
-	return -1;
+	struct ifc_data ifd_new = {
+		.unit = ifd->unit,
+	};
+
+	int err = batadv_softif_ifc_create(ifc, name, len, &ifd_new, &ifd->ifp);
+
+	/*
+	struct nl_parsed_link *lattrs = ifd->lattrs;
+	struct net_device *dev = (struct net_device*)ifd->ifp;
+
+	struct nlattr *bsd_data = lattrs->ifla_idata;
+	struct nlattr *data[IFLA_BATADV_MAX + 1] = { 0 };
+
+	for (size_t i = 0; bsd_data && i < nitems(data); i++)
+		data[i] = &bsd_data[i];
+
+	int err = batadv_link_ops.newlink(NULL, dev, NULL, data, NULL);
+	*/
+
+	return err;
 }
 
 static int batadv_softif_ifc_modify_nl(struct ifnet *ifp, struct ifc_data_nl *ifd)

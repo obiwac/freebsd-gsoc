@@ -529,9 +529,18 @@ struct packet_type {
 static inline struct net_device *
 linux_dev_get_by_index(struct net *net, int ifindex)
 {
+	struct epoch_tracker et;
+	struct ifnet *ifp;
 
-	pr_debug("%s: TODO\n", __func__);
-	return (NULL);
+	NET_EPOCH_ENTER(et);
+	ifp = ifnet_byindex(ifindex);
+	NET_EPOCH_EXIT(et);
+
+	/* TODO explain why we just cast. */
+	/* https://github.com/luigirizzo/netmap/blob/master/LINUX/bsd_glue.h */
+
+	pr_debug("TODO: %s\n", __func__);
+	return ((struct net_device *)ifp);
 }
 
 #define	NET_XMIT_SUCCESS	0x00

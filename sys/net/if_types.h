@@ -257,6 +257,7 @@ typedef enum {
 	IFT_PFLOG	= 0xf6,		/* PF packet filter logging */
 	IFT_PFSYNC	= 0xf7,		/* PF packet filter synchronization */
 	IFT_WIREGUARD	= 0xf8,		/* WireGuard tunnel */
+	IFT_BATMAN	= 0xf9,		/* B.A.T.M.A.N. soft interface */
 } ifType;
 
 /*
