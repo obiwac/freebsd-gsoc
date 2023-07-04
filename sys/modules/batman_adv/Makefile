@@ -17,8 +17,6 @@ SRCS=	bat_algo.c \
 	bat_v_elp.c \
 	bat_v_ogm.c \
 	bitarray.c \
-	bridge_loop_avoidance.c \
-	distributed-arp-table.c \
 	fragmentation.c \
 	gateway_client.c \
 	gateway_common.c \
@@ -26,7 +24,6 @@ SRCS=	bat_algo.c \
 	hash.c \
 	log.c \
 	main.c \
-	multicast.c \
 	netlink.c \
 	originator.c \
 	routing.c \
@@ -42,15 +39,16 @@ CFLAGS+=	-I${DEVBATMANADVDIR}
 
 CFLAGS+=	-DCONFIG_BATMAN_ADV_BATMAN_V
 CFLAGS+=	-DCONFIG_BATMAN_ADV_DEBUG
-CFLAGS+=	-DCONFIG_BATMAN_ADV_BLA # bridge loop avoidance
-CFLAGS+=	-DCONFIG_BATMAN_ADV_DAT # distributed ARP table
-CFLAGS+=	-DCONFIG_BATMAN_ADV_MCAST # multicast
+# CFLAGS+=	-DCONFIG_BATMAN_ADV_BLA # bridge loop avoidance
+# CFLAGS+=	-DCONFIG_BATMAN_ADV_DAT # distributed ARP table
+# CFLAGS+=	-DCONFIG_BATMAN_ADV_MCAST # multicast
 # CFLAGS+=	-DCONFIG_BATMAN_ADV_NC # XXX network coding (need to add network-coding.c to $SRCS)
 
 # Linux KPI sources/flags.
 
 SRCS+=	${LINUXKPI_GENSRCS}
 CFLAGS+=	${LINUXKPI_INCLUDES}
+CFLAGS+=	-O0
 
 # DebugFS source files.
 
