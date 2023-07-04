@@ -1221,8 +1221,12 @@ static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 
 static int batadv_softif_ifc_modify_nl(struct ifnet *ifp, struct ifc_data_nl *ifd)
 {
-	pr_debug("%s: TODO\n", __func__);
-	return -1;
+	struct nl_parsed_link *lattrs = ifd->lattrs;
+
+	if (lattrs->ifla_idata != NULL && (ifd->flags & IFC_F_CREATE) == 0)
+		pr_debug("%s: TODO\n", __func__);
+
+	return nl_modify_ifp_generic(ifp, lattrs, ifd->bm, ifd->npt);
 }
 
 static void batadv_softif_ifc_dump_nl(struct ifnet *ifp, struct nl_writer *nw)
