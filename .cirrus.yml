@@ -58,7 +58,7 @@ task:
   - chown user:user /usr/obj/$(pwd -P)
 
   script:
-  - su user -c "make -j$(sysctl -n hw.ncpu) CROSS_TOOLCHAIN=${TOOLCHAIN} WITHOUT_TOOLCHAIN=yes buildworld buildkernel"
+  - su user -c "make -j$(sysctl -n hw.ncpu) CROSS_TOOLCHAIN=${TOOLCHAIN} KERNCONF=GSOC WITHOUT_TOOLCHAIN=yes buildworld buildkernel"
 
   package_script:
   - su user -c "make CROSS_TOOLCHAIN=${TOOLCHAIN} WITHOUT_TOOLCHAIN=yes packages"
