@@ -1183,7 +1183,7 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	if (dev->netdev_ops->ndo_init(dev) < 0)
 		return ENOSPC;
 
-	struct ifnet *const ifp = if_alloc(IFT_ETHER);
+	struct ifnet *const ifp = if_alloc(IFT_BATMAN);
 	if (ifp == NULL)
 		return ENOSPC;
 
