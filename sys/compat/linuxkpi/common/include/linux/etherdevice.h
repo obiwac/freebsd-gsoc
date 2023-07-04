@@ -29,6 +29,7 @@
 #include <linux/device.h>
 #include <linux/skbuff.h>
 #include <linux/types.h>
+#include <linux/netdevice.h>
 
 #include <sys/random.h>
 #include <sys/libkern.h>
