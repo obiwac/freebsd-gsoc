@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target_arch: [ amd64, aarch64 ]
+        target_arch: [ amd64 ]
         os: [ ubuntu-20.04, ubuntu-22.04, macos-latest ]
         include:
           # TODO: both Ubuntu and macOS have bmake packages, we should try them instead of bootstrapping our own copy.
@@ -34,8 +34,6 @@ jobs:
             pkgs: bmake libarchive llvm@13
           - target_arch: amd64
             target: amd64
-          - target_arch: aarch64
-            target: arm64
     steps:
       - uses: actions/checkout@v3
       - name: install packages (Ubuntu)
