@@ -1149,6 +1149,18 @@ struct rtnl_link_ops batadv_link_ops __read_mostly = {
 };
 
 #if defined(__FreeBSD__)
+static int batadv_softif_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
+{
+	int err = 0;
+
+	switch (cmd) {
+	default:
+		err = ether_ioctl(ifp, cmd, data);
+	}
+
+	return err;
+}
+
 static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
 {
 	if (strncmp(name, "bat", 3) != 0)
@@ -1171,12 +1183,13 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	if (dev->netdev_ops->ndo_init(dev) < 0)
 		return ENOSPC;
 
-	struct ifnet *const ifp = if_alloc(IFT_BATMAN);
+	struct ifnet *const ifp = if_alloc(IFT_ETHER);
 	if (ifp == NULL)
 		return ENOSPC;
 
 	if_initname(ifp, "bat", ifd->unit);
 	if_setsoftc(ifp, dev);
+	if_setioctlfn(ifp, batadv_softif_ioctl);
 
 	if_attach(ifp);
 
