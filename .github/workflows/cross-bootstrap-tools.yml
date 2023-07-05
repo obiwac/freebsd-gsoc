@@ -17,21 +17,13 @@ jobs:
       fail-fast: false
       matrix:
         target_arch: [ amd64 ]
-        os: [ ubuntu-20.04, ubuntu-22.04, macos-latest ]
+        os: [ ubuntu-22.04 ]
         include:
           # TODO: both Ubuntu and macOS have bmake packages, we should try them instead of bootstrapping our own copy.
-          - os: ubuntu-20.04
-            compiler: clang-12
-            cross-bindir: /usr/lib/llvm-12/bin
-            pkgs: bmake libarchive-dev clang-12 lld-12
           - os: ubuntu-22.04
             compiler: clang-14
             cross-bindir: /usr/lib/llvm-14/bin
             pkgs: bmake libarchive-dev clang-14 lld-14
-          - os: macos-latest
-            compiler: clang-13
-            cross-bindir: /usr/local/opt/llvm@13/bin
-            pkgs: bmake libarchive llvm@13
           - target_arch: amd64
             target: amd64
     steps:
@@ -61,4 +53,4 @@ jobs:
       - name: make kernel-toolchain
         run: ./tools/build/make.py --debug $EXTRA_BUILD_ARGS TARGET=${{ matrix.target }} TARGET_ARCH=${{ matrix.target_arch }} kernel-toolchain -s -j$NPROC -DWITH_DISK_IMAGE_TOOLS_BOOTSTRAP
       - name: make buildkernel
-        run: ./tools/build/make.py --debug $EXTRA_BUILD_ARGS TARGET=${{ matrix.target }} TARGET_ARCH=${{ matrix.target_arch }} KERNCONF=GSOC NO_MODULES=yes buildkernel -s -j$NPROC $EXTRA_MAKE_ARGS
+        run: ./tools/build/make.py --debug $EXTRA_BUILD_ARGS TARGET=${{ matrix.target }} TARGET_ARCH=${{ matrix.target_arch }} KERNCONF=GENERIC NO_MODULES=yes buildkernel -s -j$NPROC $EXTRA_MAKE_ARGS
