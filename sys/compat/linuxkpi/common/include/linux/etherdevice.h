@@ -144,7 +144,8 @@ static inline void
 eth_hw_addr_set(struct net_device *dev, u8 const *addr)
 {
 
-	pr_debug("%s: TODO\n", __func__);
+	dev->addr_len = ETHER_ADDR_LEN;
+	ether_addr_copy(dev->dev_addr, addr);
 }
 
 static inline int
@@ -158,8 +159,10 @@ eth_validate_addr(struct net_device *dev)
 static inline void
 eth_hw_addr_random(struct net_device *dev)
 {
+	uint8_t ether[ETHER_ADDR_LEN];
 
-	pr_debug("%s: TODO\n", __func__);
+	random_ether_addr(ether);
+	eth_hw_addr_set(dev, ether);
 }
 
 #endif					/* _LINUXKPI_LINUX_ETHERDEVICE_H_ */
