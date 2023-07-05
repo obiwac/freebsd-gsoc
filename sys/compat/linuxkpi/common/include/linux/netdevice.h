@@ -298,6 +298,7 @@ struct net_device {
 
 	uint8_t				dev_addr[ETH_ALEN];
 	struct netdev_hw_addr_list	mc;
+	uint8_t				broadcast[ETH_ALEN];
 
 	const struct rtnl_link_ops	*rtnl_link_ops;
 	const struct ethtool_ops	*ethtool_ops;
