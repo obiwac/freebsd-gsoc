@@ -6,6 +6,7 @@
 
 #if defined(__FreeBSD__)
 #include "opt_netlink.h"
+#include <sys/sockio.h>
 #endif
 
 #include "soft-interface.h"
@@ -1149,11 +1150,27 @@ struct rtnl_link_ops batadv_link_ops __read_mostly = {
 };
 
 #if defined(__FreeBSD__)
-static int batadv_softif_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
+static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
 {
+	struct net_device *const dev = (void *)ifp;
+	struct ifreq *ifr = (void *)data;
 	int err = 0;
 
+	// TODO there should be a generic netdev_ioctl (or something else) function which calls these ndo_* functions
+
 	switch (cmd) {
+	case SIOCAIFADDR:
+	case SIOCADDMULTI:
+	case SIOCDELMULTI: {}
+		printf("testset\n");
+		caddr_t const mac = if_getlladdr(ifp);
+		err = dev->netdev_ops->ndo_set_mac_address(dev, mac);
+		if (err == 0)
+			if_setlladdr(ifp, dev->dev_addr, dev->addr_len);
+		break;
+	case SIOCSIFMTU:
+		err = dev->netdev_ops->ndo_change_mtu(dev, ifr->ifr_mtu);
+		break;
 	default:
 		err = ether_ioctl(ifp, cmd, data);
 	}
@@ -1178,21 +1195,19 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 				    struct ifc_data *ifd, struct ifnet **ifpp)
 {
 	struct net_device *const dev =
-		alloc_netdev(batadv_link_ops.priv_size, name, 0, batadv_link_ops.setup);
+		linuxkpi_alloc_netdev_ifp(batadv_link_ops.priv_size,
+		IFT_BATMAN, batadv_link_ops.setup);
 
 	if (dev->netdev_ops->ndo_init(dev) < 0)
 		return ENOSPC;
 
-	struct ifnet *const ifp = if_alloc(IFT_BATMAN);
-	if (ifp == NULL)
-		return ENOSPC;
+	if_t ifp = (void *)dev;
 
 	if_initname(ifp, "bat", ifd->unit);
-	if_setsoftc(ifp, dev);
 	if_setioctlfn(ifp, batadv_softif_ioctl);
+	if_setlladdr(ifp, dev->dev_addr, dev->addr_len);
 
 	if_attach(ifp);
-
 	*ifpp = ifp;
 
 	return 0;
