@@ -3,6 +3,7 @@
  * Copyright (c) 2010 iX Systems, Inc.
  * Copyright (c) 2010 Panasas, Inc.
  * Copyright (c) 2013-2021 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2501,11 +2502,21 @@ linux_handle_iflladdr_event(void *arg, struct ifnet *ifp)
 {
 	struct notifier_block *nb;
 	struct netdev_notifier_info ni;
+	caddr_t mac;
 
 	nb = arg;
 	ni.ifp = ifp;
 	ni.dev = (struct net_device *)ifp;
 	nb->notifier_call(nb, NETDEV_CHANGEADDR, &ni);
+
+	/*
+	 * We call this here because our ioctl isn't called on a NETDEV_CHANGEADDR event.
+	 */
+
+	if (ni.dev->netdev_ops != NULL) {
+		mac = if_getlladdr(ifp);
+		ni.dev->netdev_ops->ndo_set_mac_address(ni.dev, mac);
+	}
 }
 
 static void
