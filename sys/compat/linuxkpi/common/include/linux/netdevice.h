@@ -165,7 +165,7 @@ struct net_device {
 
 	/* These fields are shared with struct if_data. */
 	uint8_t		type;		/* ethernet, tokenring, etc */
-	uint8_t		if_addrlen;	/* media address length */
+	uint8_t		addr_len;	/* media address length */
 	uint8_t		if_hdrlen;	/* media header length */
 	uint8_t		if_link_state;	/* current link state */
 	uint32_t	mtu;		/* maximum transmission unit */
@@ -296,7 +296,6 @@ struct net_device {
 	unsigned short			hard_header_len;
 	int				needed_headroom, needed_tailroom;
 
-	unsigned char			addr_len;
 	uint8_t				dev_addr[ETH_ALEN];
 	struct netdev_hw_addr_list	mc;
 
