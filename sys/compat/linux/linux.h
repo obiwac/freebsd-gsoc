@@ -362,6 +362,7 @@ struct l_statx {
  */
 #define	IFP_IS_ETH(ifp)		(if_gettype(ifp) == IFT_ETHER)
 #define	IFP_IS_LOOP(ifp)	(if_gettype(ifp) == IFT_LOOP)
+#define	IFP_IS_BATMAN(ifp)	(if_gettype(ifp) == IFT_BATMAN)
 
 struct ifnet;
 

@@ -1186,7 +1186,7 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 
 	if_t ifp = (void *)dev;
 
-	if_initname(ifp, "bat", ifd->unit);
+	if_initname(ifp, batadv_link_ops.kind, ifd->unit);
 	if_setioctlfn(ifp, batadv_softif_ioctl);
 
 	if_attach(ifp);

@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 2015 Dmitry Chagin <dchagin@FreeBSD.org>
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -332,6 +333,13 @@ ifname_bsd_to_linux_ifp(struct ifnet *ifp, char *lxname, size_t len)
 	if (IFP_IS_LOOP(ifp) && strncmp(if_name(ifp), "lo0", IFNAMSIZ) == 0)
 		return (strlcpy(lxname, "lo", len));
 
+	/*
+	 * B.A.T.M.A.N. interface names under Linux are batX,
+	 * not batadvX.
+	 */
+	if (IFP_IS_BATMAN(ifp))
+		return (snprintf(lxname, len, "bat%d", ifp->if_dunit));
+
 	/* Short-circuit non ethernet interfaces. */
 	if (!IFP_IS_ETH(ifp) || linux_use_real_ifname(ifp))
 		return (strlcpy(lxname, if_name(ifp), len));
@@ -349,6 +357,7 @@ ifname_bsd_to_linux_ifp(struct ifnet *ifp, char *lxname, size_t len)
 struct ifname_linux_to_ifp_cb_s {
 	bool		is_lo;
 	bool		is_eth;
+	bool		is_batman;
 	int		ethno;
 	int		unit;
 	const char	*lxname;
@@ -372,6 +381,8 @@ ifname_linux_to_ifp_cb(if_t ifp, void *arg)
 	if (cbs->is_eth && IFP_IS_ETH(ifp) && cbs->unit == cbs->ethno)
 		goto out;
 	if (cbs->is_lo && IFP_IS_LOOP(ifp))
+		goto out;
+	if (cbs->is_batman && IFP_IS_BATMAN(ifp) && cbs->unit == ifp->if_dunit)
 		goto out;
 	if (IFP_IS_ETH(ifp))
 		cbs->ethno++;
@@ -409,6 +420,7 @@ ifname_linux_to_ifp(struct thread *td, const char *lxname)
 	if ((ep == NULL || ep == lxname + len || ep >= lxname + LINUX_IFNAMSIZ) &&
 	    arg.is_lo == 0)
 		return (NULL);
+	arg.is_batman = (len == 3 && strncmp(lxname, "bat", len) == 0);
 	arg.is_eth = (len == 3 && strncmp(lxname, "eth", len) == 0);
 
 	if_foreach(ifname_linux_to_ifp_cb, &arg);
