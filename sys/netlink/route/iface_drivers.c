@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  *
  * Copyright (c) 2022 Alexander V. Chernikov <melifaro@FreeBSD.org>
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -87,6 +88,11 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 	if ((lattrs->ifi_change & IFF_UP) && (lattrs->ifi_flags & IFF_UP) == 0) {
 		/* Request to down the interface */
 		if_down(ifp);
+	}
+
+	if ((lattrs->ifi_change & IFF_UP) && (lattrs->ifi_flags & IFF_UP) != 0) {
+		/* Request to up the interface */
+		if_up(ifp);
 	}
 
 	if (lattrs->ifla_mtu > 0) {
