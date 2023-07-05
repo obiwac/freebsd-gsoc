@@ -2480,8 +2480,7 @@ linux_handle_ifnet_arrival_event(void *arg, struct ifnet *ifp)
 
 	nb = arg;
 	ni.ifp = ifp;
-	// TODO figure this out - do I want to go along with this, or do an ifnet alias (like what everyone seems to be doing already)?
-	ni.dev = (struct net_device *)ifp->if_softc;
+	ni.dev = (struct net_device *)ifp;
 	nb->notifier_call(nb, NETDEV_REGISTER, &ni);
 }
 

@@ -392,12 +392,12 @@ linuxkpi_init_dummy_netdev(struct net_device *ndev)
 }
 
 struct net_device *
-linuxkpi_alloc_netdev(size_t len, const char *name, uint32_t flags,
-    void(*setup_func)(struct net_device *))
+linuxkpi_alloc_netdev(size_t priv_len, const char *name, uint32_t flags,
+	void(*setup_func)(struct net_device *))
 {
 	struct net_device *ndev;
 
-	ndev = malloc(sizeof(*ndev) + len, M_NETDEV, M_NOWAIT);
+	ndev = malloc(sizeof(*ndev) + priv_len, M_NETDEV, M_NOWAIT);
 	if (ndev == NULL)
 		return (ndev);
 
@@ -405,12 +405,33 @@ linuxkpi_alloc_netdev(size_t len, const char *name, uint32_t flags,
 	linuxkpi_init_dummy_netdev(ndev);
 
 	/* Zero out the rest of the structure. */
-	memset(ndev->drv_priv, 0, len);
+	memset(ndev->drv_priv, 0, priv_len);
 
 	strlcpy(ndev->name, name, sizeof(*ndev->name));
 
 	/* This needs extending as we support more. */
 
+	setup_func(ndev);
+
+	return (ndev);
+}
+
+struct net_device *
+linuxkpi_alloc_netdev_ifp(size_t priv_len, u_char type,
+	void(*setup_func)(struct net_device *))
+{
+	struct net_device *ndev;
+	if_t ifp;
+
+	ndev = malloc(sizeof(*ndev) + priv_len, M_NETDEV, M_NOWAIT);
+	if (ndev == NULL)
+		return (ndev);
+	ifp = (if_t)ndev;
+
+	linuxkpi_init_dummy_netdev(ndev);
+	if_fill_domain(ifp, type, IF_NODOM);
+
+	memset(ndev->drv_priv, 0, priv_len);
 	setup_func(ndev);
 
 	return (ndev);

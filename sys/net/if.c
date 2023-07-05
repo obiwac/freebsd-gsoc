@@ -527,23 +527,15 @@ VNET_SYSUNINIT(vnet_if_return, SI_SUB_VNET_DONE, SI_ORDER_ANY,
 #endif
 
 /*
- * Allocate a struct ifnet and an index for an interface.  A layer 2
- * common structure will also be allocated if an allocation routine is
- * registered for the passed type.
+ * Fill members for a struct ifnet and allocate an index for an interface.
+ * A layer 2 common structure will also be allocated if an allocation routine
+ * is registered for the passed type.
  */
-static struct ifnet *
-if_alloc_domain(u_char type, int numa_domain)
+void
+if_fill_domain(struct ifnet *ifp, u_char type, int numa_domain)
 {
-	struct ifnet *ifp;
 	u_short idx;
 
-	KASSERT(numa_domain <= IF_NODOM, ("numa_domain too large"));
-	if (numa_domain == IF_NODOM)
-		ifp = malloc(sizeof(struct ifnet), M_IFNET,
-		    M_WAITOK | M_ZERO);
-	else
-		ifp = malloc_domainset(sizeof(struct ifnet), M_IFNET,
-		    DOMAINSET_PREF(numa_domain), M_WAITOK | M_ZERO);
 	ifp->if_type = type;
 	ifp->if_alloctype = type;
 	ifp->if_numa_domain = numa_domain;
@@ -607,7 +599,22 @@ if_alloc_domain(u_char type, int numa_domain)
 	ifp->if_idxgen = ifindex_table[idx].ife_gencnt;
 	ck_pr_store_ptr(&ifindex_table[idx].ife_ifnet, ifp);
 	IFNET_WUNLOCK();
+}
 
+static struct ifnet *
+if_alloc_domain(u_char type, int numa_domain)
+{
+	struct ifnet *ifp;
+
+	KASSERT(numa_domain <= IF_NODOM, ("numa_domain too large"));
+	if (numa_domain == IF_NODOM)
+		ifp = malloc(sizeof(struct ifnet), M_IFNET,
+		    M_WAITOK | M_ZERO);
+	else
+		ifp = malloc_domainset(sizeof(struct ifnet), M_IFNET,
+		    DOMAINSET_PREF(numa_domain), M_WAITOK | M_ZERO);
+
+	if_fill_domain(ifp, type, numa_domain);
 	return (ifp);
 }
 
