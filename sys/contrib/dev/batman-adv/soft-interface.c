@@ -1175,6 +1175,8 @@ static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
 static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len,
 				    struct ifc_data *ifd, struct ifnet **ifpp)
 {
+	// TODO see about making it s.t. ether_ifattach is called (IFT_ETHER?)
+
 	struct net_device *const dev =
 		linuxkpi_alloc_netdev_ifp(batadv_link_ops.priv_size,
 		IFT_BATMAN, batadv_link_ops.setup);
@@ -1196,6 +1198,9 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	sdl->sdl_alen = dev->addr_len;
 
 	if_setlladdr(ifp, dev->dev_addr, dev->addr_len);
+
+	eth_broadcast_addr(dev->broadcast);
+	ifp->if_broadcastaddr = dev->broadcast;
 
 	*ifpp = ifp;
 
