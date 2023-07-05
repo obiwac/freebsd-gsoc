@@ -1159,15 +1159,6 @@ static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
 	// TODO there should be a generic netdev_ioctl (or something else) function which calls these ndo_* functions
 
 	switch (cmd) {
-	case SIOCAIFADDR:
-	case SIOCADDMULTI:
-	case SIOCDELMULTI: {}
-		printf("testset\n");
-		caddr_t const mac = if_getlladdr(ifp);
-		err = dev->netdev_ops->ndo_set_mac_address(dev, mac);
-		if (err == 0)
-			if_setlladdr(ifp, dev->dev_addr, dev->addr_len);
-		break;
 	case SIOCSIFMTU:
 		err = dev->netdev_ops->ndo_change_mtu(dev, ifr->ifr_mtu);
 		break;
@@ -1205,9 +1196,17 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 
 	if_initname(ifp, "bat", ifd->unit);
 	if_setioctlfn(ifp, batadv_softif_ioctl);
-	if_setlladdr(ifp, dev->dev_addr, dev->addr_len);
 
 	if_attach(ifp);
+
+	struct ifaddr *ifa = ifp->if_addr;
+	struct sockaddr_dl *sdl = (void *)ifa->ifa_addr;
+
+	sdl->sdl_type = IFT_BATMAN;
+	sdl->sdl_alen = dev->addr_len;
+
+	if_setlladdr(ifp, dev->dev_addr, dev->addr_len);
+
 	*ifpp = ifp;
 
 	return 0;

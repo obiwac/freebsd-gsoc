@@ -3935,6 +3935,7 @@ if_setlladdr(struct ifnet *ifp, const u_char *lladdr, int len)
 	case IFT_L2VLAN:
 	case IFT_BRIDGE:
 	case IFT_IEEE8023ADLAG:
+	case IFT_BATMAN:
 		bcopy(lladdr, LLADDR(sdl), len);
 		break;
 	default:
