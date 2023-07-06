@@ -64,17 +64,19 @@ void rtnl_neighs_destroy(void);
 
 /* iface.c */
 struct nl_parsed_link {
-	char		*ifla_group;
-	char		*ifla_ifname;
-	char		*ifla_cloner;
-	char		*ifla_ifalias;
-	struct nlattr	*ifla_idata;
-	unsigned short	ifi_type;
-	int		ifi_index;
-	uint32_t	ifla_link;
-	uint32_t	ifla_mtu;
-	uint32_t	ifi_flags;
-	uint32_t	ifi_change;
+	struct sockaddr_dl	*ifla_address;
+	struct sockaddr_dl	*ifla_broadcast;
+	char			*ifla_group;
+	char			*ifla_ifname;
+	char			*ifla_cloner;
+	char			*ifla_ifalias;
+	struct nlattr		*ifla_idata;
+	unsigned short		ifi_type;
+	int			ifi_index;
+	uint32_t		ifla_link;
+	uint32_t		ifla_mtu;
+	uint32_t		ifi_flags;
+	uint32_t		ifi_change;
 };
 
 #if defined(NETLINK) || defined(NETLINK_MODULE)

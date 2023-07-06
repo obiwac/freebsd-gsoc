@@ -1215,6 +1215,7 @@ static int batadv_softif_ifc_destroy(struct if_clone *ifc, struct ifnet *ifp,
 }
 
 #include <netlink/route/route_var.h>
+#include <netlink/route/interface.h>
 
 static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 				       size_t len, struct ifc_data_nl *ifd)
@@ -1248,19 +1249,15 @@ static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 static int batadv_softif_ifc_modify_nl(struct ifnet *ifp, struct ifc_data_nl *ifd)
 {
 	// TODO if we end up not doing anything special in here, replace with ifc_modify_ifp_nl_default
+	//      especially if we anyway do what we were going to do here elsewhere (like in netlink/route/iface_drivers.c calling the ndo callbacks or something idk)
 
-	struct nl_parsed_link *lattrs = ifd->lattrs;
-
-	if (lattrs->ifla_idata != NULL && (ifd->flags & IFC_F_CREATE) == 0)
-		pr_debug("%s: TODO\n", __func__);
-
+	struct nl_parsed_link *const lattrs = ifd->lattrs;
 	return nl_modify_ifp_generic(ifp, lattrs, ifd->bm, ifd->npt);
 }
 
 static void batadv_softif_ifc_dump_nl(struct ifnet *ifp, struct nl_writer *nw)
 {
 	// TODO if we end up not doing anything special in here, replace with ifc_dump_ifp_nl_default
-
 	pr_debug("%s: TODO\n", __func__);
 }
 
