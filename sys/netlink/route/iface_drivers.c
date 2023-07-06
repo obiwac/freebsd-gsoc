@@ -113,6 +113,18 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 		}
 	}
 
+	if (lattrs->ifla_address != NULL) {
+		struct sockaddr_dl *const sdl = lattrs->ifla_address;
+		if_setlladdr(ifp, LLADDR(sdl), sdl->sdl_alen);
+
+		// TODO find a way to call ((struct net_device *)ifp)->netdev_ops->ndo_set_mac_address
+		//      maybe we should call ifhwioctl to change the MAC address?
+	}
+
+	if (lattrs->ifla_broadcast != NULL) {
+		printf("%s: TODO (IFLA_BROADCAST)\n", __func__);
+	}
+
 	return (0);
 }
 
