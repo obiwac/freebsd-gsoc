@@ -131,6 +131,30 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 		printf("%s: TODO (IFLA_BROADCAST)\n", __func__);
 	}
 
+	if (lattrs->ifla_master != 0) {
+		struct epoch_tracker et;
+
+		NET_EPOCH_ENTER(et);
+		if_t const ifp_master = ifnet_byindex_ref(lattrs->ifla_master);
+		NET_EPOCH_EXIT(et);
+
+		if (ifp_master == NULL) {
+			nlmsg_report_err_msg(npt, "unable to find master interface %u",
+			    lattrs->ifla_master);
+			return (ENOENT);
+		}
+
+		if (IFT_IS_LINUX(ifp_master->if_type)) {
+			struct net_device *const master = (void *)ifp_master;
+			struct net_device *const slave = (void *)ifp; // TODO not an issue right now but how best to make this conversion?
+
+			if (master->netdev_ops)
+				master->netdev_ops->ndo_add_slave(master, slave, NULL);
+		}
+
+		if_rele(ifp_master);
+	}
+
 	return (0);
 }
 
