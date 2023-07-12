@@ -1252,6 +1252,7 @@ static int batadv_softif_ifc_modify_nl(struct ifnet *ifp, struct ifc_data_nl *if
 	//      especially if we anyway do what we were going to do here elsewhere (like in netlink/route/iface_drivers.c calling the ndo callbacks or something idk)
 
 	struct nl_parsed_link *const lattrs = ifd->lattrs;
+
 	return nl_modify_ifp_generic(ifp, lattrs, ifd->bm, ifd->npt);
 }
 

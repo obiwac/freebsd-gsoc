@@ -31,6 +31,7 @@
 __FBSDID("$FreeBSD$");
 #include "opt_inet.h"
 #include "opt_inet6.h"
+#include <linux/netdevice.h> // TODO what to do w/ this?
 #include <sys/types.h>
 #include <sys/malloc.h>
 #include <sys/socket.h>
@@ -59,6 +60,8 @@ __FBSDID("$FreeBSD$");
 #define	DEBUG_MAX_LEVEL	LOG_DEBUG3
 #include <netlink/netlink_debug.h>
 _DECLARE_DEBUG(LOG_INFO);
+
+// TODO update the comment description of _nl_modify_ifp_generic
 
 /*
  * Generic modification interface handler.
@@ -117,8 +120,11 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 		struct sockaddr_dl *const sdl = lattrs->ifla_address;
 		if_setlladdr(ifp, LLADDR(sdl), sdl->sdl_alen);
 
-		// TODO find a way to call ((struct net_device *)ifp)->netdev_ops->ndo_set_mac_address
-		//      maybe we should call ifhwioctl to change the MAC address?
+		if (IFT_IS_LINUX(ifp->if_type)) {
+			struct net_device *const dev = (void *)ifp;
+			if (dev->netdev_ops != NULL)
+				dev->netdev_ops->ndo_set_mac_address(dev, sdl);
+		}
 	}
 
 	if (lattrs->ifla_broadcast != NULL) {

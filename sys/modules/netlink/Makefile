@@ -8,6 +8,7 @@ SRCS =	netlink_module.c netlink_domain.c netlink_io.c \
 SRCS+=	opt_inet.h opt_inet6.h opt_route.h opt_netlink.h
 
 CFLAGS+=	-DNETLINK_MODULE
+CFLAGS+=	${LINUXKPI_INCLUDES}
 
 EXPORT_SYMS=
 EXPORT_SYMS+=	nlmsg_get_chain_writer

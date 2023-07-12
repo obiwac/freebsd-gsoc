@@ -275,4 +275,13 @@ typedef enum {
 #define	IFT_INFINIBAND	IFT_INFINIBAND
 #endif
 
+#define	IFT_IS_LINUX(ift)	({	\
+	bool is_linux = false;		\
+	switch ((ift)) {		\
+	case IFT_BATMAN:		\
+		is_linux = true;	\
+	}				\
+	is_linux;			\
+})
+
 #endif /* !_NET_IF_TYPES_H_ */
