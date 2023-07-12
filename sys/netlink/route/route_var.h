@@ -73,6 +73,7 @@ struct nl_parsed_link {
 	struct nlattr		*ifla_idata;
 	unsigned short		ifi_type;
 	int			ifi_index;
+	uint32_t		ifla_master;
 	uint32_t		ifla_link;
 	uint32_t		ifla_mtu;
 	uint32_t		ifi_flags;

@@ -1146,7 +1146,9 @@ static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
 	struct ifreq *ifr = (void *)data;
 	int err = 0;
 
-	// TODO there should be a generic netdev_ioctl (or something else) function which calls these ndo_* functions
+	// see dev_ifsioc
+
+	// printf("%s: %ld\n", __func__, cmd);
 
 	switch (cmd) {
 	case SIOCSIFMTU:
