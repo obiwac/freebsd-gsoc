@@ -1147,7 +1147,6 @@ static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
 	int err = 0;
 
 	// see dev_ifsioc
-
 	// printf("%s: %ld\n", __func__, cmd);
 
 	switch (cmd) {
@@ -1159,6 +1158,11 @@ static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
 	}
 
 	return err;
+}
+
+static void batadv_softif_init(void *idk)
+{
+	pr_debug("TODO: %s(%p)\n", __func__, idk);
 }
 
 static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
@@ -1187,9 +1191,10 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	if_t ifp = (void *)dev;
 
 	if_initname(ifp, batadv_link_ops.kind, ifd->unit);
+	if_setinitfn(ifp, batadv_softif_init);
 	if_setioctlfn(ifp, batadv_softif_ioctl);
-	ifp->if_flags = IFF_BROADCAST;
 
+	ifp->if_flags = IFF_BROADCAST;
 #if defined(CONFIG_BATMAN_ADV_MCAST)
 	ifp->if_flags |= IFF_MULTICAST;
 #endif
