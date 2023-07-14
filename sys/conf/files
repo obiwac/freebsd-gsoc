@@ -4441,7 +4441,8 @@ netlink/netlink_io.c		optional netlink
 netlink/netlink_message_writer.c	optional netlink
 netlink/netlink_module.c	optional netlink
 netlink/netlink_route.c		optional netlink
-netlink/route/iface_drivers.c	optional netlink
+netlink/route/iface_drivers.c	optional netlink \
+	compile-with "${NORMAL_C} ${LINUXKPI_INCLUDES}"
 netlink/route/iface.c		optional netlink
 netlink/route/neigh.c		optional netlink
 netlink/route/nexthop.c		optional netlink

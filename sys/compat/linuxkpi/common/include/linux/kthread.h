@@ -69,6 +69,9 @@ struct kthread_work {
 	__task;								\
 })
 
+#define	kthread_create(fn, data, fmt, ...)	\
+	kthread_run(fn, data, fmt, ## __VA_ARGS__)
+
 int linux_kthread_stop(struct task_struct *);
 bool linux_kthread_should_stop_task(struct task_struct *);
 bool linux_kthread_should_stop(void);

@@ -302,7 +302,7 @@ struct mlxfw_mfa2_file *mlxfw_mfa2_file_init(const struct firmware *fw)
 		return ERR_PTR(-ENOMEM);
 
 	mfa2_file->fw = fw;
-	first_tlv_ptr = (const u8 *) fw->data + NLA_ALIGN(mlxfw_mfa2_fingerprint_len);
+	first_tlv_ptr = (const u8 *) fw->data + MLX_NLA_ALIGN(mlxfw_mfa2_fingerprint_len);
 	first_tlv = mlxfw_mfa2_tlv_get(mfa2_file, first_tlv_ptr);
 	if (!first_tlv) {
 		pr_err("Could not parse package descriptor TLV\n");
@@ -336,7 +336,7 @@ struct mlxfw_mfa2_file *mlxfw_mfa2_file_init(const struct firmware *fw)
 							    mfa2_file->first_dev,
 							    mfa2_file->dev_count);
 	mfa2_file->component_count = be16_to_cpu(pd->num_components);
-	mfa2_file->cb = (const u8 *) fw->data + NLA_ALIGN(be32_to_cpu(pd->cb_offset));
+	mfa2_file->cb = (const u8 *) fw->data + MLX_NLA_ALIGN(be32_to_cpu(pd->cb_offset));
 	if (!mlxfw_mfa2_valid_ptr(mfa2_file, mfa2_file->cb)) {
 		pr_err("Component block is out side the file\n");
 		goto err_out;

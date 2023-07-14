@@ -495,6 +495,7 @@ int	if_addgroup(if_t, const char *);
 int	if_delgroup(if_t, const char *);
 int	if_addmulti(if_t, struct sockaddr *, struct ifmultiaddr **);
 int	if_allmulti(if_t, int);
+void	if_fill_domain(if_t, u_char, int);
 if_t	if_alloc(u_char);
 if_t	if_alloc_dev(u_char, device_t dev);
 void	if_attach(if_t);

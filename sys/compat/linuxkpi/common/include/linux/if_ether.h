@@ -5,6 +5,7 @@
  * Copyright (c) 2013 Mellanox Technologies, Ltd.
  * All rights reserved.
  * Copyright (c) 2021-2022 The FreeBSD Foundation
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Portions of this software were developed by Björn Zeeb
  * under sponsorship from the FreeBSD Foundation.
@@ -36,17 +37,20 @@
 #define	_LINUXKPI_LINUX_IF_ETHER_H_
 
 #include <linux/types.h>
+#include <linux/skbuff.h>
 
 #include <net/ethernet.h>
 
-#define ETH_HLEN	ETHER_HDR_LEN   /* Total octets in header. */
-#ifndef ETH_ALEN
-#define ETH_ALEN	ETHER_ADDR_LEN
+#define	ETH_HLEN	ETHER_HDR_LEN   /* Total octets in header. */
+#ifndef	ETH_ALEN
+#define	ETH_ALEN	ETHER_ADDR_LEN
 #endif
+#define	ETH_DATA_LEN	ETHERMTU
 #define	ETH_FRAME_LEN	(ETHER_MAX_LEN - ETHER_CRC_LEN)
-#define ETH_FCS_LEN     4		/* Octets in the FCS */
-#define VLAN_HLEN       4		/* The additional bytes (on top of the Ethernet header)
-					 * that VLAN requires. */
+#define	ETH_MIN_MTU	68
+#define	ETH_FCS_LEN     4		/* Octets in the FCS */
+#define	ETH_FRAME_LEN	(ETHER_MAX_LEN - ETHER_CRC_LEN)
+#define	ETH_MIN_MTU	68
 /*
  * defined Ethernet Protocol ID's.
  */
@@ -64,11 +68,20 @@
 #define	ETH_P_802_3_MIN	0x05DD		/* See comment in sys/net/ethernet.h */
 #define	ETH_P_LINK_CTL	0x886C		/* ITU-T G.989.2 */
 #define	ETH_P_TDLS	0x890D		/* 802.11z-2010, see wpa. */
+#define	ETH_P_BATMAN	0x4305		/* B.A.T.M.A.N.-Advanced */
 
 struct ethhdr {
 	uint8_t		h_dest[ETH_ALEN];
 	uint8_t		h_source[ETH_ALEN];
 	uint16_t	h_proto;
 } __packed;
+
+static inline struct ethhdr *
+eth_hdr(struct sk_buff const *skb)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
 
 #endif	/* _LINUXKPI_LINUX_IF_ETHER_H_ */

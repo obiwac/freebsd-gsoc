@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  *
  * Copyright (c) 2020 The FreeBSD Foundation
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -33,8 +34,9 @@
 #ifndef	_LINUXKPI_NET_ADDRCONF_H
 #define	_LINUXKPI_NET_ADDRCONF_H
 
-#include <sys/types.h>
+#include <linux/skbuff.h>
 #include <netinet/in.h>
+#include <sys/types.h>
 
 static __inline void
 addrconf_addr_solict_mult(struct in6_addr *ia6, struct in6_addr *sol)
@@ -46,6 +48,22 @@ addrconf_addr_solict_mult(struct in6_addr *ia6, struct in6_addr *sol)
 	sol->s6_addr32[2] = IPV6_ADDR_INT32_ONE;
 	sol->s6_addr32[3] = ia6->s6_addr32[3];
 	sol->s6_addr8[12] = 0xff;
+}
+
+static inline int
+ipv6_mc_check_mld(struct sk_buff *skb)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (-1);
+}
+
+static inline bool
+ipv6_addr_is_ll_all_nodes(struct in6_addr const *addr)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (false);
 }
 
 #endif	/* _LINUXKPI_NET_ADDRCONF_H */

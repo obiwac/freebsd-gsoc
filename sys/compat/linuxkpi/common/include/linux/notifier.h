@@ -31,15 +31,15 @@
 #ifndef	_LINUXKPI_LINUX_NOTIFIER_H_
 #define	_LINUXKPI_LINUX_NOTIFIER_H_
 
-#include <sys/types.h>
 #include <sys/eventhandler.h>
+#include <sys/types.h>
 
 #define	NOTIFY_DONE		0
 #define	NOTIFY_OK		0x0001
 #define	NOTIFY_STOP_MASK	0x8000
 #define	NOTIFY_BAD		(NOTIFY_STOP_MASK | 0x0002)
 
-enum {
+enum netdev_cmd {
 	NETDEV_CHANGE,
 	NETDEV_UP,
 	NETDEV_DOWN,
@@ -47,7 +47,12 @@ enum {
 	NETDEV_UNREGISTER,
 	NETDEV_CHANGEADDR,
 	NETDEV_CHANGEIFADDR,
-	LINUX_NOTIFY_TAGS		/* must be last */
+	NETDEV_GOING_DOWN,
+	NETDEV_PRE_TYPE_CHANGE,
+	NETDEV_POST_TYPE_CHANGE,
+	NETDEV_CHANGEMTU,
+	NETDEV_CHANGEUPPER,
+	LINUX_NOTIFY_TAGS,
 };
 
 struct notifier_block {

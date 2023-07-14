@@ -37,8 +37,10 @@
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 #define	__LITTLE_ENDIAN
+#define	__LITTLE_ENDIAN_BITFIELD
 #else
 #define	__BIG_ENDIAN
+#define	__BIG_ENDIAN_BITFIELD
 #endif
 
 #define	__cpu_to_le64(x)	htole64(x)

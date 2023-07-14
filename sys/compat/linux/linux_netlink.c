@@ -349,7 +349,11 @@ rtnl_newlink_to_linux(struct nlmsghdr *hdr, struct nlpcb *nlp,
 	/* Convert interface type */
 	switch (ifinfo->ifi_type) {
 	case IFT_ETHER:
+	case IFT_BATMAN:
 		ifinfo->ifi_type = LINUX_ARPHRD_ETHER;
+		break;
+	case IFT_LOOP:
+		ifinfo->ifi_type = LINUX_ARPHRD_LOOPBACK;
 		break;
 	}
 	ifinfo->ifi_flags = rtnl_if_flags_to_linux(ifinfo->ifi_flags);

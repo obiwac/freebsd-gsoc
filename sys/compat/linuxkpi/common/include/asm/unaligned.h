@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  *
  * Copyright (c) 2020,2023 The FreeBSD Foundation
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -97,5 +98,14 @@ get_unaligned_be64(const void *p)
 
 	return (be64_to_cpup((const __be64 *)p));
 }
+
+#define	get_unaligned(ptr)	({		\
+	struct {				\
+		typeof(*(ptr))	x;		\
+	} __attribute__((packed)) const *	\
+	nptr = __DECONST(void *, (ptr));	\
+						\
+	nptr->x;				\
+})
 
 #endif	/* _LINUXKPI_ASM_UNALIGNED_H */

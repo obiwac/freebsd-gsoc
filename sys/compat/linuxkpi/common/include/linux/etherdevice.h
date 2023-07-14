@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 2015-2016 Mellanox Technologies, Ltd. All rights reserved.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,8 +28,10 @@
 #ifndef _LINUXKPI_LINUX_ETHERDEVICE_H_
 #define	_LINUXKPI_LINUX_ETHERDEVICE_H_
 
-#include <linux/types.h>
 #include <linux/device.h>
+#include <linux/skbuff.h>
+#include <linux/types.h>
+#include <linux/netdevice.h>
 
 #include <sys/random.h>
 #include <sys/libkern.h>
@@ -129,6 +132,39 @@ device_get_mac_address(struct device *dev, char *dst)
 
 	/* XXX get mac address from FDT? */
 	return (-ENOENT);
+}
+
+static inline __be16
+eth_type_trans(struct sk_buff *skb, struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (0);
+}
+
+static inline void
+eth_hw_addr_set(struct net_device *dev, u8 const *addr)
+{
+
+	dev->addr_len = ETHER_ADDR_LEN;
+	ether_addr_copy(dev->dev_addr, addr);
+}
+
+static inline int
+eth_validate_addr(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (-1);
+}
+
+static inline void
+eth_hw_addr_random(struct net_device *dev)
+{
+	uint8_t ether[ETHER_ADDR_LEN];
+
+	random_ether_addr(ether);
+	eth_hw_addr_set(dev, ether);
 }
 
 #endif					/* _LINUXKPI_LINUX_ETHERDEVICE_H_ */

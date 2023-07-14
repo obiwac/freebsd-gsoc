@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2020-2023 The FreeBSD Foundation
  * Copyright (c) 2021-2023 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -176,6 +177,8 @@ struct sk_buff {
 	uint8_t			*end;			/* End of buffer. */
 
 	struct skb_shared_info	*shinfo;
+	int			skb_iif;
+	uint32_t		mark;
 
 	/* FreeBSD specific bandaid (see linuxkpi_kfree_skb). */
 	void			*m;
@@ -720,11 +723,11 @@ skb_queue_prev(struct sk_buff_head *q, struct sk_buff *skb)
 /* -------------------------------------------------------------------------- */
 
 static inline struct sk_buff *
-skb_copy(struct sk_buff *skb, gfp_t gfp)
+skb_copy(struct sk_buff const *skb, gfp_t gfp)
 {
 	struct sk_buff *new;
 
-	new = linuxkpi_skb_copy(skb, gfp);
+	new = linuxkpi_skb_copy(__DECONST(struct sk_buff *, skb), gfp);
 	SKB_TRACE2(skb, new);
 	return (new);
 }
@@ -978,9 +981,17 @@ csum_unfold(__sum16 sum)
 	return (sum);
 }
 
-static __inline void
-skb_postpush_rcsum(struct sk_buff *skb, const void *data, size_t len)
+static inline void
+skb_postpull_rcsum(struct sk_buff *skb, void const *start, unsigned int len)
 {
+
+	SKB_TODO();
+}
+
+static inline void
+skb_postpush_rcsum(struct sk_buff *skb, void const *start, unsigned int len)
+{
+
 	SKB_TODO();
 }
 
@@ -1072,5 +1083,163 @@ skb_mark_for_recycle(struct sk_buff *skb)
 
 #define	SKB_WITH_OVERHEAD(_s)						\
 	(_s) - ALIGN(sizeof(struct skb_shared_info), CACHE_LINE_SIZE)
+
+static inline struct sk_buff *
+skb_copy_expand(struct sk_buff const *skb, int newheadroom, int newtailroom, gfp_t priority)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+#define	NET_IP_ALIGN	2
+
+static inline void
+skb_reset_network_header(struct sk_buff *skb)
+{
+
+	SKB_TODO();
+}
+
+static inline struct sk_buff *
+netdev_alloc_skb_ip_align(struct net_device *dev, unsigned int length)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline struct sk_buff *
+skb_clone(struct sk_buff *skb, gfp_t priority)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline void * __must_check
+skb_header_pointer(struct sk_buff const *skb, int offset, int len, void *buffer)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline bool
+pskb_may_pull(struct sk_buff *skb, unsigned int len)
+{
+
+	SKB_TODO();
+	return (false);
+}
+
+static inline struct sk_buff *
+pskb_copy_for_clone(struct sk_buff *skb, gfp_t gfp_mask)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline void
+skb_set_network_header(struct sk_buff *skb, int offset)
+{
+
+	skb_reset_network_header(skb);
+	SKB_TODO();
+}
+
+static inline int
+skb_network_offset(struct sk_buff const *skb)
+{
+
+	return (skb_network_header(__DECONST(struct sk_buff *, skb)) - skb->data);
+}
+
+static inline void
+skb_set_transport_header(struct sk_buff *skb, int offset)
+{
+
+	skb_reset_transport_header(skb);
+	SKB_TODO();
+}
+
+static inline int
+skb_transport_offset(struct sk_buff const *skb)
+{
+
+	return (skb_transport_header(__DECONST(struct sk_buff *, skb)) - skb->data);
+}
+
+static inline void
+skb_split(struct sk_buff *skb, struct sk_buff *skb1, u32 len)
+{
+
+	SKB_TODO();
+}
+
+static inline bool
+skb_has_frag_list(struct sk_buff const *skb)
+{
+
+	return (skb_shinfo(__DECONST(struct sk_buff *, skb))->frag_list != NULL);
+}
+
+static inline int
+skb_cow(struct sk_buff *skb, unsigned int headroom)
+{
+
+	SKB_TODO();
+	return (-1);
+}
+
+static inline int
+skb_cow_head(struct sk_buff *skb, unsigned int headroom)
+{
+
+	SKB_TODO();
+	return (-1);
+}
+
+static inline struct sk_buff *
+skb_share_check(struct sk_buff *skb, gfp_t pri)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+struct skb_seq_state {
+};
+
+static inline void
+skb_prepare_seq_read(struct sk_buff *skb, unsigned int from, unsigned int to, struct skb_seq_state *st)
+{
+
+	SKB_TODO();
+}
+
+static inline unsigned int
+skb_seq_read(unsigned int consumed, u8 const **data, struct skb_seq_state *st)
+{
+
+	SKB_TODO();
+	return (0);
+}
+
+static inline void *
+skb_pull_rcsum(struct sk_buff *skb, unsigned int len)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline void
+nf_reset_ct(struct sk_buff *skb)
+{
+
+	SKB_TODO();
+}
 
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */
