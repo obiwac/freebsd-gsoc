@@ -1534,6 +1534,14 @@ setifname(if_ctx *ctx, const char *val, int dummy __unused)
 	free(newname);
 }
 
+#ifndef WITHOUT_NETLINK
+static void
+setifmaster(if_ctx *ctx, const char *master, int dummy __unused)
+{
+	setifmaster_nl(ctx, master);
+}
+#endif
+
 static void
 setifdescr(if_ctx *ctx, const char *val, int dummy __unused)
 {
@@ -2034,6 +2042,9 @@ static struct cmd basic_cmds[] = {
 	DEF_CMD("noicmp",	IFF_LINK1,	setifflags),
 	DEF_CMD_ARG("mtu",			setifmtu),
 	DEF_CMD_ARG("name",			setifname),
+#ifndef WITHOUT_NETLINK
+	DEF_CMD_ARG("master",			setifmaster),
+#endif
 };
 
 static __constructor void

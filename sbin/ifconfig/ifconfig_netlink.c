@@ -470,3 +470,24 @@ list_interfaces_nl(struct ifconfig_args *args)
 	snl_free(&ss);
 }
 
+void
+setifmaster_nl(if_ctx *ctx, const char *master)
+{
+	struct snl_writer nw = {};
+	snl_init_writer(ctx->io_ss, &nw);
+
+	struct nlmsghdr *const hdr = snl_create_msg_request(&nw, RTM_NEWLINK);
+	hdr->nlmsg_flags |= NLM_F_DUMP;
+	snl_reserve_msg_object(&nw, struct ifinfomsg);
+
+	snl_add_msg_attr_string(&nw, IFLA_IFNAME, name);
+
+	uint32_t const master_index = if_nametoindex(master);
+	snl_add_msg_attr_u32(&nw, IFLA_MASTER, master_index);
+
+	if (snl_finalize_msg(&nw) == NULL) {
+		return;
+	}
+
+	snl_send_message(ctx->io_ss, hdr);
+}
