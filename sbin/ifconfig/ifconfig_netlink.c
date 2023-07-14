@@ -485,9 +485,8 @@ setifmaster_nl(if_ctx *ctx, const char *master)
 	uint32_t const master_index = if_nametoindex(master);
 	snl_add_msg_attr_u32(&nw, IFLA_MASTER, master_index);
 
-	if (snl_finalize_msg(&nw) == NULL) {
+	if (snl_finalize_msg(&nw) == NULL)
 		return;
-	}
 
 	snl_send_message(ctx->io_ss, hdr);
 }

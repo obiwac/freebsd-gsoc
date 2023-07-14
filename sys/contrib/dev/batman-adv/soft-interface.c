@@ -1111,6 +1111,13 @@ static void batadv_softif_destroy_netlink(struct net_device *soft_iface,
  */
 bool batadv_softif_is_valid(const struct net_device *net_dev)
 {
+#if defined(__FreeBSD__)
+	struct ifnet const* const ifp = (void const*)net_dev;
+
+	if (!IFT_IS_LINUX(ifp->if_type))
+		return false;
+#endif
+
 	if (net_dev->netdev_ops->ndo_start_xmit == batadv_interface_tx)
 		return true;
 

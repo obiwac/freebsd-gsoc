@@ -761,7 +761,7 @@ netdev_master_upper_dev_link(struct net_device *dev, struct net_device *upper_de
 {
 
 	pr_debug("%s: TODO\n", __func__);
-	return (-1);
+	return (0);
 }
 
 static inline void
