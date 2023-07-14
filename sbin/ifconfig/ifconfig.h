@@ -290,6 +290,7 @@ void	list_interfaces_nl(struct ifconfig_args *args);
 int	ifconfig_nl(if_ctx *ctx, int iscreate,
 		const struct afswtch *uafp);
 uint32_t if_nametoindex_nl(struct snl_state *ss, const char *ifname);
+void	setifmaster_nl(if_ctx *ctx, const char *master);
 
 /*
  * XXX expose this so modules that need to know of any pending
