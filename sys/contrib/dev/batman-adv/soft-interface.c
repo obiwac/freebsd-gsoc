@@ -833,6 +833,15 @@ static int batadv_softif_slave_add(struct net_device *dev,
 				   struct net_device *slave_dev,
 				   struct netlink_ext_ack *extack)
 {
+	// TODO in lieu of a better solution...
+
+#if defined(__FreeBSD__)
+	struct ifnet *ifp;
+
+	CK_STAILQ_FOREACH(ifp, &V_ifnet, if_link)
+		EVENTHANDLER_INVOKE(ifnet_arrival_event, ifp);
+#endif
+
 	struct batadv_hard_iface *hard_iface;
 	int ret = -EINVAL;
 
