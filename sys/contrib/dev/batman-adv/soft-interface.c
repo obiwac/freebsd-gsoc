@@ -1181,6 +1181,15 @@ static void batadv_softif_init(void *idk)
 	pr_debug("TODO: %s(%p)\n", __func__, idk);
 }
 
+static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
+{
+	struct net_device *const dev = (void *)ifp;
+
+	printf("%s: TODO, send %p to %p over %s\n", __func__, m, dst, dev->name);
+
+	return dev->netdev_ops->ndo_start_xmit(NULL /* TODO */, dev);
+}
+
 static int batadv_softif_ifc_match_linux(struct if_clone *ifc, char const *name)
 {
 	if (strncmp(name, "bat", 3) != 0)
@@ -1241,6 +1250,8 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	eth_broadcast_addr(dev->broadcast);
 	ifp->if_broadcastaddr = dev->broadcast;
 
+	if_setoutputfn(ifp, batadv_softif_output);
+
 	*ifpp = ifp;
 
 	return 0;
@@ -1269,7 +1280,7 @@ static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 
 	int err = batadv_softif_ifc_create(ifc, name, len, &ifd_new, &ifd->ifp);
 
-	/*
+	/* TODO
 	struct nl_parsed_link *lattrs = ifd->lattrs;
 	struct net_device *dev = (struct net_device*)ifd->ifp;
 
