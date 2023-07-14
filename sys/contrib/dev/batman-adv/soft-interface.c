@@ -1165,7 +1165,7 @@ static void batadv_softif_init(void *idk)
 	pr_debug("TODO: %s(%p)\n", __func__, idk);
 }
 
-static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
+static int batadv_softif_ifc_match_linux(struct if_clone *ifc, char const *name)
 {
 	if (strncmp(name, "bat", 3) != 0)
 		return 0;
@@ -1176,6 +1176,27 @@ static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
 	}
 
 	return 1;
+}
+
+static int batadv_softif_ifc_match_fbsd(struct if_clone *ifc, char const *name)
+{
+	if (strncmp(name, "batadv", 6) != 0)
+		return 0;
+
+	for (char const *cp = name + 6; *cp != '\0'; cp++) {
+		if (*cp < '0' || *cp > '9')
+			return 0;
+	}
+
+	return 1;
+}
+
+static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
+{
+	bool const matches_linux = batadv_softif_ifc_match_linux(ifc, name);
+	bool const matches_fbsd = batadv_softif_ifc_match_fbsd(ifc, name);
+
+	return matches_linux || matches_fbsd;
 }
 
 static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len,
