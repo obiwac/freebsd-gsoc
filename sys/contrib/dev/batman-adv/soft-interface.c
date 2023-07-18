@@ -211,6 +211,8 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 	/* reset control block to avoid left overs from previous users */
 	memset(skb->cb, 0, sizeof(struct batadv_skb_cb));
 
+	// TODO replace with netdev_start_xmit
+
 	netif_trans_update(soft_iface);
 	vid = batadv_get_vid(skb, 0);
 
@@ -1181,13 +1183,31 @@ static void batadv_softif_init(void *idk)
 	pr_debug("TODO: %s(%p)\n", __func__, idk);
 }
 
+static void batadv_softif_free_skb_mbuf(void *p) {
+	struct mbuf *m = p;
+
+	if (m == NULL)
+		return;
+
+	m_freem(m);
+}
+
 static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
 {
 	struct net_device *const dev = (void *)ifp;
 
 	printf("%s: TODO, send %p to %p over %s\n", __func__, m, dst, dev->name);
 
-	return dev->netdev_ops->ndo_start_xmit(NULL /* TODO */, dev);
+	/* Create struct sk_buff from mbuf. */
+
+	struct sk_buff *skb = dev_alloc_skb(m->m_pkthdr.len);
+	if (skb == NULL)
+		return -1;
+
+	skb->m = m;
+	skb->m_free_func = batadv_softif_free_skb_mbuf;
+
+	return dev->netdev_ops->ndo_start_xmit(skb, dev);
 }
 
 static int batadv_softif_ifc_match_linux(struct if_clone *ifc, char const *name)
