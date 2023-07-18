@@ -80,8 +80,8 @@ static inline struct ethhdr *
 eth_hdr(struct sk_buff const *skb)
 {
 
-	pr_debug("%s: TODO\n", __func__);
-	return (NULL);
+	struct ethhdr *const ethhdr = __DECONST(void *, skb_mac_header(skb));
+	return (ethhdr);
 }
 
 #endif	/* _LINUXKPI_LINUX_IF_ETHER_H_ */
