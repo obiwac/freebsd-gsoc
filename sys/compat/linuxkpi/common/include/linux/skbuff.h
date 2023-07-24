@@ -160,14 +160,14 @@ struct sk_buff {
 	uint32_t		truesize;	/* The total size of all buffers, incl. frags. */
 	uint16_t		mac_len;	/* Link-layer header length. */
 	__sum16			csum;
-	uint16_t		l3hdroff;	/* network header offset from *head */
-	uint16_t		l4hdroff;	/* transport header offset from *head */
 	uint32_t		priority;
 	uint16_t		qmap;		/* queue mapping */
 	uint16_t		_flags;		/* Internal flags. */
 #define	_SKB_FLAGS_SKBEXTFRAG	0x0001
 	enum sk_buff_pkt_type	pkt_type;
-	uint16_t		mac_header;	/* offset of mac_header */
+	uint16_t		mac_header;		/* link header offset from *head */
+	uint16_t		network_header;		/* network header offset from *head */
+	uint16_t		transport_header;	/* transport header offset from *head */
 
 	/* "Scratch" area for layers to store metadata. */
 	/* ??? I see sizeof() operations so probably an array. */
@@ -878,20 +878,12 @@ skb_queue_splice_tail_init(struct sk_buff_head *from, struct sk_buff_head *to)
 	__skb_queue_head_init(from);
 }
 
-static inline void
-skb_reset_transport_header(struct sk_buff *skb)
-{
-
-	SKB_TRACE(skb);
-	skb->l4hdroff = skb->data - skb->head;
-}
-
 static inline uint8_t *
 skb_transport_header(struct sk_buff *skb)
 {
 
 	SKB_TRACE(skb);
-        return (skb->head + skb->l4hdroff);
+        return (skb->head + skb->transport_header);
 }
 
 static inline uint8_t *
@@ -899,7 +891,7 @@ skb_network_header(struct sk_buff *skb)
 {
 
 	SKB_TRACE(skb);
-        return (skb->head + skb->l3hdroff);
+        return (skb->head + skb->network_header);
 }
 
 static inline bool
@@ -977,6 +969,36 @@ skb_set_mac_header(struct sk_buff *skb, const size_t len)
 	SKB_TRACE(skb);
 	skb_reset_mac_header(skb);
 	skb->mac_header += len;
+}
+
+static inline void
+skb_reset_network_header(struct sk_buff *skb)
+{
+	SKB_TRACE(skb);
+	skb->network_header = skb->data - skb->head;
+}
+
+static inline void
+skb_set_network_header(struct sk_buff *skb, int len)
+{
+	SKB_TRACE(skb);
+	skb_reset_network_header(skb);
+	skb->network_header += len;
+}
+
+static inline void
+skb_reset_transport_header(struct sk_buff *skb)
+{
+	SKB_TRACE(skb);
+	skb->transport_header = skb->data - skb->head;
+}
+
+static inline void
+skb_set_transport_header(struct sk_buff *skb, int len)
+{
+	SKB_TRACE(skb);
+	skb_reset_transport_header(skb);
+	skb->transport_header += len;
 }
 
 static inline struct skb_shared_hwtstamps *
@@ -1121,13 +1143,6 @@ skb_copy_expand(struct sk_buff const *skb, int newheadroom, int newtailroom, gfp
 
 #define	NET_IP_ALIGN	2
 
-static inline void
-skb_reset_network_header(struct sk_buff *skb)
-{
-
-	SKB_TODO();
-}
-
 static inline struct sk_buff *
 netdev_alloc_skb_ip_align(struct net_device *dev, unsigned int length)
 {
@@ -1168,27 +1183,11 @@ pskb_copy_for_clone(struct sk_buff *skb, gfp_t gfp_mask)
 	return (NULL);
 }
 
-static inline void
-skb_set_network_header(struct sk_buff *skb, int offset)
-{
-
-	skb_reset_network_header(skb);
-	SKB_TODO();
-}
-
 static inline int
 skb_network_offset(struct sk_buff const *skb)
 {
 
 	return (skb_network_header(__DECONST(struct sk_buff *, skb)) - skb->data);
-}
-
-static inline void
-skb_set_transport_header(struct sk_buff *skb, int offset)
-{
-
-	skb_reset_transport_header(skb);
-	SKB_TODO();
 }
 
 static inline int
