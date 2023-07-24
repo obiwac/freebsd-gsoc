@@ -1289,6 +1289,10 @@ static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const 
 	return dev->netdev_ops->ndo_start_xmit(skb, dev);
 }
 
+static void batadv_softif_input(if_t ifp, struct mbuf *m) {
+	printf("%s: TODO\n", __func__);
+}
+
 static int batadv_softif_ifc_match_linux(struct if_clone *ifc, char const *name)
 {
 	if (strncmp(name, "bat", 3) != 0)
@@ -1349,7 +1353,14 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	eth_broadcast_addr(dev->broadcast);
 	ifp->if_broadcastaddr = dev->broadcast;
 
+	/*
+	 * Transmission is handled by batadv_softif_output;
+	 * no need to register an ifp->if_transmit.
+	 */
+
 	if_setoutputfn(ifp, batadv_softif_output);
+	if_setinputfn(ifp, batadv_softif_input);
+	// TODO if_setqflushfn?
 
 	*ifpp = ifp;
 
