@@ -1253,17 +1253,38 @@ linuxkpi_skb_from_mbuf(struct mbuf *m)
 static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
 {
 	struct net_device *const dev = (void *)ifp;
+	sa_family_t af;
 
-	printf("%s: TODO, send %p to %p over %s\n", __func__, m, dst, dev->name);
+	if (dst->sa_family == AF_UNSPEC)
+		memcpy(&af, &dst->sa_family, sizeof af);
+	else
+		af = RO_GET_FAMILY(ro, dst);
+	m->m_pkthdr.csum_data = af;
 
-	/* Create struct sk_buff from mbuf. */
+	printf("%s: TODO, send %p to [%d, %d] over %s\n", __func__, m, dst->sa_family, dst->sa_len, dev->name);
 
-	struct sk_buff *skb = dev_alloc_skb(m->m_pkthdr.len);
+	/* Create sk_buff from mbuf. */
+
+#if 0
+	/* TODO How much headroom do we need? */
+
+	struct sk_buff *const skb = dev_alloc_skb(m->m_pkthdr.len);
 	if (skb == NULL)
 		return -1;
 
+	// skb_set_mac_header(skb, -ETH_HLEN);
+
+	skb_reset_mac_header(skb);
+	struct ethhdr *const ethhdr = eth_hdr(skb);
+	memcpy(ethhdr, dst->sa_data, ETH_HLEN);
+#else
+	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(m);
+	if (skb == NULL)
+		return -1;
+#endif
+
 	skb->m = m;
-	skb->m_free_func = batadv_softif_free_skb_mbuf;
+	skb->m_free_func = NULL; /* We don't want to free this because mbuf may still be used for retransmission. */
 
 	return dev->netdev_ops->ndo_start_xmit(skb, dev);
 }
