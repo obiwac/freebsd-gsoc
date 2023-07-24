@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2020-2022 The FreeBSD Foundation
  * Copyright (c) 2021-2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -128,6 +129,7 @@ linuxkpi_alloc_skb(size_t size, gfp_t gfp)
 	skb->prev = skb->next = skb;
 
 	skb->shinfo = (struct skb_shared_info *)(skb->end);
+	memset(skb->shinfo, 0, sizeof *skb->shinfo);
 
 	SKB_TRACE_FMT(skb, "data %p size %zu", (skb) ? skb->data : NULL, size);
 	return (skb);
@@ -178,7 +180,6 @@ linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
 	struct sk_buff *new;
 	struct skb_shared_info *shinfo;
 	size_t len;
-	unsigned int headroom;
 
 	/* Full buffer size + any fragments. */
 	len = skb->end - skb->head + skb->data_len;
@@ -187,13 +188,18 @@ linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
 	if (new == NULL)
 		return (NULL);
 
-	headroom = skb_headroom(skb);
-	/* Fixup head and end. */
-	skb_reserve(new, headroom);	/* data and tail move headroom forward. */
-	skb_put(new, skb->len);		/* tail and len get adjusted */
+	// headroom = skb_headroom(skb);
+	// /* Fixup head and end. */
+	// skb_reserve(new, headroom);	/* data and tail move headroom forward. */
+	// skb_put(new, skb->len);		/* tail and len get adjusted */
 
-	/* Copy data. */
-	memcpy(new->head, skb->data - headroom, headroom + skb->len);
+	// /* Copy data. */
+	// memcpy(new->head, skb->data - headroom, headroom + skb->len);
+
+	new->data = new->head + (skb->data - skb->head);
+	new->tail = new->head + (skb->tail - skb->head);
+
+	memcpy(new->head, skb->head, skb->end - skb->head);
 
 	/* Deal with fragments. */
 	shinfo = skb->shinfo;
