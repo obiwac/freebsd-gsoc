@@ -737,6 +737,13 @@ consume_skb(struct sk_buff *skb)
 {
 	SKB_TRACE(skb);
 	SKB_TODO();
+
+	/*
+	 * XXX Until we implement skb_clone properly, we can't really free
+	 * skb's as they may still be in use.
+	 */
+
+	kfree_skb(skb);
 }
 
 static inline uint16_t
