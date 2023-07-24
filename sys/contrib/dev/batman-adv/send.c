@@ -906,6 +906,10 @@ static bool batadv_send_no_broadcast(struct batadv_priv *bat_priv,
 		   bcast_packet->orig,
 		   if_out->net_dev->name, type);
 
+	/* XXX Temporary exception; still send packet if no neighbour. */
+	if (strcmp(type, "no neighbor") == 0)
+		return false;
+
 	return true;
 }
 
