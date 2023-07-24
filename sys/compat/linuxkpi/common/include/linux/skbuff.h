@@ -1128,9 +1128,15 @@ netdev_alloc_skb_ip_align(struct net_device *dev, unsigned int length)
 static inline struct sk_buff *
 skb_clone(struct sk_buff *skb, gfp_t priority)
 {
+	/* XXX This is temporary - implement proper cloning in fine! */
+	struct sk_buff *const newskb = skb_copy(skb, priority);
 
 	SKB_TODO();
-	return (NULL);
+
+	newskb->m = skb->m;
+	newskb->m_free_func = skb->m_free_func;
+
+	return (newskb);
 }
 
 static inline void * __must_check
