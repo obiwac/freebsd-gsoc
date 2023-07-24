@@ -353,8 +353,21 @@ send:
 		/* hw address of first interface is the orig mac because only
 		 * this mac is known throughout the mesh
 		 */
+#if defined(__FreeBSD__)
+		if_t const ifp = __DECONST(if_t, primary_if->net_dev);
+		struct ifaddr *const ifa = ifp->if_addr;
+
+		struct sockaddr_dl *const sdl = __DECONST(struct sockaddr_dl *, ifa->ifa_addr);
+		ether_addr_copy(bcast_packet->orig, LLADDR(sdl));
+#else
 		ether_addr_copy(bcast_packet->orig,
 				primary_if->net_dev->dev_addr);
+#endif
+
+		printf("%s: bcast_packet->orig = ", __func__);
+		for (size_t i = 0; i < ETH_ALEN; i++)
+			printf("%x:", bcast_packet->orig[i]);
+		printf("\b\n");
 
 		/* set broadcast sequence number */
 		seqno = atomic_inc_return(&bat_priv->bcast_seqno);
@@ -777,7 +790,7 @@ static int batadv_softif_init_late(struct net_device *dev)
 	atomic_set(&bat_priv->orig_interval, 1000);
 	atomic_set(&bat_priv->hop_penalty, 30);
 #ifdef CONFIG_BATMAN_ADV_DEBUG
-	atomic_set(&bat_priv->log_level, 0);
+	atomic_set(&bat_priv->log_level, 255 /* BATADV_DBG_ALL */);
 #endif
 	atomic_set(&bat_priv->fragmentation, 1);
 	atomic_set(&bat_priv->packet_size_max, ETH_DATA_LEN);
