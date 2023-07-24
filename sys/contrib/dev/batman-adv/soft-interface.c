@@ -1370,8 +1370,12 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 static int batadv_softif_ifc_destroy(struct if_clone *ifc, struct ifnet *ifp,
 				     uint32_t flags)
 {
-	pr_debug("%s: TODO\n", __func__);
-	return -1;
+	printf("%s: TODO\n", __func__);
+
+	if_detach(ifp);
+	if_free(ifp); /* XXX Is the interface freed by the caller or by us? */
+
+	return 0;
 }
 
 #include <netlink/route/route_var.h>
