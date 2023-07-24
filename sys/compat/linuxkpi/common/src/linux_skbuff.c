@@ -207,6 +207,12 @@ linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
 	memcpy(new->cb, skb->cb, sizeof(skb->cb));
 	SKB_IMPROVE("more header fields to copy?");
 
+	new->mac_header = skb->mac_header;
+	new->network_header = skb->network_header;
+	new->transport_header = skb->transport_header;
+
+	printf("%s: %x\n", __func__, *new->data);
+
 	return (new);
 }
 
@@ -291,8 +297,8 @@ DB_SHOW_COMMAND(skb, db_show_skb)
 	db_printf("\t_alloc_len %u len %u data_len %u truesize %u mac_len %u\n",
 	    skb->_alloc_len, skb->len, skb->data_len, skb->truesize,
 	    skb->mac_len);
-	db_printf("\tcsum %#06x l3hdroff %u l4hdroff %u priority %u qmap %u\n",
-	    skb->csum, skb->l3hdroff, skb->l4hdroff, skb->priority, skb->qmap);
+	db_printf("\tcsum %#06x network_header %u transport_header %u priority %u qmap %u\n",
+	    skb->csum, skb->network_header, skb->transport_header, skb->priority, skb->qmap);
 	db_printf("\tpkt_type %d dev %p sk %p\n",
 	    skb->pkt_type, skb->dev, skb->sk);
 	db_printf("\tcsum_offset %d csum_start %d ip_summed %d protocol %d\n",
