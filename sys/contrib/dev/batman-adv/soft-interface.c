@@ -223,6 +223,7 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 
 	proto = ethhdr->h_proto;
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 0
 	switch (ntohs(proto)) {
 	case ETH_P_8021Q:
 		if (!pskb_may_pull(skb, sizeof(*vhdr)))
@@ -241,10 +242,12 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 		goto dropped;
 	}
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 1
 	skb_set_network_header(skb, network_offset);
 
 	if (batadv_bla_tx(bat_priv, skb, vid))
 		goto dropped;
+	printf("%s: %d\n", __func__, __COUNTER__); // 2
 
 	/* skb->data might have been reallocated by batadv_bla_tx() */
 	ethhdr = eth_hdr(skb);
@@ -258,6 +261,7 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 		if (!client_added)
 			goto dropped;
 	}
+	printf("%s: %d\n", __func__, __COUNTER__); // 3
 
 	/* Snoop address candidates from DHCPACKs for early DAT filling */
 	batadv_dat_snoop_outgoing_dhcp_ack(bat_priv, skb, proto, vid);
@@ -270,11 +274,18 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 	 */
 	if (batadv_compare_eth(ethhdr->h_dest, stp_addr))
 		goto dropped;
+	printf("%s: %d\n", __func__, __COUNTER__); // 4
 
 	if (batadv_compare_eth(ethhdr->h_dest, ectp_addr))
 		goto dropped;
+	printf("%s: %d\n", __func__, __COUNTER__); // 5
 
 	gw_mode = atomic_read(&bat_priv->gw.mode);
+	printf("%s: gw_mode = %d, ethhdr->h_dest = ", __func__, gw_mode);
+	for (size_t i = 0; i < ETH_ALEN; i++)
+		printf("%x:", ethhdr->h_dest[i]);
+	printf("\b, is_multicast_ether_addr = %d\n", is_multicast_ether_addr(ethhdr->h_dest));
+
 	if (is_multicast_ether_addr(ethhdr->h_dest)) {
 		/* if gw mode is off, broadcast every packet */
 		if (gw_mode == BATADV_GW_MODE_OFF) {
@@ -304,6 +315,7 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 			 * directed to a DHCP server
 			 */
 			goto dropped;
+	printf("%s: %d\n", __func__, __COUNTER__); // 6
 
 send:
 		if (do_bcast && !is_broadcast_ether_addr(ethhdr->h_dest)) {
@@ -321,6 +333,7 @@ send:
 				goto dropped;
 			}
 		}
+	printf("%s: %d\n", __func__, __COUNTER__); // 7
 	}
 
 	printf("%s: batadv_skb_set_priority not yet tested, disabled for now\n", __func__);
@@ -331,6 +344,7 @@ send:
 		primary_if = batadv_primary_if_get_selected(bat_priv);
 		if (!primary_if)
 			goto dropped;
+	printf("%s: %d\n", __func__, __COUNTER__); // 8
 
 		/* in case of ARP request, we do not immediately broadcasti the
 		 * packet, instead we first wait for DAT to try to retrieve the
@@ -341,6 +355,7 @@ send:
 
 		if (batadv_skb_head_push(skb, sizeof(*bcast_packet)) < 0)
 			goto dropped;
+	printf("%s: %d\n", __func__, __COUNTER__); // 9
 
 		bcast_packet = (struct batadv_bcast_packet *)skb->data;
 		bcast_packet->version = BATADV_COMPAT_VERSION;
@@ -373,6 +388,12 @@ send:
 		seqno = atomic_inc_return(&bat_priv->bcast_seqno);
 		bcast_packet->seqno = htonl(seqno);
 
+		ssize_t const l = skb->tail - skb->data;
+		printf("%s: done, skbuff now of size %zd\n", __func__, l);
+		for (ssize_t i = 0; i < l; i++)
+			printf("%x ", ((uint8_t*) skb->data)[i]);
+		printf("\n");
+
 		batadv_send_bcast_packet(bat_priv, skb, brd_delay, true);
 	/* unicast packet */
 	} else {
@@ -381,6 +402,7 @@ send:
 			ret = batadv_gw_out_of_range(bat_priv, skb);
 			if (ret)
 				goto dropped;
+	printf("%s: %d\n", __func__, __COUNTER__); // 10
 			ret = batadv_send_skb_via_gw(bat_priv, skb, vid);
 		} else if (forw_mode == BATADV_FORW_UCASTS) {
 			ret = batadv_mcast_forw_send(bat_priv, skb, vid,
@@ -389,6 +411,7 @@ send:
 			if (batadv_dat_snoop_outgoing_arp_request(bat_priv,
 								  skb))
 				goto dropped;
+	printf("%s: %d\n", __func__, __COUNTER__); // 11
 
 			batadv_dat_snoop_outgoing_arp_reply(bat_priv, skb);
 
@@ -397,6 +420,7 @@ send:
 		}
 		if (ret != NET_XMIT_SUCCESS)
 			goto dropped_freed;
+	printf("%s: %d\n", __func__, __COUNTER__); // 12
 	}
 
 	batadv_inc_counter(bat_priv, BATADV_CNT_TX);
@@ -407,6 +431,7 @@ dropped:
 	kfree_skb(skb);
 dropped_freed:
 	batadv_inc_counter(bat_priv, BATADV_CNT_TX_DROPPED);
+	printf("%s: DROPPED\n", __func__);
 end:
 	batadv_hardif_put(primary_if);
 	return NETDEV_TX_OK;
