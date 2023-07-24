@@ -7,6 +7,7 @@
 #if defined(__FreeBSD__)
 #include "opt_netlink.h"
 #include <sys/sockio.h>
+#include <sys/kassert.h>
 #endif
 
 #include "soft-interface.h"
@@ -215,6 +216,7 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 
 	netif_trans_update(soft_iface);
 	vid = batadv_get_vid(skb, 0);
+	KASSERT(vid == BATADV_NO_FLAGS, ("%s: batadv_get_vid not yet tested, returned %u\n", __func__, vid));
 
 	skb_reset_mac_header(skb);
 	ethhdr = eth_hdr(skb);
@@ -321,7 +323,8 @@ send:
 		}
 	}
 
-	batadv_skb_set_priority(skb, 0);
+	printf("%s: batadv_skb_set_priority not yet tested, disabled for now\n", __func__);
+	// batadv_skb_set_priority(skb, 0);
 
 	/* ethernet packet should be broadcasted */
 	if (do_bcast) {
