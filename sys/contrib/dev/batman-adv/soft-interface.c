@@ -1199,13 +1199,30 @@ static void batadv_softif_init(void *idk)
 	pr_debug("TODO: %s(%p)\n", __func__, idk);
 }
 
-static void batadv_softif_free_skb_mbuf(void *p) {
-	struct mbuf *m = p;
+// TODO put me in linux_skbuff.c
 
-	if (m == NULL)
-		return;
+static struct sk_buff *
+linuxkpi_skb_from_mbuf(struct mbuf *m)
+{
+	size_t const payload_len = m_length(m, NULL);
+	size_t const packet_len = ETH_HLEN + payload_len;
+	struct sk_buff *skb;
 
-	m_freem(m);
+	// TODO what should this 128 value be exactly? needed_headroom?
+
+	skb = dev_alloc_skb(128 + packet_len);
+	if (skb == NULL)
+		return (NULL);
+
+	/* Copy over mbuf cluster data. */
+
+	skb->data = skb->head + 128;
+	memcpy(skb->data, m->m_ext.ext_buf, m->m_ext.ext_size);
+	skb->tail = skb->data + packet_len;
+
+	memset(skb->shinfo, 0, sizeof *skb->shinfo); // TODO this should really be done only in linuxkpi_alloc_skb, not sure why it's not working correctly...
+
+	return (skb);
 }
 
 static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
