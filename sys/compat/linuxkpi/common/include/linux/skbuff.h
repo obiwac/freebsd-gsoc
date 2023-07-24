@@ -1202,19 +1202,29 @@ skb_has_frag_list(struct sk_buff const *skb)
 }
 
 static inline int
-skb_cow(struct sk_buff *skb, unsigned int headroom)
+__skb_cow(struct sk_buff *skb, unsigned int headroom, int cloned)
 {
 
-	SKB_TODO();
-	return (-1);
+	if (headroom > skb_headroom(skb))
+		return (pskb_expand_head(skb, ALIGN(headroom - skb_headroom(skb), NET_SKB_PAD), 0, GFP_ATOMIC));
+
+	return (0);
+}
+
+static inline int
+skb_cow(struct sk_buff *skb, unsigned int headroom)
+{
+	/* skb_clone is not implemented yet, so don't worry about the case where the buffer is cloned. */
+
+	return (__skb_cow(skb, headroom, false));
 }
 
 static inline int
 skb_cow_head(struct sk_buff *skb, unsigned int headroom)
 {
+	/* skb_clone is not implemented yet, so don't worry about the case where the buffer is cloned. */
 
-	SKB_TODO();
-	return (-1);
+	return (__skb_cow(skb, headroom, false));
 }
 
 static inline struct sk_buff *
