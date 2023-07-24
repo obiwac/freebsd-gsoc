@@ -20,8 +20,8 @@
 extern int linuxkpi_debug;
 #define pr_debug(fmt, ...)					\
 	do {							\
-		if (linuxkpi_debug)				\
-			log(LOG_DEBUG, fmt, ##__VA_ARGS__);	\
+		/*if (linuxkpi_debug)*/				\
+			printf(fmt, ##__VA_ARGS__);		\
 	} while (0)
 #define pr_devel(fmt, ...) \
 	log(LOG_DEBUG, pr_fmt(fmt), ##__VA_ARGS__)
