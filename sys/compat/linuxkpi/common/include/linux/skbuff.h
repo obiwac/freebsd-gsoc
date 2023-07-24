@@ -1091,7 +1091,6 @@ static inline struct sk_buff *
 napi_build_skb(void *data, size_t len)
 {
 
-	SKB_TRACE(skb);
 	SKB_TODO();
 	return (NULL);
 }
@@ -1151,7 +1150,11 @@ skb_header_pointer(struct sk_buff const *skb, int offset, int len, void *buffer)
 {
 
 	SKB_TODO();
-	return (NULL);
+
+	if (skb_headlen(__DECONST(struct sk_buff *, skb)) - offset >= len)
+		return ((char *)buffer + offset);
+
+	return (buffer);
 }
 
 static inline bool
