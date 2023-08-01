@@ -2,9 +2,9 @@ name: Cross-build Kernel
 
 on:
   push:
-    branches: [ main, 'stable/13' ]
+    branches: [ batman ]
   pull_request:
-    branches: [ main ]
+    branches: [ batman ]
 
 permissions:
   contents: read
