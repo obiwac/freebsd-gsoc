@@ -1227,23 +1227,36 @@ static void batadv_softif_init(void *idk)
 // TODO put me in linux_skbuff.c
 
 static struct sk_buff *
-linuxkpi_skb_from_mbuf(struct mbuf *m)
+linuxkpi_skb_from_mbuf(struct mbuf *m, struct route *ro)
 {
 	size_t const payload_len = m_length(m, NULL);
-	size_t const packet_len = ETH_HLEN + payload_len;
 	struct sk_buff *skb;
 
 	// TODO what should this 128 value be exactly? needed_headroom?
 
-	skb = dev_alloc_skb(128 + packet_len);
+	skb = dev_alloc_skb(128 + payload_len);
 	if (skb == NULL)
 		return (NULL);
 
-	/* Copy over mbuf cluster data. */
-
 	skb->data = skb->head + 128;
-	memcpy(skb->data, m->m_ext.ext_buf, m->m_ext.ext_size);
-	skb->tail = skb->data + packet_len;
+	skb->tail = skb->data + payload_len;
+
+	/*
+	 * XXX This feels quite wrong; surely there must be an easier way to just
+	 * get the whole packet data which would be sent out at the end, i.e. the
+	 * equivalent to skb->data, right?
+	 */
+
+	/* Copy over mbuf cluster data. */
+	if ((m->m_flags & M_EXT) != 0 || (m->m_flags & M_EXTPG) != 0)
+		memcpy(skb->data, m->m_ext.ext_buf, m->m_ext.ext_size);
+
+	/* Otherwise, add ro->ro_prepend. */
+	else {
+		memcpy(skb->data, mtod(m, void *), payload_len);
+		skb->data -= ro->ro_plen;
+		memcpy(skb->data, ro->ro_prepend, ro->ro_plen);
+	}
 
 	memset(skb->shinfo, 0, sizeof *skb->shinfo); // TODO this should really be done only in linuxkpi_alloc_skb, not sure why it's not working correctly...
 
@@ -1278,7 +1291,7 @@ static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const 
 	struct ethhdr *const ethhdr = eth_hdr(skb);
 	memcpy(ethhdr, dst->sa_data, ETH_HLEN);
 #else
-	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(m);
+	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(m, ro);
 	if (skb == NULL)
 		return -1;
 #endif
