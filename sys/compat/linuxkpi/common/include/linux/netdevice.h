@@ -722,6 +722,7 @@ dev_queue_xmit(struct sk_buff *skb)
 	pr_debug("%s: TODO\n", __func__);
 
 	/* Create mbuf from skbuff. */
+	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
 
 	m = m_get3(len, M_WAITOK, MT_DATA, M_PKTHDR);
 	if (m == NULL)
@@ -730,8 +731,8 @@ dev_queue_xmit(struct sk_buff *skb)
 	m->m_len = len - ETH_HLEN;
 
 	memcpy(mtod(m, uint8_t *), skb->data, len);
-	m->m_ext.ext_size = MCLBYTES;
-	memcpy(m->m_ext.ext_buf, skb->data, len);
+	// m->m_ext.ext_size = MCLBYTES;
+	// memcpy(m->m_ext.ext_buf, skb->data, len);
 
 	/* Create destination struct. */
 
