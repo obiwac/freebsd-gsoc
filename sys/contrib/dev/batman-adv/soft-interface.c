@@ -1283,9 +1283,6 @@ static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const 
 		return -1;
 #endif
 
-	skb->m = m;
-	skb->m_free_func = NULL; /* We don't want to free this because mbuf may still be used for retransmission. */
-
 	return dev->netdev_ops->ndo_start_xmit(skb, dev);
 }
 
