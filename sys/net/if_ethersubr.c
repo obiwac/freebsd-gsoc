@@ -837,7 +837,6 @@ ether_input(struct ifnet *ifp, struct mbuf *m)
 		}
 	}
 #endif
-
 	/*
 	 * The drivers are allowed to pass in a chain of packets linked with
 	 * m_nextpkt. We split them up into separate packets here and pass
@@ -846,6 +845,21 @@ ether_input(struct ifnet *ifp, struct mbuf *m)
 	CURVNET_SET_QUIET(ifp->if_vnet);
 	if (__predict_false(needs_epoch))
 		NET_EPOCH_ENTER(et);
+	/*
+	 * If the packet is a BATMAN packet, pass it to the master BATMAN interface.
+	 * Skip if there's no master or it's not BATMAN.
+	 * TODO How do we implement interface masters in FreeBSD? (What about vs. dev_add_pack?)
+	 * TODO Where in this routine should this be done?
+	 */
+	struct ether_header *const eh = mtod(m, struct ether_header *);
+	if (eh->ether_type == htons(ETHERTYPE_BATMAN)) {
+		if_t const master = if_getmaster(ifp);
+
+		if (master != NULL && master->if_type == IFT_BATMAN
+		    && master->if_slavefn)
+			master->if_slavefn(m, ifp, master);
+		return;
+	}
 	while (m) {
 		mn = m->m_nextpkt;
 		m->m_nextpkt = NULL;

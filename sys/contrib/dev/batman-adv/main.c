@@ -448,25 +448,37 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 	if (!skb)
 		goto err_put;
 
-	/* packet should hold at least type and version */
-	if (unlikely(!pskb_may_pull(skb, 2)))
-		goto err_free;
+	printf("%s: %d\n", __func__, __COUNTER__);
+
+	// TODO
+	// /* packet should hold at least type and version */
+	// if (unlikely(!pskb_may_pull(skb, 2)))
+	// 	goto err_free;
+
+	printf("%s: %d\n", __func__, __COUNTER__);
 
 	/* expect a valid ethernet header here. */
 	if (unlikely(skb->mac_len != ETH_HLEN || !skb_mac_header(skb)))
 		goto err_free;
 
+	printf("%s: %d\n", __func__, __COUNTER__);
+
 	if (!hard_iface->soft_iface)
 		goto err_free;
 
 	bat_priv = netdev_priv(hard_iface->soft_iface);
+	printf("%s: %d (check bat_priv->mesh_state = %d)\n", __func__, __COUNTER__, atomic_read(&bat_priv->mesh_state));
 
-	if (atomic_read(&bat_priv->mesh_state) != BATADV_MESH_ACTIVE)
-		goto err_free;
+	// if (atomic_read(&bat_priv->mesh_state) != BATADV_MESH_ACTIVE)
+	// 	goto err_free;
+
+	printf("%s: %d (check hard_iface->if_status = %d)\n", __func__, __COUNTER__, hard_iface->if_status);
 
 	/* discard frames on not active interfaces */
-	if (hard_iface->if_status != BATADV_IF_ACTIVE)
-		goto err_free;
+	// if (hard_iface->if_status != BATADV_IF_ACTIVE)
+	// 	goto err_free;
+
+	printf("%s: %d\n", __func__, __COUNTER__);
 
 	batadv_ogm_packet = (struct batadv_ogm_packet *)skb->data;
 
@@ -477,13 +489,21 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 		goto err_free;
 	}
 
+	printf("%s: %d\n", __func__, __COUNTER__);
+
 	/* reset control block to avoid left overs from previous users */
 	memset(skb->cb, 0, sizeof(struct batadv_skb_cb));
+
+	printf("%s: %d\n", __func__, __COUNTER__);
 
 	idx = batadv_ogm_packet->packet_type;
 	(*batadv_rx_handler[idx])(skb, hard_iface);
 
-	batadv_hardif_put(hard_iface);
+	printf("%s: %d\n", __func__, __COUNTER__);
+
+	printf("%s: TODO: batadv_hardif_put(hard_iface);\n", __func__);
+
+	printf("%s: %d\n", __func__, __COUNTER__);
 
 	/* return NET_RX_SUCCESS in any case as we
 	 * most probably dropped the packet for
@@ -494,10 +514,80 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 err_free:
 	kfree_skb(skb);
 err_put:
-	batadv_hardif_put(hard_iface);
+	printf("%s: TODO: batadv_hardif_put(hard_iface);\n", __func__);
 err_out:
 	return NET_RX_DROP;
 }
+
+#if defined(__FreeBSD__)
+// TODO combine me with the same function in soft-interface.c
+
+static struct sk_buff *
+linuxkpi_skb_from_mbuf(struct mbuf *m, struct route *ro)
+{
+	size_t const payload_len = m_length(m, NULL);
+	struct sk_buff *skb;
+
+	// TODO what should this 128 value be exactly? needed_headroom?
+	// XXX not sure where these 28 bytes are supposed to come from!
+
+	skb = dev_alloc_skb(128 + payload_len + 28);
+	if (skb == NULL)
+		return (NULL);
+
+	skb->data = skb->head + 128;
+	skb->tail = skb->data + payload_len + 28;
+
+	/*
+	 * XXX This feels quite wrong; surely there must be an easier way to just
+	 * get the whole packet data which would be sent out at the end, i.e. the
+	 * equivalent to skb->data, right?
+	 */
+
+	printf("%s: %d\n", __func__, (m->m_flags & M_EXT) != 0 || (m->m_flags & M_EXTPG) != 0);
+
+	/* Copy over mbuf cluster data. */
+	if (0)
+		memcpy(skb->data, m->m_ext.ext_buf, m->m_ext.ext_size);
+
+	/* Otherwise, add ro->ro_prepend. */
+	else {
+		memcpy(skb->data, mtod(m, void *), payload_len);
+
+		if (ro != NULL) {
+			skb->data -= ro->ro_plen;
+			memcpy(skb->data, ro->ro_prepend, ro->ro_plen);
+		}
+	}
+
+	memset(skb->shinfo, 0, sizeof *skb->shinfo); // TODO this should really be done only in linuxkpi_alloc_skb, not sure why it's not working correctly...
+
+	return (skb);
+}
+
+int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
+{
+	struct net_device *const dev = (void *)ifp;
+	struct net_device *const orig_dev = (void *)master;
+
+	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(m, NULL);
+	struct packet_type ptype = {
+		.type = htons(ETH_P_BATMAN),
+		.func = batadv_batman_skb_recv,
+		.dev = dev,
+	};
+
+	// TODO what are the proper calls for this?
+
+	skb->mac_len = ETH_HLEN;
+	skb_reset_mac_header(skb);
+	skb->data += skb->mac_len;
+
+	printf("%s: received on %s, going to %s\n", __func__, ifp->if_xname, master->if_xname);
+
+	return batadv_batman_skb_recv(skb, dev, &ptype, orig_dev);
+}
+#endif
 
 static void batadv_recv_handler_init(void)
 {

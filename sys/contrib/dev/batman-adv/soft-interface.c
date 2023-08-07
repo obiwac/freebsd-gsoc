@@ -1233,19 +1233,22 @@ linuxkpi_skb_from_mbuf(struct mbuf *m, struct route *ro)
 	struct sk_buff *skb;
 
 	// TODO what should this 128 value be exactly? needed_headroom?
+	// XXX not sure where these 28 bytes are supposed to come from!
 
-	skb = dev_alloc_skb(128 + payload_len);
+	skb = dev_alloc_skb(128 + payload_len + 28);
 	if (skb == NULL)
 		return (NULL);
 
 	skb->data = skb->head + 128;
-	skb->tail = skb->data + payload_len;
+	skb->tail = skb->data + payload_len + 28;
 
 	/*
 	 * XXX This feels quite wrong; surely there must be an easier way to just
 	 * get the whole packet data which would be sent out at the end, i.e. the
 	 * equivalent to skb->data, right?
 	 */
+
+	printf("%s: %d\n", __func__, (m->m_flags & M_EXT) != 0 || (m->m_flags & M_EXTPG) != 0);
 
 	/* Copy over mbuf cluster data. */
 	if ((m->m_flags & M_EXT) != 0 || (m->m_flags & M_EXTPG) != 0)
@@ -1352,6 +1355,7 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	if_initname(ifp, batadv_link_ops.kind, ifd->unit);
 	if_setinitfn(ifp, batadv_softif_init);
 	if_setioctlfn(ifp, batadv_softif_ioctl);
+	ifp->if_slavefn = batadv_batman_m_recv; // TODO if we end up going with this, make setter function
 
 	ifp->if_flags = IFF_BROADCAST;
 #if defined(CONFIG_BATMAN_ADV_MCAST)

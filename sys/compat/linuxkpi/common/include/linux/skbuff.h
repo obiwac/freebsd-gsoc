@@ -1232,7 +1232,7 @@ skb_share_check(struct sk_buff *skb, gfp_t pri)
 {
 
 	SKB_TODO();
-	return (NULL);
+	return (skb);
 }
 
 struct skb_seq_state {

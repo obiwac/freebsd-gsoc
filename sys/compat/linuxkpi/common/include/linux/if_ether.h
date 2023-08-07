@@ -65,10 +65,10 @@
 #define	ETH_P_802_2	ETHERTYPE_8023
 #define	ETH_P_IPX	ETHERTYPE_IPX
 #define	ETH_P_AARP	ETHERTYPE_AARP
+#define	ETH_P_BATMAN	ETHERTYPE_BATMAN
 #define	ETH_P_802_3_MIN	0x05DD		/* See comment in sys/net/ethernet.h */
 #define	ETH_P_LINK_CTL	0x886C		/* ITU-T G.989.2 */
 #define	ETH_P_TDLS	0x890D		/* 802.11z-2010, see wpa. */
-#define	ETH_P_BATMAN	0x4305		/* B.A.T.M.A.N.-Advanced */
 
 struct ethhdr {
 	uint8_t		h_dest[ETH_ALEN];

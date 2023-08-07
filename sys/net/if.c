@@ -4512,6 +4512,19 @@ if_getmtu_family(const if_t ifp, int family)
 	return (ifp->if_mtu);
 }
 
+int
+if_setmaster(if_t ifp, if_t const master)
+{
+	ifp->if_master = master;
+	return (0);
+}
+
+if_t
+if_getmaster(if_t const ifp)
+{
+	return (ifp->if_master);
+}
+
 /*
  * Methods for drivers to access interface unicast and multicast
  * link level addresses.  Driver shall not know 'struct ifaddr' neither

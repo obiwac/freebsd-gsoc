@@ -1995,12 +1995,12 @@ vtnet_rxq_input(struct vtnet_rxq *rxq, struct mbuf *m,
 {
 	struct vtnet_softc *sc;
 	if_t ifp;
+	struct ether_header *eh = mtod(m, struct ether_header *);
 
 	sc = rxq->vtnrx_sc;
 	ifp = sc->vtnet_ifp;
 
 	if (if_getcapenable(ifp) & IFCAP_VLAN_HWTAGGING) {
-		struct ether_header *eh = mtod(m, struct ether_header *);
 		if (eh->ether_type == htons(ETHERTYPE_VLAN)) {
 			vtnet_vlan_tag_remove(m);
 			/*

@@ -179,6 +179,9 @@ struct net_device {
 	struct	task if_linktask;	/* task for link change events */
 	struct	task if_addmultitask;	/* task for SIOCADDMULTI */
 
+	struct ifnet	*if_master;	/* master interface */
+	int		(*if_slavefn)(struct mbuf *, if_t, if_t); /* slave forwarding function */
+
 	/* Addresses of different protocol families assigned to this if. */
 	struct mtx if_addr_lock;	/* lock to protect address lists */
 		/*
