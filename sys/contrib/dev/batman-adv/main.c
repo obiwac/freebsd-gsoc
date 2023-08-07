@@ -467,16 +467,16 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 		goto err_free;
 
 	bat_priv = netdev_priv(hard_iface->soft_iface);
-	printf("%s: %d (check bat_priv->mesh_state = %d)\n", __func__, __COUNTER__, atomic_read(&bat_priv->mesh_state));
+	printf("%s: %d\n", __func__, __COUNTER__);
 
-	// if (atomic_read(&bat_priv->mesh_state) != BATADV_MESH_ACTIVE)
-	// 	goto err_free;
+	if (atomic_read(&bat_priv->mesh_state) != BATADV_MESH_ACTIVE)
+		goto err_free;
 
 	printf("%s: %d (check hard_iface->if_status = %d)\n", __func__, __COUNTER__, hard_iface->if_status);
 
 	/* discard frames on not active interfaces */
-	// if (hard_iface->if_status != BATADV_IF_ACTIVE)
-	// 	goto err_free;
+	if (hard_iface->if_status != BATADV_IF_ACTIVE)
+		goto err_free;
 
 	printf("%s: %d\n", __func__, __COUNTER__);
 
@@ -571,11 +571,7 @@ int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
 	struct net_device *const orig_dev = (void *)master;
 
 	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(m, NULL);
-	struct packet_type ptype = {
-		.type = htons(ETH_P_BATMAN),
-		.func = batadv_batman_skb_recv,
-		.dev = dev,
-	};
+	struct packet_type *const ptype = ifp->if_linux_softc;
 
 	// TODO what are the proper calls for this?
 
@@ -585,7 +581,7 @@ int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
 
 	printf("%s: received on %s, going to %s\n", __func__, ifp->if_xname, master->if_xname);
 
-	return batadv_batman_skb_recv(skb, dev, &ptype, orig_dev);
+	return batadv_batman_skb_recv(skb, dev, ptype, orig_dev);
 }
 #endif
 

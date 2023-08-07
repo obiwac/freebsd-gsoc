@@ -742,6 +742,11 @@ int batadv_hardif_enable_interface(struct batadv_hard_iface *hard_iface,
 	hard_iface->batman_adv_ptype.dev = hard_iface->net_dev;
 	dev_add_pack(&hard_iface->batman_adv_ptype);
 
+#if defined(__FreeBSD__)
+	if_t const ifp = (void *)hard_iface->net_dev;
+	ifp->if_linux_softc = &hard_iface->batman_adv_ptype;
+#endif
+
 	batadv_info(hard_iface->soft_iface, "Adding interface: %s\n",
 		    hard_iface->net_dev->name);
 
