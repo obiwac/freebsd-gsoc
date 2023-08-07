@@ -1174,40 +1174,48 @@ int batadv_recv_bcast_packet(struct sk_buff *skb,
 	u32 seqno;
 	int ret;
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 0
 	/* drop packet if it has not necessary minimum size */
-	if (unlikely(!pskb_may_pull(skb, hdr_size)))
-		goto free_skb;
+	// if (unlikely(!pskb_may_pull(skb, hdr_size)))
+	// 	goto free_skb;
 
 	ethhdr = eth_hdr(skb);
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 1
 	/* packet with broadcast indication but unicast recipient */
 	if (!is_broadcast_ether_addr(ethhdr->h_dest))
 		goto free_skb;
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 2
 	/* packet with broadcast/multicast sender address */
 	if (is_multicast_ether_addr(ethhdr->h_source))
 		goto free_skb;
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 3
 	/* ignore broadcasts sent by myself */
 	if (batadv_is_my_mac(bat_priv, ethhdr->h_source))
 		goto free_skb;
 
 	bcast_packet = (struct batadv_bcast_packet *)skb->data;
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 4
 	/* ignore broadcasts originated by myself */
 	if (batadv_is_my_mac(bat_priv, bcast_packet->orig))
 		goto free_skb;
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 5
 	if (bcast_packet->ttl-- < 2)
 		goto free_skb;
 
 	orig_node = batadv_orig_hash_find(bat_priv, bcast_packet->orig);
 
+	printf("%s: %d\n", __func__, __COUNTER__); // 6
 	if (!orig_node)
 		goto free_skb;
 
 	spin_lock_bh(&orig_node->bcast_seqno_lock);
 
+	printf("%s: %d\n", __func__, __COUNTER__);
 	seqno = ntohl(bcast_packet->seqno);
 	/* check whether the packet is a duplicate */
 	if (batadv_test_bit(orig_node->bcast_bits, orig_node->last_bcast_seqno,
@@ -1216,6 +1224,7 @@ int batadv_recv_bcast_packet(struct sk_buff *skb,
 
 	seq_diff = seqno - orig_node->last_bcast_seqno;
 
+	printf("%s: %d\n", __func__, __COUNTER__);
 	/* check whether the packet is old and the host just restarted. */
 	if (batadv_window_protected(bat_priv, seq_diff,
 				    BATADV_BCAST_MAX_AGE,
@@ -1225,18 +1234,21 @@ int batadv_recv_bcast_packet(struct sk_buff *skb,
 	/* mark broadcast in flood history, update window position
 	 * if required.
 	 */
+	printf("%s: %d\n", __func__, __COUNTER__);
 	if (batadv_bit_get_packet(bat_priv, orig_node->bcast_bits, seq_diff, 1))
 		orig_node->last_bcast_seqno = seqno;
 
 	spin_unlock_bh(&orig_node->bcast_seqno_lock);
 
 	/* check whether this has been sent by another originator before */
+	printf("%s: %d\n", __func__, __COUNTER__);
 	if (batadv_bla_check_bcast_duplist(bat_priv, skb))
 		goto free_skb;
 
 	batadv_skb_set_priority(skb, sizeof(struct batadv_bcast_packet));
 
 	/* rebroadcast packet */
+	printf("%s: %d\n", __func__, __COUNTER__);
 	ret = batadv_forw_bcast_packet(bat_priv, skb, 0, false);
 	if (ret == NETDEV_TX_BUSY)
 		goto free_skb;
@@ -1244,14 +1256,18 @@ int batadv_recv_bcast_packet(struct sk_buff *skb,
 	/* don't hand the broadcast up if it is from an originator
 	 * from the same backbone.
 	 */
+	printf("%s: %d\n", __func__, __COUNTER__);
 	if (batadv_bla_is_backbone_gw(skb, orig_node, hdr_size))
 		goto free_skb;
 
+	printf("%s: %d\n", __func__, __COUNTER__);
 	if (batadv_dat_snoop_incoming_arp_request(bat_priv, skb, hdr_size))
 		goto rx_success;
+	printf("%s: %d\n", __func__, __COUNTER__);
 	if (batadv_dat_snoop_incoming_arp_reply(bat_priv, skb, hdr_size))
 		goto rx_success;
 
+	printf("%s: %d\n", __func__, __COUNTER__);
 	batadv_dat_snoop_incoming_dhcp_ack(bat_priv, skb, hdr_size);
 
 	/* broadcast for me */
