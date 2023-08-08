@@ -61,6 +61,8 @@ batadv_orig_hash_find(struct batadv_priv *bat_priv, const void *data)
 	struct batadv_orig_node *orig_node, *orig_node_tmp = NULL;
 	int index;
 
+	printf("%s: hash = %p\n", __func__, hash);
+
 	if (!hash)
 		return NULL;
 
@@ -69,6 +71,8 @@ batadv_orig_hash_find(struct batadv_priv *bat_priv, const void *data)
 
 	rcu_read_lock();
 	hlist_for_each_entry_rcu(orig_node, head, hash_entry) {
+		printf("%s: hash_entry %x:%x:%x:%x:%x:%x\n", __func__, orig_node->orig[0], orig_node->orig[1], orig_node->orig[2], orig_node->orig[3], orig_node->orig[4], orig_node->orig[5]);
+
 		if (!batadv_compare_eth(orig_node, data))
 			continue;
 
