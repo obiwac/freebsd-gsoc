@@ -1127,9 +1127,12 @@ skb_copy_expand(struct sk_buff const *skb, int newheadroom, int newtailroom, gfp
 static inline struct sk_buff *
 netdev_alloc_skb_ip_align(struct net_device *dev, unsigned int length)
 {
+	struct sk_buff *const skb = linuxkpi_alloc_skb(length + NET_IP_ALIGN, GFP_ATOMIC);
 
-	SKB_TODO();
-	return (NULL);
+	SKB_TRACE(skb);
+	if (skb)
+		skb_reserve(skb, NET_IP_ALIGN);
+	return (skb);
 }
 
 static inline struct sk_buff *
