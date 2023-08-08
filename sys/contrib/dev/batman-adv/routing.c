@@ -180,9 +180,9 @@ bool batadv_check_management_packet(struct sk_buff *skb,
 {
 	struct ethhdr *ethhdr;
 
-	/* drop packet if it has not necessary minimum size */
-	if (unlikely(!pskb_may_pull(skb, header_len)))
-		return false;
+	// /* drop packet if it has not necessary minimum size */
+	// if (unlikely(!pskb_may_pull(skb, header_len)))
+	// 	return false;
 
 	ethhdr = eth_hdr(skb);
 
