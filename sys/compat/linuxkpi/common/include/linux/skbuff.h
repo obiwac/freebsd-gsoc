@@ -533,6 +533,7 @@ static inline void
 skb_queue_head_init(struct sk_buff_head *q)
 {
 	SKB_TRACE(q);
+	spin_lock_init(&q->lock);
 	return (__skb_queue_head_init(q));
 }
 
