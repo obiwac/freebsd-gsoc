@@ -83,8 +83,7 @@ static inline u32
 get_random_u32_below(u32 ceil)
 {
 
-	pr_debug("%s: TODO\n", __func__);
-	return 0;
+	return (arc4random_uniform(ceil));
 }
 
 #endif /* _LINUXKPI_LINUX_RANDOM_H_ */
