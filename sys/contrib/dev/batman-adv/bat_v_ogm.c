@@ -441,7 +441,16 @@ void batadv_v_ogm_primary_iface_set(struct batadv_hard_iface *primary_iface)
 		goto unlock;
 
 	ogm_packet = (struct batadv_ogm2_packet *)bat_priv->bat_v.ogm_buff;
+
+#if defined(__FreeBSD__)
+	if_t const ifp = __DECONST(if_t, primary_iface->net_dev);
+	struct ifaddr *const ifa = ifp->if_addr;
+
+	struct sockaddr_dl *const sdl = __DECONST(struct sockaddr_dl *, ifa->ifa_addr);
+	ether_addr_copy(ogm_packet->orig, LLADDR(sdl));
+#else
 	ether_addr_copy(ogm_packet->orig, primary_iface->net_dev->dev_addr);
+#endif
 
 unlock:
 	mutex_unlock(&bat_priv->bat_v.ogm_buff_mutex);
