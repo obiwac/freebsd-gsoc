@@ -730,9 +730,10 @@ dev_queue_xmit(struct sk_buff *skb)
 	m = m_get3(len, M_WAITOK, MT_DATA, M_PKTHDR);
 	if (m == NULL)
 		return (EIO);
-	m->m_pkthdr.len = len - ETH_HLEN;
-	m->m_len = len - ETH_HLEN;
+	m->m_pkthdr.len = len;
+	m->m_len = len;
 
+	skb_reset_mac_header(skb);
 	memcpy(mtod(m, uint8_t *), skb->data, len);
 	// m->m_ext.ext_size = MCLBYTES;
 	// memcpy(m->m_ext.ext_buf, skb->data, len);
@@ -741,9 +742,9 @@ dev_queue_xmit(struct sk_buff *skb)
 
 	ethhdr = eth_hdr(skb);
 
-	dst.sa_family = ntohs(ethhdr->h_proto);
 	dst.sa_len = sizeof ethhdr->h_dest;
 	memcpy(dst.sa_data, ethhdr->h_dest, dst.sa_len);
+	dst.sa_family = AF_INET;
 
 	/* Create route struct. */
 	/*
@@ -757,8 +758,6 @@ dev_queue_xmit(struct sk_buff *skb)
 	ro.ro_flags = RT_HAS_HEADER;
 
 	/* XXX Printing for testing. */
-
-	printf("%d\n", dst.sa_family);
 
 	ssize_t const l = skb->tail - skb->data;
 	printf("%s: skbuff of size %zd\n", __func__, l);
