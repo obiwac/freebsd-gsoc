@@ -20,7 +20,12 @@
 #include "bat_algo.h"
 #include "netlink.h"
 
+#if defined(__FreeBSD__)
+char batadv_routing_algo[20] = "BATMAN_V";
+#else
 char batadv_routing_algo[20] = "BATMAN_IV";
+#endif
+
 static struct hlist_head batadv_algo_list;
 
 /**
