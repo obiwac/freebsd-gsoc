@@ -836,7 +836,7 @@ void batadv_v_hardif_init(struct batadv_hard_iface *hard_iface)
 	 * override to zero
 	 */
 	atomic_set(&hard_iface->bat_v.throughput_override, 0);
-	atomic_set(&hard_iface->bat_v.elp_interval, 500);
+	atomic_set(&hard_iface->bat_v.elp_interval, 5000);
 
 	hard_iface->bat_v.aggr_len = 0;
 	skb_queue_head_init(&hard_iface->bat_v.aggr_list);
