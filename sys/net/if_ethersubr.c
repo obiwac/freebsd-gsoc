@@ -476,7 +476,7 @@ ether_output_frame(struct ifnet *ifp, struct mbuf *m)
 	    !ether_set_pcp(&m, ifp, pcp))
 		return (0);
 
-	if (/* PFIL_HOOKED_OUT(V_link_pfil_head) */ 0)
+	if (curthread->td_vnet && PFIL_HOOKED_OUT(V_link_pfil_head))
 		switch (pfil_mbuf_out(V_link_pfil_head, &m, ifp, NULL)) {
 		case PFIL_DROPPED:
 			return (EACCES);
