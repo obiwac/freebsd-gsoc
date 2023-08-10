@@ -1184,8 +1184,6 @@ static inline void * __must_check
 skb_header_pointer(struct sk_buff const *skb, int offset, int len, void *buffer)
 {
 
-	SKB_TODO();
-
 	if (skb_headlen(__DECONST(struct sk_buff *, skb)) - offset >= len)
 		return ((char *)buffer + offset);
 
