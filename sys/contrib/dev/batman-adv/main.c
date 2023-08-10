@@ -448,37 +448,26 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 	if (!skb)
 		goto err_put;
 
-	printf("%s: %d\n", __func__, __COUNTER__);
-
 	// TODO
 	// /* packet should hold at least type and version */
 	// if (unlikely(!pskb_may_pull(skb, 2)))
 	// 	goto err_free;
 
-	printf("%s: %d\n", __func__, __COUNTER__);
-
 	/* expect a valid ethernet header here. */
 	if (unlikely(skb->mac_len != ETH_HLEN || !skb_mac_header(skb)))
 		goto err_free;
-
-	printf("%s: %d\n", __func__, __COUNTER__);
 
 	if (!hard_iface->soft_iface)
 		goto err_free;
 
 	bat_priv = netdev_priv(hard_iface->soft_iface);
-	printf("%s: %d\n", __func__, __COUNTER__);
 
 	if (atomic_read(&bat_priv->mesh_state) != BATADV_MESH_ACTIVE)
 		goto err_free;
 
-	printf("%s: %d (check hard_iface->if_status = %d)\n", __func__, __COUNTER__, hard_iface->if_status);
-
 	/* discard frames on not active interfaces */
 	if (hard_iface->if_status != BATADV_IF_ACTIVE)
 		goto err_free;
-
-	printf("%s: %d\n", __func__, __COUNTER__);
 
 	batadv_ogm_packet = (struct batadv_ogm_packet *)skb->data;
 
@@ -489,21 +478,13 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 		goto err_free;
 	}
 
-	printf("%s: %d\n", __func__, __COUNTER__);
-
 	/* reset control block to avoid left overs from previous users */
 	memset(skb->cb, 0, sizeof(struct batadv_skb_cb));
-
-	printf("%s: %d\n", __func__, __COUNTER__);
 
 	idx = batadv_ogm_packet->packet_type;
 	(*batadv_rx_handler[idx])(skb, hard_iface);
 
-	printf("%s: %d\n", __func__, __COUNTER__);
-
-	printf("%s: TODO: batadv_hardif_put(hard_iface);\n", __func__);
-
-	printf("%s: %d\n", __func__, __COUNTER__);
+	// TODO batadv_hardif_put(hard_iface);\n", __func__);
 
 	/* return NET_RX_SUCCESS in any case as we
 	 * most probably dropped the packet for
@@ -572,6 +553,8 @@ int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
 
 	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(m, NULL);
 	struct packet_type *const ptype = ifp->if_linux_softc;
+
+	skb->dev = dev;
 
 	// TODO what are the proper calls for this?
 

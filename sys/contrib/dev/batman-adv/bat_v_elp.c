@@ -518,16 +518,13 @@ int batadv_v_elp_packet_recv(struct sk_buff *skb,
 	bool res;
 	int ret = NET_RX_DROP;
 
-	printf("%s: %d\n", __func__, __COUNTER__);
 	res = batadv_check_management_packet(skb, if_incoming, BATADV_ELP_HLEN);
 	if (!res)
 		goto free_skb;
 
-	printf("%s: %d\n", __func__, __COUNTER__);
 	if (batadv_is_my_mac(bat_priv, ethhdr->h_source))
 		goto free_skb;
 
-	printf("%s: %d\n", __func__, __COUNTER__);
 	/* did we receive a B.A.T.M.A.N. V ELP packet on an interface
 	 * that does not have B.A.T.M.A.N. V ELP enabled ?
 	 */
@@ -541,19 +538,14 @@ int batadv_v_elp_packet_recv(struct sk_buff *skb,
 		   ethhdr->h_source, ntohl(elp_packet->seqno),
 		   elp_packet->orig);
 
-	printf("%s: %d\n", __func__, __COUNTER__);
 	primary_if = batadv_primary_if_get_selected(bat_priv);
 	if (!primary_if)
 		goto free_skb;
 
-	printf("%s: %d\n", __func__, __COUNTER__);
 	batadv_v_elp_neigh_update(bat_priv, ethhdr->h_source, if_incoming,
 				  elp_packet);
-
 	ret = NET_RX_SUCCESS;
 	batadv_hardif_put(primary_if);
-
-	printf("%s: %d\n", __func__, __COUNTER__);
 free_skb:
 	if (ret == NET_RX_SUCCESS)
 		consume_skb(skb);

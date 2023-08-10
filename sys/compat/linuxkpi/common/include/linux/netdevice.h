@@ -616,7 +616,24 @@ unregister_netdevice(struct net_device *ndev)
 static __inline void
 netif_rx(struct sk_buff *skb)
 {
-	pr_debug("%s: TODO\n", __func__);
+	struct net_device *const dev = skb->dev;
+	if_t const ifp = __DECONST(if_t, dev);
+	size_t const len = skb->tail - skb->data;
+	struct mbuf *m;
+
+	/* Create mbuf from skbuff. */
+	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
+
+	m = m_get3(len, M_WAITOK, MT_DATA, M_PKTHDR);
+	if (m == NULL)
+		return;
+	m->m_pkthdr.rcvif = ifp;
+	m->m_pkthdr.len = len;
+	m->m_len = len;
+
+	memcpy(mtod(m, uint8_t *), skb->data, len);
+
+	ifp->if_input(ifp, m);
 }
 
 static __inline void
@@ -719,10 +736,8 @@ dev_queue_xmit(struct sk_buff *skb)
 	struct ethhdr *ethhdr;
 	struct sockaddr dst;
 	struct route ro = {0};
-	size_t len = skb->tail - skb->data;
-	struct mbuf* m;
-
-	pr_debug("%s: TODO\n", __func__);
+	size_t const len = skb->tail - skb->data;
+	struct mbuf *m;
 
 	/* Create mbuf from skbuff. */
 	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
@@ -757,13 +772,14 @@ dev_queue_xmit(struct sk_buff *skb)
 	ro.ro_prepend = (void *)0xdeadc0de;
 	ro.ro_flags = RT_HAS_HEADER;
 
-	/* XXX Printing for testing. */
+	/* XXX Printing for testing.
 
 	ssize_t const l = skb->tail - skb->data;
 	printf("%s: skbuff of size %zd\n", __func__, l);
 	for (ssize_t i = 0; i < l; i++)
 		printf("%x ", ((uint8_t*) skb->data)[i]);
 	printf("\n");
+	*/
 
 	/* Actually call output function. */
 
