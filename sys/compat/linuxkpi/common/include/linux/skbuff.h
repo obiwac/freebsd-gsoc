@@ -1273,8 +1273,8 @@ static inline void *
 skb_pull_rcsum(struct sk_buff *skb, unsigned int len)
 {
 
-	SKB_TODO();
-	return (NULL);
+	/* TODO Should also update recv checksum. (skb_postpull_rcsum?) */
+	return (skb_pull(skb, len));
 }
 
 static inline void
