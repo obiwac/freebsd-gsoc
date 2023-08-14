@@ -196,6 +196,7 @@ struct sk_buff *linuxkpi_build_skb(void *, size_t);
 void linuxkpi_kfree_skb(struct sk_buff *);
 
 struct sk_buff *linuxkpi_skb_copy(struct sk_buff *, gfp_t);
+struct sk_buff *linuxkpi_skb_clone(struct sk_buff *, gfp_t);
 
 /* -------------------------------------------------------------------------- */
 
@@ -733,14 +734,30 @@ skb_copy(struct sk_buff const *skb, gfp_t gfp)
 	return (new);
 }
 
+static inline struct sk_buff *
+skb_clone(struct sk_buff *skb, gfp_t gfp)
+{
+	struct sk_buff *new;
+
+	/*
+	 * XXX Currently not implemented properly, and might cause problems if
+	 * caller modifies data, expecting it to reflect in other clones.
+	 * Once this is properly implemented, don't forget to update all the
+	 * functions with XXX-CL.
+	 */
+
+	new = linuxkpi_skb_copy(__DECONST(struct sk_buff *, skb), gfp);
+	SKB_TRACE2(skb, new);
+	return (new);
+}
+
 static inline void
 consume_skb(struct sk_buff *skb)
 {
 	SKB_TRACE(skb);
-	SKB_TODO();
 
 	/*
-	 * XXX Until we implement skb_clone properly, we can't really free
+	 * XXX-CL Until we implement skb_clone properly, we can't really free
 	 * skb's as they may still be in use.
 	 */
 
@@ -1135,20 +1152,6 @@ netdev_alloc_skb_ip_align(struct net_device *dev, unsigned int length)
 	return (skb);
 }
 
-static inline struct sk_buff *
-skb_clone(struct sk_buff *skb, gfp_t priority)
-{
-	/* XXX This is temporary - implement proper cloning in fine! */
-	struct sk_buff *const newskb = skb_copy(skb, priority);
-
-	SKB_TODO();
-
-	newskb->m = skb->m;
-	newskb->m_free_func = skb->m_free_func;
-
-	return (newskb);
-}
-
 static inline void * __must_check
 skb_header_pointer(struct sk_buff const *skb, int offset, int len, void *buffer)
 {
@@ -1216,7 +1219,10 @@ __skb_cow(struct sk_buff *skb, unsigned int headroom, int cloned)
 static inline int
 skb_cow(struct sk_buff *skb, unsigned int headroom)
 {
-	/* skb_clone is not implemented yet, so don't worry about the case where the buffer is cloned. */
+	/*
+	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
+	 * case where the buffer is cloned.
+	 */
 
 	return (__skb_cow(skb, headroom, false));
 }
@@ -1224,7 +1230,10 @@ skb_cow(struct sk_buff *skb, unsigned int headroom)
 static inline int
 skb_cow_head(struct sk_buff *skb, unsigned int headroom)
 {
-	/* skb_clone is not implemented yet, so don't worry about the case where the buffer is cloned. */
+	/*
+	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
+	 * case where the buffer is cloned.
+	 */
 
 	return (__skb_cow(skb, headroom, false));
 }
@@ -1232,8 +1241,11 @@ skb_cow_head(struct sk_buff *skb, unsigned int headroom)
 static inline struct sk_buff *
 skb_share_check(struct sk_buff *skb, gfp_t pri)
 {
+	/*
+	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
+	 * case where the buffer is cloned.
+	 */
 
-	SKB_TODO();
 	return (skb);
 }
 
