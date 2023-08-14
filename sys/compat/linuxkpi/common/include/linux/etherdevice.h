@@ -146,6 +146,15 @@ eth_type_trans(struct sk_buff *skb, struct net_device *dev)
 	 */
 	skb_reset_mac_header(skb);
 	ethhdr = (struct ethhdr *)skb->data;
+	skb_pull(skb, ETH_HLEN);
+
+	/* Set skb->dev and skb->pkt_type (cf. batman-adv). */
+
+	skb->dev = dev;
+	skb->pkt_type = PACKET_OTHERHOST;
+	if (is_multicast_ether_addr(ethhdr->h_dest))
+		skb->pkt_type = ether_addr_equal_64bits(ethhdr->h_dest,
+		    dev->broadcast) ? PACKET_BROADCAST : PACKET_MULTICAST;
 
 	return (ethhdr->h_proto);
 }
