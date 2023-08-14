@@ -365,6 +365,7 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 
 	skb->data = skb->head + 128;
 	skb->tail = skb->data + payload_len + 28;
+	skb->len = skb->tail - skb->data;
 	memcpy(skb->data, mtod(m, void *), payload_len);
 
 	/*
