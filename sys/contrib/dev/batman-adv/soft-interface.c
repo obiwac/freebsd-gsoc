@@ -1284,8 +1284,6 @@ static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const 
 		af = RO_GET_FAMILY(ro, dst);
 	m->m_pkthdr.csum_data = af;
 
-	printf("%s: TODO, send %p to [%d, %d] over %s\n", __func__, m, dst->sa_family, dst->sa_len, dev->name);
-
 	/* Create sk_buff from mbuf. */
 
 #if 0
