@@ -471,10 +471,12 @@ void batadv_interface_rx(struct net_device *soft_iface,
 	skb_pull_rcsum(skb, hdr_size);
 	skb_reset_mac_header(skb);
 
+#if !defined(__FreeBSD__)
 	/* clean the netfilter state now that the batman-adv header has been
 	 * removed
 	 */
 	nf_reset_ct(skb);
+#endif
 
 	// if (unlikely(!pskb_may_pull(skb, ETH_HLEN)))
 	// 	goto dropped;
