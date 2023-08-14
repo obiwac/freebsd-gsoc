@@ -501,55 +501,12 @@ err_out:
 }
 
 #if defined(__FreeBSD__)
-// TODO combine me with the same function in soft-interface.c
-
-static struct sk_buff *
-linuxkpi_skb_from_mbuf(struct mbuf *m, struct route *ro)
-{
-	size_t const payload_len = m_length(m, NULL);
-	struct sk_buff *skb;
-
-	// TODO what should this 128 value be exactly? needed_headroom?
-	// XXX not sure where these 28 bytes are supposed to come from!
-
-	skb = dev_alloc_skb(128 + payload_len + 28);
-	if (skb == NULL)
-		return (NULL);
-
-	skb->data = skb->head + 128;
-	skb->tail = skb->data + payload_len + 28;
-
-	/*
-	 * XXX This feels quite wrong; surely there must be an easier way to just
-	 * get the whole packet data which would be sent out at the end, i.e. the
-	 * equivalent to skb->data, right?
-	 */
-
-	/* Copy over mbuf cluster data. */
-	if (0)
-		memcpy(skb->data, m->m_ext.ext_buf, m->m_ext.ext_size);
-
-	/* Otherwise, add ro->ro_prepend. */
-	else {
-		memcpy(skb->data, mtod(m, void *), payload_len);
-
-		if (ro != NULL) {
-			skb->data -= ro->ro_plen;
-			memcpy(skb->data, ro->ro_prepend, ro->ro_plen);
-		}
-	}
-
-	memset(skb->shinfo, 0, sizeof *skb->shinfo); // TODO this should really be done only in linuxkpi_alloc_skb, not sure why it's not working correctly...
-
-	return (skb);
-}
-
 int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
 {
 	struct net_device *const dev = (void *)ifp;
 	struct net_device *const orig_dev = (void *)master;
 
-	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(m, NULL);
+	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(ifp, m, NULL, NULL);
 	struct packet_type *const ptype = ifp->if_linux_softc;
 
 	skb->dev = dev;
