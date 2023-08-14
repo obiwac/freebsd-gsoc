@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013-2017 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -404,10 +405,31 @@ bitmap_free(const unsigned long *bitmap)
 }
 
 static inline void
-bitmap_shift_left(unsigned long *dst, unsigned long const *src, unsigned int shift, unsigned int nbits)
+bitmap_shift_left(unsigned long *dst, unsigned long const *src,
+	unsigned int shift, unsigned int nbits)
 {
+	/* XXX-GPL This comes from lib/bitmap.c, I did not write this. */
 
-	pr_debug("TODO: %s\n", __func__);
+	int k;
+	unsigned int lim = BITS_TO_LONGS(nbits);
+	unsigned int off = shift/BITS_PER_LONG, rem = shift % BITS_PER_LONG;
+
+	for (k = lim - off - 1; k >= 0; --k) {
+		unsigned long upper, lower;
+
+		/*
+		 * If shift is not word aligned, take upper rem bits of
+		 * word below and make them the bottom rem bits of result.
+		 */
+		if (rem && k > 0)
+			lower = src[k - 1] >> (BITS_PER_LONG - rem);
+		else
+			lower = 0;
+		upper = src[k] << rem;
+		dst[k + off] = lower | upper;
+	}
+	if (off)
+		memset(dst, 0, off*sizeof(unsigned long));
 }
 
 #endif					/* _LINUXKPI_LINUX_BITMAP_H_ */
