@@ -618,8 +618,16 @@ netif_rx(struct sk_buff *skb)
 {
 	struct net_device *const dev = skb->dev;
 	if_t const ifp = __DECONST(if_t, dev);
-	size_t const len = skb->tail - skb->data;
+	size_t len;
 	struct mbuf *m;
+
+	/*
+	 * XXX Bit of a hack bc batadv_interface_rx removes the ethernet header.
+	 * This won't work for all calls to netif_rx.
+	 */
+
+	skb_push(skb, ETH_HLEN);
+	len = skb->tail - skb->data;
 
 	/* Create mbuf from skbuff. */
 	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
@@ -631,7 +639,7 @@ netif_rx(struct sk_buff *skb)
 	m->m_pkthdr.len = len;
 	m->m_len = len;
 
-	memcpy(mtod(m, uint8_t *), skb->data, len);
+	memcpy(mtod(m, void *), skb->data, len);
 
 	ifp->if_input(ifp, m);
 }
