@@ -137,9 +137,17 @@ device_get_mac_address(struct device *dev, char *dst)
 static inline __be16
 eth_type_trans(struct sk_buff *skb, struct net_device *dev)
 {
+	struct ethhdr *ethhdr;
 
-	pr_debug("%s: TODO\n", __func__);
-	return (0);
+	/*
+	 * XXX eth_type_trans is a little more complicated than what I'm doing
+	 * here; some protocols aren't simply what's in ethhdr->h_proto.
+	 * There's surely a FreeBSD equivalent I'm not aware of though.
+	 */
+	skb_reset_mac_header(skb);
+	ethhdr = (struct ethhdr *)skb->data;
+
+	return (ethhdr->h_proto);
 }
 
 static inline void
