@@ -624,7 +624,7 @@ netif_rx(struct sk_buff *skb)
 	/* Create mbuf from skbuff. */
 	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
 
-	m = m_get3(len, M_WAITOK, MT_DATA, M_PKTHDR);
+	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
 	if (m == NULL)
 		return;
 	m->m_pkthdr.rcvif = ifp;
@@ -742,7 +742,7 @@ dev_queue_xmit(struct sk_buff *skb)
 	/* Create mbuf from skbuff. */
 	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
 
-	m = m_get3(len, M_WAITOK, MT_DATA, M_PKTHDR);
+	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
 	if (m == NULL)
 		return (EIO);
 	m->m_pkthdr.len = len;
