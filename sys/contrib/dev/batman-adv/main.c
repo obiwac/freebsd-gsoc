@@ -525,8 +525,6 @@ linuxkpi_skb_from_mbuf(struct mbuf *m, struct route *ro)
 	 * equivalent to skb->data, right?
 	 */
 
-	printf("%s: %d\n", __func__, (m->m_flags & M_EXT) != 0 || (m->m_flags & M_EXTPG) != 0);
-
 	/* Copy over mbuf cluster data. */
 	if (0)
 		memcpy(skb->data, m->m_ext.ext_buf, m->m_ext.ext_size);
@@ -561,8 +559,6 @@ int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
 	skb->mac_len = ETH_HLEN;
 	skb_reset_mac_header(skb);
 	skb->data += skb->mac_len;
-
-	printf("%s: received on %s, going to %s\n", __func__, ifp->if_xname, master->if_xname);
 
 	return batadv_batman_skb_recv(skb, dev, ptype, orig_dev);
 }
