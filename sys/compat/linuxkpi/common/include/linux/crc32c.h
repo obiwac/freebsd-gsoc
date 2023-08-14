@@ -8,12 +8,11 @@
 
 #include <sys/gsb_crc32.h>
 
-static inline u32
-crc32c(u32 crc, void const *address, unsigned int length)
+static inline uint32_t
+crc32c(uint32_t crc, void const *data, size_t len)
 {
 
-	pr_debug("%s: TODO\n", __func__);
-	return (-1);
+	return (crc32_raw(data, len, crc));
 }
 
 #endif	/* _LINUXKPI_LINUX_CRC32C_H */
