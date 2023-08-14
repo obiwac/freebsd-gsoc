@@ -174,19 +174,10 @@ linuxkpi_build_skb(void *data, size_t fragsz)
 	return (skb);
 }
 
-struct sk_buff *
-linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
+static struct sk_buff *
+copy_internal(struct sk_buff *new, struct sk_buff *skb)
 {
-	struct sk_buff *new;
 	struct skb_shared_info *shinfo;
-	size_t len;
-
-	/* Full buffer size + any fragments. */
-	len = skb->end - skb->head + skb->data_len;
-
-	new = linuxkpi_alloc_skb(len, gfp);
-	if (new == NULL)
-		return (NULL);
 
 	// headroom = skb_headroom(skb);
 	// /* Fixup head and end. */
@@ -195,11 +186,6 @@ linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
 
 	// /* Copy data. */
 	// memcpy(new->head, skb->data - headroom, headroom + skb->len);
-
-	new->data = new->head + (skb->data - skb->head);
-	new->tail = new->head + (skb->tail - skb->head);
-
-	memcpy(new->head, skb->head, skb->end - skb->head);
 
 	/* Deal with fragments. */
 	shinfo = skb->shinfo;
@@ -217,8 +203,43 @@ linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
 	new->network_header = skb->network_header;
 	new->transport_header = skb->transport_header;
 
-	printf("%s: %x\n", __func__, *new->data);
+	return (new);
+}
 
+struct sk_buff *
+linuxkpi_skb_clone(struct sk_buff *skb, gfp_t gfp)
+{
+	struct sk_buff *new;
+
+	new = linuxkpi_alloc_skb(0, gfp);
+	if (new == NULL)
+		return (NULL);
+
+	new = copy_internal(skb, new);
+	return (new);
+}
+
+struct sk_buff *
+linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
+{
+	struct sk_buff *new;
+	size_t len;
+
+	/* Full buffer size + any fragments. */
+	len = skb->end - skb->head + skb->data_len;
+
+	new = linuxkpi_alloc_skb(len, gfp);
+	if (new == NULL)
+		return (NULL);
+
+	new = copy_internal(new, skb);
+	if (new == NULL)
+		return (NULL);
+
+	new->data = new->head + (skb->data - skb->head);
+	new->tail = new->head + (skb->tail - skb->head);
+
+	memcpy(new->head, skb->head, skb->end - skb->head);
 	return (new);
 }
 
