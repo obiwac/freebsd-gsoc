@@ -32,6 +32,7 @@
 #define	_LINUXKPI_LINUX_ETHTOOL_H_
 
 #include <linux/types.h>
+#include <net/rtnetlink.h>
 
 #define	ETH_GSTRING_LEN	(2 * IF_NAMESIZE)	/* Increase if not large enough */
 
@@ -80,8 +81,12 @@ static inline int
 __ethtool_get_link_ksettings(struct net_device *dev, struct ethtool_link_ksettings *link_ksettings)
 {
 
-	pr_debug("%s: TODO\n", __func__);
-	return (0);
+	/* XXX Normally we'd wanna call dev->ethtool_ops->get_link_ksettings for
+	 * this, but we're not guaranteed dev is a Linux net_device (i.e. could
+	 * be a FreeBSD ifp), so we can't just do that.
+	 */
+
+	return (-EOPNOTSUPP);
 }
 
 static inline u32
