@@ -1231,128 +1231,6 @@ static void batadv_softif_init(void *idk)
 	pr_debug("TODO: %s(%p)\n", __func__, idk);
 }
 
-// TODO put me in linux_skbuff.c
-
-#include <netinet/if_ether.h>
-#include <net/if_llatbl.h>
-
-static inline int
-resolve_addr(struct ifnet *ifp, struct mbuf *m,
-	struct sockaddr const *dst, struct route *ro, u_char *phdr,
-	uint32_t *pflags)
-{
-	/*
-	 * XXX This fella is adapted from ether_resolve_addr.
-	 * Make this more permanent and less lobotomized.
-	 */
-
-	uint32_t lleflags = 0;
-	int error = 0;
-	struct ether_header *eh = (struct ether_header *)phdr;
-	uint16_t etype;
-
-	switch (dst->sa_family) {
-	case AF_INET:
-		if ((m->m_flags & (M_BCAST | M_MCAST)) == 0)
-			error = arpresolve(ifp, 0, m, dst, phdr, &lleflags,
-			    NULL);
-		else {
-			if (m->m_flags & M_BCAST)
-				memcpy(eh->ether_dhost, ifp->if_broadcastaddr,
-				    ETHER_ADDR_LEN);
-			else {
-				const struct in_addr *a;
-				a = &(((const struct sockaddr_in *)dst)->sin_addr);
-				ETHER_MAP_IP_MULTICAST(a, eh->ether_dhost);
-			}
-			etype = htons(ETHERTYPE_IP);
-			memcpy(&eh->ether_type, &etype, sizeof(etype));
-			memcpy(eh->ether_shost, IF_LLADDR(ifp), ETHER_ADDR_LEN);
-		}
-		break;
-	default:
-		if_printf(ifp, "can't handle af%d\n", dst->sa_family);
-		if (m != NULL)
-			m_freem(m);
-		return (EAFNOSUPPORT);
-	}
-
-	if (error == EHOSTDOWN) {
-		if (ro != NULL && (ro->ro_flags & RT_HAS_GW) != 0)
-			error = EHOSTUNREACH;
-	}
-
-	if (error != 0)
-		return (error);
-
-	*pflags = RT_MAY_LOOP;
-	if (lleflags & LLE_IFADDR)
-		*pflags |= RT_L2_ME;
-
-	return (error);
-}
-
-static struct sk_buff *
-linuxkpi_skb_from_mbuf(struct ifnet *ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
-{
-	size_t payload_len;
-	struct sk_buff *skb;
-	char linkhdr[ETHER_HDR_LEN], *phdr = NULL;
-	uint32_t pflags;
-	size_t hlen = 0;
-
-	/*
-	 * We first gotta see if we're provided a link layer header.
-	 * XXX Take a look at ether_output. This is probably what we wanna do.
-	 */
-
-	if (ro != NULL) {
-		if (ro->ro_prepend != NULL) {
-			phdr = ro->ro_prepend;
-			hlen = ro->ro_plen;
-		}
-
-		/* TODO more stuff here... */
-	}
-
-	/* If not, figure one out. */
-
-	if (phdr == NULL) {
-		phdr = linkhdr;
-		hlen = sizeof linkhdr;
-		if (resolve_addr(ifp, m, dst, ro, phdr, &pflags) != 0)
-			return (NULL);
-	}
-
-	M_PREPEND(m, hlen, M_NOWAIT);
-	if (m == NULL)
-		return (NULL);
-	if ((pflags & RT_HAS_HEADER) == 0)
-		memcpy(mtod(m, void *), phdr, hlen);
-
-	/* XXX Is it better performance-wise to defrag directly into skb? */
-
-	m = m_defrag(m, M_NOWAIT);
-	if (m == NULL)
-		return (NULL);
-
-	// TODO what should this 128 value be exactly? needed_headroom?
-	// XXX not sure where these 28 bytes are supposed to come from!
-
-	payload_len = m_length(m, NULL);
-	skb = dev_alloc_skb(128 + payload_len);
-	if (skb == NULL)
-		return (NULL);
-
-	skb->data = skb->head + 128;
-	skb->tail = skb->data + payload_len;
-	memcpy(skb->data, mtod(m, void *), payload_len);
-
-	memset(skb->shinfo, 0, sizeof *skb->shinfo); // TODO this should really be done only in linuxkpi_alloc_skb, not sure why it's not working correctly...
-
-	return (skb);
-}
-
 static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
 {
 	struct net_device *const dev = (void *)ifp;
@@ -1364,25 +1242,9 @@ static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const 
 		af = RO_GET_FAMILY(ro, dst);
 	m->m_pkthdr.csum_data = af;
 
-	/* Create sk_buff from mbuf. */
-
-#if 0
-	/* TODO How much headroom do we need? */
-
-	struct sk_buff *const skb = dev_alloc_skb(m->m_pkthdr.len);
-	if (skb == NULL)
-		return -1;
-
-	// skb_set_mac_header(skb, -ETH_HLEN);
-
-	skb_reset_mac_header(skb);
-	struct ethhdr *const ethhdr = eth_hdr(skb);
-	memcpy(ethhdr, dst->sa_data, ETH_HLEN);
-#else
 	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(ifp, m, dst, ro);
 	if (skb == NULL)
 		return -1;
-#endif
 
 	return dev->netdev_ops->ndo_start_xmit(skb, dev);
 }

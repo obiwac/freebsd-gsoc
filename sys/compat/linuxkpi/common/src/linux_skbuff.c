@@ -45,7 +45,14 @@ __FBSDID("$FreeBSD$");
 #include <sys/types.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
+#include <sys/socket.h>
 #include <sys/sysctl.h>
+
+#include <net/if.h>
+#include <net/if_dl.h>
+#include <net/if_var.h>
+#include <net/if_llatbl.h>
+#include <netinet/if_ether.h>
 
 #ifdef DDB
 #include <ddb/ddb.h>
@@ -241,6 +248,132 @@ linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
 
 	memcpy(new->head, skb->head, skb->end - skb->head);
 	return (new);
+}
+
+static int
+resolve_addr(struct ifnet *ifp, struct mbuf *m, struct sockaddr const *dst,
+	struct route *ro, u_char *phdr, uint32_t *pflags)
+{
+	/*
+	 * XXX This fella is adapted from ether_resolve_addr.
+	 * Make this more permanent and less lobotomized.
+	 */
+
+	uint32_t lleflags = 0;
+	int error = 0;
+	struct ether_header *eh = (struct ether_header *)phdr;
+	uint16_t etype;
+
+	if (dst == NULL)
+		return (ENOTSUP);
+
+	switch (dst->sa_family) {
+	case AF_INET:
+		if ((m->m_flags & (M_BCAST | M_MCAST)) == 0)
+			error = arpresolve(ifp, 0, m, dst, phdr, &lleflags,
+			    NULL);
+		else {
+			if (m->m_flags & M_BCAST)
+				memcpy(eh->ether_dhost, ifp->if_broadcastaddr,
+				    ETHER_ADDR_LEN);
+			else {
+				const struct in_addr *a;
+				a = &(((const struct sockaddr_in *)dst)->sin_addr);
+				ETHER_MAP_IP_MULTICAST(a, eh->ether_dhost);
+			}
+			etype = htons(ETHERTYPE_IP);
+			memcpy(&eh->ether_type, &etype, sizeof(etype));
+			memcpy(eh->ether_shost, IF_LLADDR(ifp), ETHER_ADDR_LEN);
+		}
+		break;
+	default:
+		if_printf(ifp, "can't handle af%d\n", dst->sa_family);
+		if (m != NULL)
+			m_freem(m);
+		return (EAFNOSUPPORT);
+	}
+
+	if (error == EHOSTDOWN) {
+		if (ro != NULL && (ro->ro_flags & RT_HAS_GW) != 0)
+			error = EHOSTUNREACH;
+	}
+
+	if (error != 0)
+		return (error);
+
+	*pflags = RT_MAY_LOOP;
+	if (lleflags & LLE_IFADDR)
+		*pflags |= RT_L2_ME;
+
+	return (error);
+}
+
+struct sk_buff *
+linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
+	struct route *ro)
+{
+	size_t payload_len;
+	struct sk_buff *skb;
+	char linkhdr[ETHER_HDR_LEN], *phdr = NULL;
+	uint32_t pflags;
+	size_t hlen = 0;
+
+	/*
+	 * We first gotta see if we're provided a link layer header.
+	 * XXX Take a look at ether_output. This is probably what we wanna do.
+	 */
+
+	if (ro != NULL) {
+		if (ro->ro_prepend != NULL) {
+			phdr = ro->ro_prepend;
+			hlen = ro->ro_plen;
+		}
+
+		/* TODO more stuff here... */
+	}
+
+	/* If not, figure one out. */
+
+	if (phdr == NULL) {
+		if (resolve_addr(ifp, m, dst, ro, linkhdr, &pflags) == 0) {
+			phdr = linkhdr;
+			hlen = sizeof linkhdr;
+		}
+	}
+
+	/* Add header once/if we've got one. */
+
+	M_PREPEND(m, hlen, M_NOWAIT);
+	if (m == NULL)
+		return (NULL);
+	if ((pflags & RT_HAS_HEADER) == 0)
+		memcpy(mtod(m, void *), phdr, hlen);
+
+	/* XXX Is it better performance-wise to defrag directly into skb? */
+
+	m = m_defrag(m, M_NOWAIT);
+	if (m == NULL)
+		return (NULL);
+
+	/* TODO what should this 128 value be exactly? needed_headroom? */
+	/* XXX not sure where these 28 bytes are supposed to come from! */
+
+	payload_len = m_length(m, NULL);
+	skb = dev_alloc_skb(128 + payload_len + 28);
+	if (skb == NULL)
+		return (NULL);
+
+	skb->data = skb->head + 128;
+	skb->tail = skb->data + payload_len + 28;
+	memcpy(skb->data, mtod(m, void *), payload_len);
+
+	/*
+	 * TODO this should really be done only in linuxkpi_alloc_skb, not sure why
+	 * it's not working correctly...
+	 */
+
+	memset(skb->shinfo, 0, sizeof *skb->shinfo);
+	return (skb);
 }
 
 void
