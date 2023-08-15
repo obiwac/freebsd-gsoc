@@ -475,6 +475,7 @@ linuxkpi_dev_queue_xmit(struct sk_buff *skb)
 	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
 	if (m == NULL)
 		return (EIO);
+	m->m_next = NULL;
 	m->m_pkthdr.len = len;
 	m->m_len = len;
 
