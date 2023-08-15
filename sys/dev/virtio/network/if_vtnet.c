@@ -2842,7 +2842,7 @@ vtnet_txq_eof(struct vtnet_txq *txq)
 		if (m->m_flags & M_MCAST)
 			txq->vtntx_stats.vtxs_omcasts++;
 
-		m_freem(m);
+		// TODO m_freem(m);
 		uma_zfree(vtnet_tx_header_zone, txhdr);
 	}
 
