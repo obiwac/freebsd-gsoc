@@ -336,8 +336,7 @@ send:
 	printf("%s: %d\n", __func__, __COUNTER__); // 7
 	}
 
-	printf("%s: batadv_skb_set_priority not yet tested, disabled for now\n", __func__);
-	// batadv_skb_set_priority(skb, 0);
+	batadv_skb_set_priority(skb, 0);
 
 	/* ethernet packet should be broadcasted */
 	if (do_bcast) {
@@ -786,7 +785,6 @@ static int batadv_softif_init_late(struct net_device *dev)
 	batadv_set_lockdep_class(dev);
 
 	bat_priv = netdev_priv(dev);
-
 	bat_priv->soft_iface = dev;
 
 	/* batadv_interface_stats() needs to be available as soon as
@@ -1251,10 +1249,6 @@ static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const 
 	return dev->netdev_ops->ndo_start_xmit(skb, dev);
 }
 
-static void batadv_softif_input(if_t ifp, struct mbuf *m) {
-	printf("%s: TODO\n", __func__);
-}
-
 static int batadv_softif_ifc_match_linux(struct if_clone *ifc, char const *name)
 {
 	if (strncmp(name, "bat", 3) != 0)
@@ -1322,7 +1316,6 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	 */
 
 	if_setoutputfn(ifp, batadv_softif_output);
-	if_setinputfn(ifp, batadv_softif_input);
 	// TODO if_setqflushfn?
 
 	*ifpp = ifp;

@@ -82,8 +82,6 @@ int batadv_send_skb_packet(struct sk_buff *skb,
 		goto send_skb_err;
 	}
 
-	skb_reset_mac_header(skb);
-
 	/* push to the ethernet header. */
 	if (batadv_skb_head_push(skb, ETH_HLEN) < 0)
 		goto send_skb_err;
@@ -905,10 +903,6 @@ static bool batadv_send_no_broadcast(struct batadv_priv *bat_priv,
 		   "BCAST packet from orig %pM on %s suppressed: %s\n",
 		   bcast_packet->orig,
 		   if_out->net_dev->name, type);
-
-	/* XXX Temporary exception; still send packet if no neighbour. */
-	if (strcmp(type, "no neighbor") == 0)
-		return false;
 
 	return true;
 }
