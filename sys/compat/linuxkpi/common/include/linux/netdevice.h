@@ -635,6 +635,7 @@ netif_rx(struct sk_buff *skb)
 	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
 	if (m == NULL)
 		return;
+	m->m_next = NULL;
 	m->m_pkthdr.rcvif = ifp;
 	m->m_pkthdr.len = len;
 	m->m_len = len;
