@@ -614,38 +614,6 @@ unregister_netdevice(struct net_device *ndev)
 /* -------------------------------------------------------------------------- */
 
 static __inline void
-netif_rx(struct sk_buff *skb)
-{
-	struct net_device *const dev = skb->dev;
-	if_t const ifp = __DECONST(if_t, dev);
-	size_t len;
-	struct mbuf *m;
-
-	/*
-	 * XXX Bit of a hack bc batadv_interface_rx removes the ethernet header.
-	 * This won't work for all calls to netif_rx.
-	 */
-
-	skb_push(skb, ETH_HLEN);
-	len = skb->tail - skb->data;
-
-	/* Create mbuf from skbuff. */
-	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
-
-	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
-	if (m == NULL)
-		return;
-	m->m_next = NULL;
-	m->m_pkthdr.rcvif = ifp;
-	m->m_pkthdr.len = len;
-	m->m_len = len;
-
-	memcpy(mtod(m, void *), skb->data, len);
-
-	ifp->if_input(ifp, m);
-}
-
-static __inline void
 netif_rx_ni(struct sk_buff *skb)
 {
 	pr_debug("%s: TODO\n", __func__);
@@ -736,64 +704,6 @@ linux_dev_get_by_index(struct net *net, int ifindex)
 #define	LL_RESERVED_SPACE(dev)						\
 	((((dev)->hard_header_len + READ_ONCE((dev)->needed_headroom))	\
 	& ~(HH_DATA_MOD - 1)) + HH_DATA_MOD)
-
-static inline int
-dev_queue_xmit(struct sk_buff *skb)
-{
-	struct net_device *const dev = skb->dev;
-	if_t const ifp = __DECONST(if_t, dev);
-	struct ethhdr *ethhdr;
-	struct sockaddr dst;
-	struct route ro = {0};
-	size_t const len = skb->tail - skb->data;
-	struct mbuf *m;
-
-	/* Create mbuf from skbuff. */
-	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
-
-	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
-	if (m == NULL)
-		return (EIO);
-	m->m_pkthdr.len = len;
-	m->m_len = len;
-
-	skb_reset_mac_header(skb);
-	memcpy(mtod(m, uint8_t *), skb->data, len);
-	// m->m_ext.ext_size = MCLBYTES;
-	// memcpy(m->m_ext.ext_buf, skb->data, len);
-
-	/* Create destination struct. */
-
-	ethhdr = eth_hdr(skb);
-
-	dst.sa_len = sizeof ethhdr->h_dest;
-	memcpy(dst.sa_data, ethhdr->h_dest, dst.sa_len);
-	dst.sa_family = AF_INET;
-
-	/* Create route struct. */
-	/*
-	 * XXX I don't know how it works atm, so just pass through original.
-	 * I think it's quite simple; look at how bpfwrite does it.
-	 * Not sure this is necessary at all, try just passing in NULL for ro.
-	 */
-
-	ro.ro_plen = 0;
-	ro.ro_prepend = (void *)0xdeadc0de;
-	ro.ro_flags = RT_HAS_HEADER;
-
-	/* XXX Printing for testing.
-
-	ssize_t const l = skb->tail - skb->data;
-	printf("%s: skbuff of size %zd\n", __func__, l);
-	for (ssize_t i = 0; i < l; i++)
-		printf("%x ", ((uint8_t*) skb->data)[i]);
-	printf("\n");
-	*/
-
-	/* Actually call output function. */
-
-	return (ifp->if_output(ifp, m, &dst, &ro));
-}
 
 static inline int
 net_xmit_eval(int e)
@@ -897,5 +807,13 @@ netdev_for_each_tx_queue(struct net_device *dev, void (*fn)(struct net_device *,
 }
 
 #define	IFF_NO_QUEUE	IFF_DRV_OACTIVE
+
+int linuxkpi_dev_queue_xmit(struct sk_buff *);
+void linuxkpi_netif_rx(struct sk_buff *);
+
+#define	dev_queue_xmit(skb)		\
+	linuxkpi_dev_queue_xmit((skb))
+#define netif_rx(skb)			\
+	linuxkpi_netif_rx((skb))
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */
