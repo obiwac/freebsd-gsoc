@@ -180,9 +180,9 @@ bool batadv_check_management_packet(struct sk_buff *skb,
 {
 	struct ethhdr *ethhdr;
 
-	// /* drop packet if it has not necessary minimum size */
-	// if (unlikely(!pskb_may_pull(skb, header_len)))
-	// 	return false;
+	/* drop packet if it has not necessary minimum size */
+	if (unlikely(!pskb_may_pull(skb, header_len)))
+		return false;
 
 	ethhdr = eth_hdr(skb);
 
@@ -443,9 +443,9 @@ static int batadv_check_unicast_packet(struct batadv_priv *bat_priv,
 {
 	struct ethhdr *ethhdr;
 
-	// /* drop packet if it has not necessary minimum size */
-	// if (unlikely(!pskb_may_pull(skb, hdr_size)))
-	// 	return -ENODATA;
+	/* drop packet if it has not necessary minimum size */
+	if (unlikely(!pskb_may_pull(skb, hdr_size)))
+		return -ENODATA;
 
 	ethhdr = eth_hdr(skb);
 
@@ -794,9 +794,9 @@ static bool batadv_check_unicast_ttvn(struct batadv_priv *bat_priv,
 	unsigned short vid;
 	int is_old_ttvn;
 
-	// /* check if there is enough data before accessing it */
-	// if (!pskb_may_pull(skb, hdr_len + ETH_HLEN))
-	// 	return false;
+	/* check if there is enough data before accessing it */
+	if (!pskb_may_pull(skb, hdr_len + ETH_HLEN))
+		return false;
 
 	/* create a copy of the skb (in case of for re-routing) to modify it. */
 	if (skb_cow(skb, sizeof(*unicast_packet)) < 0)
@@ -1193,8 +1193,8 @@ int batadv_recv_bcast_packet(struct sk_buff *skb,
 	int ret;
 
 	/* drop packet if it has not necessary minimum size */
-	// if (unlikely(!pskb_may_pull(skb, hdr_size)))
-	// 	goto free_skb;
+	if (unlikely(!pskb_may_pull(skb, hdr_size)))
+		goto free_skb;
 
 	ethhdr = eth_hdr(skb);
 
