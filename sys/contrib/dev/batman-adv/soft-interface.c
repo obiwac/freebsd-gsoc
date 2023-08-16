@@ -477,8 +477,8 @@ void batadv_interface_rx(struct net_device *soft_iface,
 	nf_reset_ct(skb);
 #endif
 
-	// if (unlikely(!pskb_may_pull(skb, ETH_HLEN)))
-	// 	goto dropped;
+	if (unlikely(!pskb_may_pull(skb, ETH_HLEN)))
+		goto dropped;
 
 	vid = batadv_get_vid(skb, 0);
 	ethhdr = eth_hdr(skb);

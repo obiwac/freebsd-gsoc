@@ -349,12 +349,6 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 	if ((pflags & RT_HAS_HEADER) == 0)
 		memcpy(mtod(m, void *), phdr, hlen);
 
-	/* XXX Is it better performance-wise to defrag directly into skb? */
-
-	m = m_defrag(m, M_NOWAIT);
-	if (m == NULL)
-		return (NULL);
-
 	/* TODO what should this 128 value be exactly? needed_headroom? */
 	/* XXX not sure where these 28 bytes are supposed to come from! */
 
