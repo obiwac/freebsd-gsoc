@@ -642,8 +642,11 @@ netdev_priv(const struct net_device *ndev)
 static __inline void
 dev_put(struct net_device *dev)
 {
+	if_t const ifp = (if_t)dev;
 
-	pr_debug("%s: TODO\n", __func__);
+	if (ifp == NULL)
+		return;
+	if_rele(ifp);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -679,16 +682,15 @@ static inline struct net_device *
 linux_dev_get_by_index(struct net *net, int ifindex)
 {
 	struct epoch_tracker et;
-	struct ifnet *ifp;
+	if_t ifp;
 
 	NET_EPOCH_ENTER(et);
-	ifp = ifnet_byindex(ifindex);
+	ifp = ifnet_byindex_ref(ifindex);
 	NET_EPOCH_EXIT(et);
 
 	/* TODO explain why we just cast. */
 	/* https://github.com/luigirizzo/netmap/blob/master/LINUX/bsd_glue.h */
 
-	pr_debug("TODO: %s\n", __func__);
 	return ((struct net_device *)ifp);
 }
 
