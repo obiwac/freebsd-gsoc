@@ -853,7 +853,7 @@ static int batadv_softif_slave_add(struct net_device *dev,
 	// TODO in lieu of a better solution...
 
 #if defined(__FreeBSD__)
-	struct ifnet *ifp;
+	if_t ifp;
 
 	CK_STAILQ_FOREACH(ifp, &V_ifnet, if_link)
 		EVENTHANDLER_INVOKE(ifnet_arrival_event, ifp);
@@ -1145,7 +1145,7 @@ static void batadv_softif_destroy_netlink(struct net_device *soft_iface,
 bool batadv_softif_is_valid(const struct net_device *net_dev)
 {
 #if defined(__FreeBSD__)
-	struct ifnet const* const ifp = (void const*)net_dev;
+	if_t const ifp = __DECONST(if_t, net_dev);
 
 	if (!IFT_IS_LINUX(ifp->if_type))
 		return false;
@@ -1258,7 +1258,7 @@ static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
 }
 
 static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len,
-				    struct ifc_data *ifd, struct ifnet **ifpp)
+				    struct ifc_data *ifd, if_t *ifpp)
 {
 	struct net_device *const dev =
 		linuxkpi_alloc_netdev_ifp(batadv_link_ops.priv_size,
@@ -1296,13 +1296,16 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	return 0;
 }
 
-static int batadv_softif_ifc_destroy(struct if_clone *ifc, struct ifnet *ifp,
+static int batadv_softif_ifc_destroy(struct if_clone *ifc, if_t ifp,
 				     uint32_t flags)
 {
-	printf("%s: TODO\n", __func__);
+	struct net_device *const dev = (struct net_device *)ifp;
 
-	if_detach(ifp);
-	if_free(ifp); /* XXX Is the interface freed by the caller or by us? */
+	/* TODO dellink and bpfdetach (in ether_ifdetach) seem to be causing problems. */
+
+	batadv_link_ops.dellink(dev, NULL);
+	ether_ifdetach(ifp);
+	if_free(ifp);
 
 	return 0;
 }
@@ -1339,7 +1342,7 @@ static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 	return err;
 }
 
-static int batadv_softif_ifc_modify_nl(struct ifnet *ifp, struct ifc_data_nl *ifd)
+static int batadv_softif_ifc_modify_nl(if_t ifp, struct ifc_data_nl *ifd)
 {
 	// TODO if we end up not doing anything special in here, replace with ifc_modify_ifp_nl_default
 	//      especially if we anyway do what we were going to do here elsewhere (like in netlink/route/iface_drivers.c calling the ndo callbacks or something idk)
@@ -1349,7 +1352,7 @@ static int batadv_softif_ifc_modify_nl(struct ifnet *ifp, struct ifc_data_nl *if
 	return nl_modify_ifp_generic(ifp, lattrs, ifd->bm, ifd->npt);
 }
 
-static void batadv_softif_ifc_dump_nl(struct ifnet *ifp, struct nl_writer *nw)
+static void batadv_softif_ifc_dump_nl(if_t ifp, struct nl_writer *nw)
 {
 	// TODO if we end up not doing anything special in here, replace with ifc_dump_ifp_nl_default
 	pr_debug("%s: TODO\n", __func__);
