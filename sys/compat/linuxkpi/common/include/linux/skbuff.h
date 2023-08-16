@@ -1199,8 +1199,7 @@ static inline bool
 pskb_may_pull(struct sk_buff *skb, unsigned int len)
 {
 
-	SKB_TODO();
-	return (false);
+	return (len <= skb_headlen(skb));
 }
 
 static inline struct sk_buff *
