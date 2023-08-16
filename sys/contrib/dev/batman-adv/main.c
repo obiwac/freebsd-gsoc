@@ -456,10 +456,9 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 	if (!skb)
 		goto err_put;
 
-	// TODO
-	// /* packet should hold at least type and version */
-	// if (unlikely(!pskb_may_pull(skb, 2)))
-	// 	goto err_free;
+	/* packet should hold at least type and version */
+	if (unlikely(!pskb_may_pull(skb, 2)))
+		goto err_free;
 
 	/* expect a valid ethernet header here. */
 	if (unlikely(skb->mac_len != ETH_HLEN || !skb_mac_header(skb)))
