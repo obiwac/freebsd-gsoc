@@ -1263,11 +1263,10 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	struct net_device *const dev =
 		linuxkpi_alloc_netdev_ifp(batadv_link_ops.priv_size,
 		IFT_BATMAN, batadv_link_ops.setup);
+	if_t ifp = (void *)dev;
 
 	if (dev->netdev_ops->ndo_init(dev) < 0)
 		return ENOSPC;
-
-	if_t ifp = (void *)dev;
 
 	if_initname(ifp, batadv_link_ops.kind, ifd->unit);
 	if_setinitfn(ifp, batadv_softif_init);
@@ -1358,6 +1357,7 @@ static void batadv_softif_ifc_dump_nl(struct ifnet *ifp, struct nl_writer *nw)
 
 static struct if_clone_addreq_v2 batadv_ifc_addreq = {
 	.version = 2, /* For netlink callbacks. */
+	.flags = IFC_F_AUTOUNIT,
 	.match_f = batadv_softif_ifc_match,
 	.create_f = batadv_softif_ifc_create,
 	.destroy_f = batadv_softif_ifc_destroy,
