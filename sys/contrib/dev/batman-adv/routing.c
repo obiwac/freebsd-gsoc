@@ -948,14 +948,12 @@ int batadv_recv_unicast_packet(struct sk_buff *skb,
 	int ret = NET_RX_DROP;
 	bool is4addr, is_gw;
 
-	printf("%s: %d\n", __func__, __COUNTER__); // 0
 	unicast_packet = (struct batadv_unicast_packet *)skb->data;
 	is4addr = unicast_packet->packet_type == BATADV_UNICAST_4ADDR;
 	/* the caller function should have already pulled 2 bytes */
 	if (is4addr)
 		hdr_size = sizeof(*unicast_4addr_packet);
 
-	printf("%s: %d\n", __func__, __COUNTER__); // 1
 	/* function returns -EREMOTE for promiscuous packets */
 	check = batadv_check_unicast_packet(bat_priv, skb, hdr_size);
 
@@ -965,17 +963,13 @@ int batadv_recv_unicast_packet(struct sk_buff *skb,
 	if (check == -EREMOTE)
 		batadv_nc_skb_store_sniffed_unicast(bat_priv, skb);
 
-	printf("%s: %d\n", __func__, __COUNTER__); // 2
 	if (check < 0)
 		goto free_skb;
-	printf("%s: %d\n", __func__, __COUNTER__); // 3
 	if (!batadv_check_unicast_ttvn(bat_priv, skb, hdr_size))
 		goto free_skb;
-	printf("%s: %d\n", __func__, __COUNTER__); // 4
 
 	unicast_packet = (struct batadv_unicast_packet *)skb->data;
 
-	printf("%s: %d\n", __func__, __COUNTER__); // 5
 	/* packet for me */
 	if (batadv_is_my_mac(bat_priv, unicast_packet->dest)) {
 		/* If this is a unicast packet from another backgone gw,
@@ -983,24 +977,19 @@ int batadv_recv_unicast_packet(struct sk_buff *skb,
 		 */
 		orig_addr_gw = eth_hdr(skb)->h_source;
 		orig_node_gw = batadv_orig_hash_find(bat_priv, orig_addr_gw);
-	printf("%s: %d\n", __func__, __COUNTER__); // 6
 		if (orig_node_gw) {
 			is_gw = batadv_bla_is_backbone_gw(skb, orig_node_gw,
 							  hdr_size);
-	printf("%s: %d\n", __func__, __COUNTER__); // 7
 			batadv_orig_node_put(orig_node_gw);
 			if (is_gw) {
-	printf("%s: %d\n", __func__, __COUNTER__); // 8
 				batadv_dbg(BATADV_DBG_BLA, bat_priv,
 					   "%s(): Dropped unicast pkt received from another backbone gw %pM.\n",
 					   __func__, orig_addr_gw);
 				goto free_skb;
 			}
 		}
-	printf("%s: %d\n", __func__, __COUNTER__); // 9
 
 		if (is4addr) {
-	printf("%s: %d\n", __func__, __COUNTER__); // 10
 			unicast_4addr_packet =
 				(struct batadv_unicast_4addr_packet *)skb->data;
 			subtype = unicast_4addr_packet->subtype;
@@ -1013,22 +1002,18 @@ int batadv_recv_unicast_packet(struct sk_buff *skb,
 			 * reside at the sending originator.
 			 */
 			if (subtype == BATADV_P_DATA) {
-	printf("%s: %d\n", __func__, __COUNTER__); // 11
 				orig_addr = unicast_4addr_packet->src;
 				orig_node = batadv_orig_hash_find(bat_priv,
 								  orig_addr);
 			}
 		}
-	printf("%s: %d\n", __func__, __COUNTER__); // 12
 
 		if (batadv_dat_snoop_incoming_arp_request(bat_priv, skb,
 							  hdr_size))
 			goto rx_success;
-	printf("%s: %d\n", __func__, __COUNTER__); // 13
 		if (batadv_dat_snoop_incoming_arp_reply(bat_priv, skb,
 							hdr_size))
 			goto rx_success;
-	printf("%s: %d\n", __func__, __COUNTER__); // 14
 
 		batadv_dat_snoop_incoming_dhcp_ack(bat_priv, skb, hdr_size);
 
@@ -1036,19 +1021,16 @@ int batadv_recv_unicast_packet(struct sk_buff *skb,
 				    orig_node);
 
 rx_success:
-	printf("%s: %d\n", __func__, __COUNTER__); // 15
 		batadv_orig_node_put(orig_node);
 
 		return NET_RX_SUCCESS;
 	}
-	printf("%s: %d\n", __func__, __COUNTER__); // 16
 
 	ret = batadv_route_unicast_packet(skb, recv_if);
 	/* skb was consumed */
 	skb = NULL;
 
 free_skb:
-	printf("%s: %d\n", __func__, __COUNTER__); // 17
 	kfree_skb(skb);
 
 	return ret;
