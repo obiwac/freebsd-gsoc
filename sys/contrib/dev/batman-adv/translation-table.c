@@ -638,7 +638,12 @@ bool batadv_tt_local_add(struct net_device *soft_iface, const u8 *addr,
 	struct batadv_priv *bat_priv = netdev_priv(soft_iface);
 	struct batadv_tt_local_entry *tt_local;
 	struct batadv_tt_global_entry *tt_global = NULL;
+#if defined(__FreeBSD__)
+	/* TODO This is for net namespaces (VNET's for FreeBSD). */
+	struct net *net = NULL;
+#else
 	struct net *net = dev_net(soft_iface);
+#endif
 	struct batadv_softif_vlan *vlan;
 	struct net_device *in_dev = NULL;
 	struct batadv_hard_iface *in_hardif = NULL;

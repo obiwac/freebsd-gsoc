@@ -147,7 +147,12 @@ static bool batadv_mutual_parents(const struct net_device *dev1,
  */
 static bool batadv_is_on_batman_iface(const struct net_device *net_dev)
 {
+#if defined(__FreeBSD__)
+	/* TODO This is for net namespaces (VNET's for FreeBSD). */
+	struct net *net = NULL;
+#else
 	struct net *net = dev_net(net_dev);
+#endif
 	struct net_device *parent_dev;
 	struct net *parent_net;
 	int iflink;
@@ -243,7 +248,12 @@ static struct net_device *batadv_get_real_netdevice(struct net_device *netdev)
 	if (!hard_iface || !hard_iface->soft_iface)
 		goto out;
 
+#if defined(__FreeBSD__)
+	/* TODO This is for net namespaces (VNET's for FreeBSD). */
+	net = NULL;
+#else
 	net = dev_net(hard_iface->soft_iface);
+#endif
 	real_net = batadv_getlink_net(netdev, net);
 
 	/* iflink to itself, most likely physical device */
