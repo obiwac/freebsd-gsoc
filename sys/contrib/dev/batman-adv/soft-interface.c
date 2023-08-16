@@ -212,9 +212,10 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 	/* reset control block to avoid left overs from previous users */
 	memset(skb->cb, 0, sizeof(struct batadv_skb_cb));
 
-	// TODO replace with netdev_start_xmit
-
+#if !defined(__FreeBSD__)
+	/* TODO Replace with netdev_start_xmit. */
 	netif_trans_update(soft_iface);
+#endif
 	vid = batadv_get_vid(skb, 0);
 	KASSERT(vid == BATADV_NO_FLAGS, ("%s: batadv_get_vid not yet tested, returned %u\n", __func__, vid));
 
@@ -472,7 +473,9 @@ void batadv_interface_rx(struct net_device *soft_iface,
 
 	/* skb->dev & skb->pkt_type are set here */
 	skb->protocol = eth_type_trans(skb, soft_iface);
+#if !defined(__FreeBSD__)
 	skb_postpull_rcsum(skb, eth_hdr(skb), ETH_HLEN);
+#endif
 
 	batadv_inc_counter(bat_priv, BATADV_CNT_RX);
 	batadv_add_counter(bat_priv, BATADV_CNT_RX_BYTES,
