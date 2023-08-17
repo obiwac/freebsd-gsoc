@@ -1252,11 +1252,16 @@ static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
 static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len,
 				    struct ifc_data *ifd, if_t *ifpp)
 {
-	struct net_device *const dev =
+	struct net_device *dev =
 		linuxkpi_alloc_netdev_ifp(batadv_link_ops.priv_size,
 		IFT_BATMAN, batadv_link_ops.setup);
 	if_t ifp = (void *)dev;
 
+	/*
+	 * We want to be able to use dev_put on the soft interface later, so
+	 * get a reference to it instead of using it directly.
+	 */
+	dev = linux_dev_get_by_index(NULL, dev->ifindex);
 	if (dev->netdev_ops->ndo_init(dev) < 0)
 		return ENOSPC;
 
