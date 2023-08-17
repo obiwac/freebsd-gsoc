@@ -87,6 +87,7 @@ struct ifnet {
 	struct ifnet	*if_master;	/* master interface */
 	int		(*if_slavefn)(struct mbuf *, if_t, if_t); /* slave forwarding function */
 	void		*if_linux_softc;	/* TODO Find a better solution for this!!! */
+	uint8_t		*linux_dev_addr;
 
 	/* Addresses of different protocol families assigned to this if. */
 	struct mtx if_addr_lock;	/* lock to protect address lists */

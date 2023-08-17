@@ -181,6 +181,8 @@ struct net_device {
 
 	struct ifnet	*if_master;	/* master interface */
 	int		(*if_slavefn)(struct mbuf *, if_t, if_t); /* slave forwarding function */
+	void		*if_linux_softc;
+	uint8_t		*dev_addr;
 
 	/* Addresses of different protocol families assigned to this if. */
 	struct mtx if_addr_lock;	/* lock to protect address lists */
@@ -299,7 +301,7 @@ struct net_device {
 	unsigned short			hard_header_len;
 	int				needed_headroom, needed_tailroom;
 
-	uint8_t				dev_addr[ETH_ALEN];
+	uint8_t				internal_dev_addr[ETH_ALEN];
 	struct netdev_hw_addr_list	mc;
 	uint8_t				broadcast[ETH_ALEN];
 

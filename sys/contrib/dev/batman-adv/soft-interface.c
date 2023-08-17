@@ -1279,7 +1279,6 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 #endif
 
 	ether_ifattach(ifp, dev->dev_addr);
-
 	eth_broadcast_addr(dev->broadcast);
 	ifp->if_broadcastaddr = dev->broadcast;
 

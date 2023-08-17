@@ -383,6 +383,8 @@ linuxkpi_init_dummy_netdev(struct net_device *ndev)
 	ndev->reg_state = NETREG_DUMMY;
 	NAPI_LOCK_INIT(ndev);
 	TAILQ_INIT(&ndev->napi_head);
+
+	ndev->dev_addr = ndev->internal_dev_addr;
 	/* Anything else? */
 
 	ndev->napi_tq = taskqueue_create("tq_ndev_napi", M_WAITOK,
