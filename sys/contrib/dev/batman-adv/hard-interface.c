@@ -860,16 +860,7 @@ void batadv_hardif_disable_interface(struct batadv_hard_iface *hard_iface)
 	/* delete all references to this hard_iface */
 	batadv_purge_orig_ref(bat_priv);
 	batadv_purge_outstanding_packets(bat_priv, hard_iface);
-#if !defined(__FreeBSD__)
-	/*
-	 * XXX We don't do this on FreeBSD, because the implementation of
-	 * dev_put releases a reference gotten e.g. by linux_dev_get_by_index,
-	 * but hard_iface->soft_iface was created by linuxkpi_alloc_netdev, and
-	 * so is not a reference we need to release; rather, we must free the
-	 * soft interface, but that's done in batadv_softif_ifc_destroy instead.
-	 */
 	dev_put(hard_iface->soft_iface);
-#endif
 
 	netdev_upper_dev_unlink(hard_iface->net_dev, hard_iface->soft_iface);
 	batadv_hardif_recalc_extra_skbroom(hard_iface->soft_iface);
