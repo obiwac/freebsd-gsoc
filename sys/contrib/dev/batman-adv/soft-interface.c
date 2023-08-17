@@ -353,16 +353,8 @@ send:
 		/* hw address of first interface is the orig mac because only
 		 * this mac is known throughout the mesh
 		 */
-#if defined(__FreeBSD__)
-		if_t const ifp = __DECONST(if_t, primary_if->net_dev);
-		struct ifaddr *const ifa = ifp->if_addr;
-
-		struct sockaddr_dl *const sdl = __DECONST(struct sockaddr_dl *, ifa->ifa_addr);
-		ether_addr_copy(bcast_packet->orig, LLADDR(sdl));
-#else
 		ether_addr_copy(bcast_packet->orig,
 				primary_if->net_dev->dev_addr);
-#endif
 
 		/* set broadcast sequence number */
 		seqno = atomic_inc_return(&bat_priv->bcast_seqno);
