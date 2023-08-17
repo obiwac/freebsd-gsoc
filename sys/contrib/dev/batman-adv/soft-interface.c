@@ -1287,15 +1287,35 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	return 0;
 }
 
+#include <sys/uuid.h>
+
 static int batadv_softif_ifc_destroy(struct if_clone *ifc, if_t ifp,
 				     uint32_t flags)
 {
 	struct net_device *const dev = (struct net_device *)ifp;
+	struct batadv_hard_iface const *hard_iface;
+	if_t hard_ifp;
 
-	/* TODO dellink and bpfdetach (in ether_ifdetach) seem to be causing problems. */
+	/*
+	 * Clear the ifp->if_master field of each hard interface. This is
+	 * because we're going to end up freeing the soft interface (which it
+	 * points to).
+	 */
+	rcu_read_lock();
+	list_for_each_entry_rcu(hard_iface, &batadv_hardif_list, list) {
+		hard_ifp = (if_t)hard_iface->net_dev;
+		hard_ifp->if_master = NULL;
+	}
+	rcu_read_unlock();
 
 	batadv_link_ops.dellink(dev, NULL);
-	ether_ifdetach(ifp);
+	struct sockaddr_dl *sdl;
+
+	sdl = (struct sockaddr_dl *)(ifp->if_addr->ifa_addr);
+	uuid_ether_del(LLADDR(sdl));
+
+	// bpfdetach(ifp);
+	if_detach(ifp);
 	if_free(ifp);
 
 	return 0;
