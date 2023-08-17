@@ -92,15 +92,7 @@ int batadv_send_skb_packet(struct sk_buff *skb,
 	ether_addr_copy(ethhdr->h_dest, dst_addr);
 	ethhdr->h_proto = htons(ETH_P_BATMAN);
 
-#if defined(__FreeBSD__)
-	if_t const ifp = __DECONST(if_t, hard_iface->net_dev);
-	struct ifaddr *const ifa = ifp->if_addr;
-
-	struct sockaddr_dl *const sdl = __DECONST(struct sockaddr_dl *, ifa->ifa_addr);
-	ether_addr_copy(ethhdr->h_source, LLADDR(sdl));
-#else
 	ether_addr_copy(ethhdr->h_source, hard_iface->net_dev->dev_addr);
-#endif
 
 	skb_set_network_header(skb, ETH_HLEN);
 	skb->protocol = htons(ETH_P_BATMAN);

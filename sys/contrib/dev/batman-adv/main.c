@@ -314,15 +314,7 @@ bool batadv_is_my_mac(struct batadv_priv *bat_priv, const u8 *addr)
 		if (hard_iface->soft_iface != bat_priv->soft_iface)
 			continue;
 
-#if defined(__FreeBSD__)
-		if_t const ifp = (if_t)hard_iface->net_dev;
-		struct ifaddr *const ifa = ifp->if_addr;
-		struct sockaddr_dl *const sdl =
-		    (struct sockaddr_dl *)ifa->ifa_addr;
-		if (batadv_compare_eth(LLADDR(sdl), addr)) {
-#else
 		if (batadv_compare_eth(hard_iface->net_dev->dev_addr, addr)) {
-#endif
 			is_my_mac = true;
 			break;
 		}
