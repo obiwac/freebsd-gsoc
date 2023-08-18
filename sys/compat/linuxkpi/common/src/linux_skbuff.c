@@ -322,7 +322,6 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 	 * We first gotta see if we're provided a link layer header.
 	 * XXX Take a look at ether_output. This is probably what we wanna do.
 	 */
-
 	if (ro != NULL) {
 		if (ro->ro_prepend != NULL) {
 			phdr = ro->ro_prepend;
@@ -333,7 +332,6 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 	}
 
 	/* If not, figure one out. */
-
 	if (phdr == NULL) {
 		if (resolve_addr(ifp, m, dst, ro, linkhdr, &pflags) == 0) {
 			phdr = linkhdr;
@@ -342,7 +340,6 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 	}
 
 	/* Add header once/if we've got one. */
-
 	M_PREPEND(m, hlen, M_NOWAIT);
 	if (m == NULL)
 		return (NULL);
@@ -351,7 +348,6 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 
 	/* TODO what should this 128 value be exactly? needed_headroom? */
 	/* XXX not sure where these 28 bytes are supposed to come from! */
-
 	payload_len = m_length(m, NULL);
 	skb = dev_alloc_skb(128 + payload_len + 28);
 	if (skb == NULL)
@@ -360,13 +356,12 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 	skb->data = skb->head + 128;
 	skb->tail = skb->data + payload_len + 28;
 	skb->len = skb->tail - skb->data;
-	memcpy(skb->data, mtod(m, void *), payload_len);
+	m_copydata(m, 0, payload_len, skb->data);
 
 	/*
 	 * TODO this should really be done only in linuxkpi_alloc_skb, not sure why
 	 * it's not working correctly...
 	 */
-
 	memset(skb->shinfo, 0, sizeof *skb->shinfo);
 	return (skb);
 }
