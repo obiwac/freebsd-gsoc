@@ -347,14 +347,13 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 		memcpy(mtod(m, void *), phdr, hlen);
 
 	/* TODO what should this 128 value be exactly? needed_headroom? */
-	/* XXX not sure where these 28 bytes are supposed to come from! */
 	payload_len = m_length(m, NULL);
-	skb = dev_alloc_skb(128 + payload_len + 28);
+	skb = dev_alloc_skb(128 + payload_len);
 	if (skb == NULL)
 		return (NULL);
 
 	skb->data = skb->head + 128;
-	skb->tail = skb->data + payload_len + 28;
+	skb->tail = skb->data + payload_len;
 	skb->len = skb->tail - skb->data;
 	m_copydata(m, 0, payload_len, skb->data);
 
