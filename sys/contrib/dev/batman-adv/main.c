@@ -483,7 +483,7 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 	idx = batadv_ogm_packet->packet_type;
 	(*batadv_rx_handler[idx])(skb, hard_iface);
 
-	// TODO batadv_hardif_put(hard_iface);\n", __func__);
+	batadv_hardif_put(hard_iface);
 
 	/* return NET_RX_SUCCESS in any case as we
 	 * most probably dropped the packet for
@@ -494,7 +494,7 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 err_free:
 	kfree_skb(skb);
 err_put:
-	printf("%s: TODO: batadv_hardif_put(hard_iface);\n", __func__);
+	batadv_hardif_put(hard_iface);
 err_out:
 	return NET_RX_DROP;
 }
