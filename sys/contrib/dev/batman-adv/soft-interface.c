@@ -1318,6 +1318,8 @@ static int batadv_softif_ifc_destroy(struct if_clone *ifc, if_t ifp,
 	 * stops the crashing; I thought this was to do with the malloc types
 	 * (the softif is allocated with M_NETDEV), but I tested that and it
 	 * appears not to be the case.
+	 *
+	 * Also, what should I do w.r.t. linuxkpi_free_netdev(dev)?
 	 */
 
 	sdl = (struct sockaddr_dl *)(ifp->if_addr->ifa_addr);
@@ -1333,32 +1335,53 @@ static int batadv_softif_ifc_destroy(struct if_clone *ifc, if_t ifp,
 #include <netlink/route/route_var.h>
 #include <netlink/route/interface.h>
 
+struct nl_parsed_batadv_idata {
+	struct nlattr *unspec;
+	struct nlattr *algo_name;
+};
+
+#define	_OUT(_field)	offsetof(struct nl_parsed_batadv_idata, _field)
+static struct nlattr_parser const nla_p_batadv_idata[] = {
+	{ .type = IFLA_BATADV_UNSPEC, .off = _OUT(unspec), .cb = nlattr_get_nla },
+	{ .type = IFLA_BATADV_ALGO_NAME, .off = _OUT(algo_name), .cb = nlattr_get_nla },
+};
+#undef	_OUT
+NL_DECLARE_ATTR_PARSER(batadv_idata_parser, nla_p_batadv_idata);
+
 static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 				       size_t len, struct ifc_data_nl *ifd)
 {
-	// TODO if we end up not doing anything special in here, replace with ifc_create_ifp_nl_default
+	struct nl_pstate *const npt = ifd->npt;
+	struct nl_parsed_link *const lattrs = ifd->lattrs;
+	struct nl_parsed_batadv_idata attrs = { 0 };
+	int err = 0;
 
+	/* Parse info data attributes. */
+	if (lattrs->ifla_idata != NULL) {
+		err = nl_parse_nested(lattrs->ifla_idata, &batadv_idata_parser,
+		    npt, &attrs);
+		if (err != 0)
+			return err;
+	}
+
+	/* Create batadv interface itself. */
 	struct ifc_data ifd_new = {
 		.flags = ifd->flags,
 		.unit = ifd->unit,
 		.params = ifd->params,
 	};
+	err = batadv_softif_ifc_create(ifc, name, len, &ifd_new, &ifd->ifp);
+	if (err != 0)
+		return err;
 
-	int err = batadv_softif_ifc_create(ifc, name, len, &ifd_new, &ifd->ifp);
+	/* Call the Linux function for creating a new batadv link. */
+	struct net_device *const dev = (struct net_device*)ifd->ifp;
+	struct nlattr *data[IFLA_BATADV_MAX + 1] = {
+		[IFLA_BATADV_UNSPEC] = attrs.unspec,
+		[IFLA_BATADV_ALGO_NAME] = attrs.algo_name,
+	};
 
-	/* TODO
-	struct nl_parsed_link *lattrs = ifd->lattrs;
-	struct net_device *dev = (struct net_device*)ifd->ifp;
-
-	struct nlattr *bsd_data = lattrs->ifla_idata;
-	struct nlattr *data[IFLA_BATADV_MAX + 1] = { 0 };
-
-	for (size_t i = 0; bsd_data && i < nitems(data); i++)
-		data[i] = &bsd_data[i];
-
-	int err = batadv_link_ops.newlink(NULL, dev, NULL, data, NULL);
-	*/
-
+	err = batadv_link_ops.newlink(NULL, dev, NULL, data, NULL);
 	return err;
 }
 
