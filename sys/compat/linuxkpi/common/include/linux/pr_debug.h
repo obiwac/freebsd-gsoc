@@ -1,6 +1,10 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause
- * Copyright (c) ???
+ * Copyright (c) 2010 Isilon Systems, Inc.
+ * Copyright (c) 2010 iX Systems, Inc.
+ * Copyright (c) 2010 Panasas, Inc.
+ * Copyright (c) 2013-2016 Mellanox Technologies, Ltd.
+ * Copyright (c) 2014-2015 François Tigeot
  * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  */
 
@@ -8,8 +12,6 @@
 #define	_LINUXKPI_LINUX_PR_DEBUG_H
 
 #include <sys/syslog.h>
-
-// TODO who wrote this?
 
 /*
  * The "pr_debug()" and "pr_devel()" macros should produce zero code

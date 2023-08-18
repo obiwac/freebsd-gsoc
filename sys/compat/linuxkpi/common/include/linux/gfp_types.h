@@ -1,7 +1,11 @@
 /*-
-* SPDX-License-Identifier: BSD-2-Clause
-* Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
-*/
+ * SPDX-License-Identifier: BSD-2-Clause
+ * Copyright (c) 2010 Isilon Systems, Inc.
+ * Copyright (c) 2010 iX Systems, Inc.
+ * Copyright (c) 2010 Panasas, Inc.
+ * Copyright (c) 2013-2017 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
+ */
 
 #ifndef _LINUXKPI_LINUX_GFP_TYPES_H_
 #define _LINUXKPI_LINUX_GFP_TYPES_H_
