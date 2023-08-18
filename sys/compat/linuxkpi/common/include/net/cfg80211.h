@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2020-2023 The FreeBSD Foundation
  * Copyright (c) 2021-2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.

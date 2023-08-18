@@ -410,7 +410,6 @@ void batadv_v_elp_iface_activate(struct batadv_hard_iface *primary_iface,
 
 	skb = hard_iface->bat_v.elp_skb;
 	elp_packet = (struct batadv_elp_packet *)skb->data;
-
 	ether_addr_copy(elp_packet->orig,
 			primary_iface->net_dev->dev_addr);
 }
@@ -536,8 +535,10 @@ int batadv_v_elp_packet_recv(struct sk_buff *skb,
 
 	batadv_v_elp_neigh_update(bat_priv, ethhdr->h_source, if_incoming,
 				  elp_packet);
+
 	ret = NET_RX_SUCCESS;
 	batadv_hardif_put(primary_if);
+
 free_skb:
 	if (ret == NET_RX_SUCCESS)
 		consume_skb(skb);
