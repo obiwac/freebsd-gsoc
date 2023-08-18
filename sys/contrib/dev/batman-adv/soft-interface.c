@@ -1083,19 +1083,12 @@ static int batadv_softif_newlink(struct net *src_net, struct net_device *dev,
 	const char *algo_name;
 	int err;
 
-#if defined(__FreeBSD__)
-	algo_name = "BATMAN_V";
-	err = batadv_algo_select(bat_priv, algo_name);
-	if (err)
-		return -EINVAL;
-#else
 	if (data && data[IFLA_BATADV_ALGO_NAME]) {
 		algo_name = nla_data(data[IFLA_BATADV_ALGO_NAME]);
 		err = batadv_algo_select(bat_priv, algo_name);
 		if (err)
 			return -EINVAL;
 	}
-#endif
 
 	return register_netdevice(dev);
 }
