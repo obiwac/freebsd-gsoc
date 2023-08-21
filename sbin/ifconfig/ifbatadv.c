@@ -5,6 +5,7 @@
 
 #include <err.h>
 #include <string.h>
+#include <sys/param.h>
 
 #include "ifconfig.h"
 #include "ifconfig_netlink.h"
@@ -13,6 +14,14 @@
  * Since batman_adv anyway depends on netlink, there's no point supporting the
  * ioctl way.
  */
+
+struct batadvreq {
+	char const*	routing_algo;
+};
+
+static struct batadvreq params = {
+	.routing_algo	= NULL,
+};
 
 /*
  * XXX Taken from sys/compat/linuxkpi/common/include/uapi/linux/batman_adv.h.
@@ -44,9 +53,11 @@ batadv_create(int s, if_ctx *ctx, struct ifreq *req)
 	{
 		int const off = snl_add_msg_attr_nested(&nw, IFLA_LINKINFO);
 		snl_add_msg_attr_string(&nw, IFLA_INFO_KIND, req->ifr_name);
-		{
-			int const off = snl_add_msg_attr_nested(&nw, IFLA_INFO_DATA);
-			snl_add_msg_attr_string(&nw, IFLA_BATADV_ALGO_NAME, "BATMAN_V");
+		if (params.routing_algo != NULL) {
+			int const off = snl_add_msg_attr_nested(&nw,
+			    IFLA_INFO_DATA);
+			snl_add_msg_attr_string(&nw, IFLA_BATADV_ALGO_NAME,
+			    params.routing_algo);
 			snl_end_attr_nested(&nw, off);
 		}
 		snl_end_attr_nested(&nw, off);
@@ -78,9 +89,23 @@ batadv_create(int s, if_ctx *ctx, struct ifreq *req)
 	*/
 }
 
+static void
+setra(if_ctx *ctx, char const *val, int dummy __unused)
+{
+
+	params.routing_algo = val;
+}
+
+static struct cmd batadv_cmds[] = {
+	DEF_CLONE_CMD_ARG("ra", 	setra),
+};
+
 static __constructor void
 batadv_ctor(void)
 {
+	size_t i;
 
+	for (i = 0; i < nitems(batadv_cmds); i++)
+		cmd_register(&batadv_cmds[i]);
 	clone_nl_setdefcallback_prefix("batadv", batadv_create);
 }
