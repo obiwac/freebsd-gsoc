@@ -24,7 +24,7 @@
 .\"
 .\" $FreeBSD$
 .\"
-.Dd November 1, 2022
+.Dd August 21, 2023
 .Dt RTNETLINK 4
 .Os
 .Sh NAME
@@ -282,8 +282,10 @@ struct ifinfomsg {
 .Ed
 .Ss RTM_NEWLINK
 Creates a new interface.
-The only mandatory TLV is
-.Dv IFLA_IFNAME .
+The only mandatory TLV's are
+.Dv IFLA_IFNAME
+and
+.Dv IFLA_INFO_KIND .
 The following attributes are returned inside the nested
 .Dv NLMSGERR_ATTR_COOKIE :
 .Pp
