@@ -36,6 +36,7 @@ SRCS+=	ifvxlan.c		# VXLAN support
 SRCS+=	ifgre.c			# GRE keys etc
 SRCS+=	ifgif.c			# GIF reversed header workaround
 SRCS+=	ifipsec.c		# IPsec VTI
+SRCS+=	ifbatadv.c		# B.A.T.M.A.N.-adv support
 
 SRCS+=	sfp.c			# SFP/SFP+ information
 LIBADD+=	ifconfig m util
