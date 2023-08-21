@@ -94,4 +94,23 @@ genl_info_net(struct genl_info *info)
 	return (NULL);
 }
 
+static inline int
+linux_genl_register_family(struct genl_family *family)
+{
+	/* XXX Should this be family->maxattr - 1? */
+	int const family_id = genl_register_family(family->name,
+	    family->hdrsize, family->version, family->maxattr);
+
+	if (family_id == 0)
+		return (-1);
+	return (0);
+}
+
+static inline void
+linux_genl_unregister_family(struct genl_family *family)
+{
+
+	genl_unregister_family(family->name);
+}
+
 #endif	/* _LINUXKPI_NET_GENETLINK_H */
