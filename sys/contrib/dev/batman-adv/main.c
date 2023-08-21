@@ -743,12 +743,18 @@ out:
 module_init(batadv_init);
 module_exit(batadv_exit);
 
-#if defined(__linux__)
 MODULE_LICENSE("GPL");
-
 MODULE_AUTHOR(BATADV_DRIVER_AUTHOR);
 MODULE_DESCRIPTION(BATADV_DRIVER_DESC);
+
+#if defined(__linux__)
 MODULE_VERSION(BATADV_SOURCE_VERSION);
 MODULE_ALIAS_RTNL_LINK("batadv");
 MODULE_ALIAS_GENL_FAMILY(BATADV_NL_NAME);
+#endif
+
+#if defined(__FreeBSD__)
+MODULE_VERSION(batman_adv, 20231);
+MODULE_DEPEND(batman_adv, linuxkpi, 1, 1, 1);
+MODULE_DEPEND(batman_adv, netlink, 1, 1, 1);
 #endif
