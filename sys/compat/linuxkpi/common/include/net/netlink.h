@@ -202,7 +202,7 @@ nlmsg_free(struct sk_buff *skb)
 static inline void *
 nla_data(struct nlattr const *nla)
 {
-	return __DECONST(void *, nla + NLA_HDRLEN);
+	return __DECONST(char *, nla) + NLA_HDRLEN;
 }
 
 #endif	/* _LINUXKPI_NET_NETLINK_H */
