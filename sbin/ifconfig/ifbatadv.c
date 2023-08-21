@@ -14,7 +14,15 @@
  * ioctl way.
  */
 
-#include <stdio.h>
+/*
+ * XXX Taken from sys/compat/linuxkpi/common/include/uapi/linux/batman_adv.h.
+ * How do we make this includable by userspace programs?
+ */
+enum batadv_ifla_attrs {
+	IFLA_BATADV_UNSPEC,
+	IFLA_BATADV_ALGO_NAME,
+	__IFLA_BATADV_MAX,
+};
 
 static void
 batadv_create(int s, if_ctx *ctx, struct ifreq *req)
@@ -36,6 +44,11 @@ batadv_create(int s, if_ctx *ctx, struct ifreq *req)
 	{
 		int const off = snl_add_msg_attr_nested(&nw, IFLA_LINKINFO);
 		snl_add_msg_attr_string(&nw, IFLA_INFO_KIND, req->ifr_name);
+		{
+			int const off = snl_add_msg_attr_nested(&nw, IFLA_INFO_DATA);
+			snl_add_msg_attr_string(&nw, IFLA_BATADV_ALGO_NAME, "BATMAN_V");
+			snl_end_attr_nested(&nw, off);
+		}
 		snl_end_attr_nested(&nw, off);
 	}
 
