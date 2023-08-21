@@ -265,6 +265,12 @@ typedef void clone_callback_func(int, struct ifreq *);
 void	clone_setdefcallback_prefix(const char *, clone_callback_func *);
 void	clone_setdefcallback_filter(clone_match_func *, clone_callback_func *);
 
+#if !defined(WITHOUT_NETLINK)
+typedef void clone_nl_callback_func(int, if_ctx *, struct ifreq *);
+void	clone_nl_setdefcallback_prefix(const char *, clone_nl_callback_func *);
+void	clone_nl_setdefcallback_filter(clone_match_func *, clone_nl_callback_func *);
+#endif
+
 void	sfp_status(int s, struct ifreq *ifr, int verbose);
 
 struct sockaddr_dl;
