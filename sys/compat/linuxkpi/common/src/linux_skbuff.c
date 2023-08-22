@@ -324,6 +324,14 @@ linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
 	int error;
 
 	/*
+	 * If dst == NULL, the mbuf we're passed was received, i.e., we don't
+	 * intend for the resulting skb to be transmitted. This means we can
+	 * skip the whole header prepending stuff.
+	 */
+	if (dst == NULL)
+		goto recv;
+
+	/*
 	 * We first gotta see if we're provided a link layer header.
 	 * XXX Take a look at ether_output. This is probably what we wanna do.
 	 */
