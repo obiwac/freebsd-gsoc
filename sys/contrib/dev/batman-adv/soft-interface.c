@@ -1184,6 +1184,11 @@ static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
 	return err;
 }
 
+static void batadv_softif_init(void *idk)
+{
+	/* XXX This function does nothing, but it's required. */
+}
+
 static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
 {
 	struct net_device *const dev = (void *)ifp;
@@ -1254,6 +1259,7 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 		return ENOSPC;
 
 	if_initname(ifp, batadv_link_ops.kind, ifd->unit);
+	if_setinitfn(ifp, batadv_softif_init);
 	if_setioctlfn(ifp, batadv_softif_ioctl);
 	ifp->if_slavefn = batadv_batman_m_recv; // TODO if we end up going with this, make setter function
 
@@ -1272,8 +1278,6 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	 */
 
 	if_setoutputfn(ifp, batadv_softif_output);
-	// TODO if_setqflushfn?
-
 	*ifpp = ifp;
 
 	return 0;
