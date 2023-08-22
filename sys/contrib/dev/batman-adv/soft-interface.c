@@ -1292,7 +1292,6 @@ static int batadv_softif_ifc_destroy(struct if_clone *ifc, if_t ifp,
 	struct net_device *const dev = (struct net_device *)ifp;
 	struct batadv_hard_iface const *hard_iface;
 	if_t hard_ifp;
-	struct sockaddr_dl *sdl;
 
 	/*
 	 * Clear the ifp->if_master field of each hard interface. This is
@@ -1308,25 +1307,8 @@ static int batadv_softif_ifc_destroy(struct if_clone *ifc, if_t ifp,
 
 	batadv_link_ops.dellink(dev, NULL);
 
-	/*
-	 * TODO bpfdetach results in a crash, not sure why. I'm suspecting it's
-	 * to do with Linux workqueues though, because when I never create them
-	 * for ELP and OGM2, there's no crash, but when I create them and noop
-	 * in their work functions, there still is a crash. Another thing to
-	 * note is that removing the free(ifp, M_IFNET) in if_free_deferred
-	 * stops the crashing; I thought this was to do with the malloc types
-	 * (the softif is allocated with M_NETDEV), but I tested that and it
-	 * appears not to be the case.
-	 *
-	 * Also, what should I do w.r.t. linuxkpi_free_netdev(dev)?
-	 */
-
-	sdl = (struct sockaddr_dl *)(ifp->if_addr->ifa_addr);
-	uuid_ether_del(LLADDR(sdl));
-
-	// bpfdetach(ifp);
-	if_detach(ifp);
-	if_free(ifp);
+	/* XXX free_netdev seems never to be called by BATMAN (?) */
+	free_netdev(dev);
 
 	return 0;
 }
