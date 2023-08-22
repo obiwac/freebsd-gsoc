@@ -1200,7 +1200,8 @@ static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const 
 		af = RO_GET_FAMILY(ro, dst);
 	m->m_pkthdr.csum_data = af;
 
-	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(ifp, m, dst, ro);
+	/* XXX 28 is enough headroom for BATMAN. */
+	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(dev, m, dst, ro, 28);
 	if (skb == NULL)
 		return -1;
 
@@ -1283,8 +1284,6 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 
 	return 0;
 }
-
-#include <sys/uuid.h>
 
 static int batadv_softif_ifc_destroy(struct if_clone *ifc, if_t ifp,
 				     uint32_t flags)
