@@ -202,6 +202,7 @@ nlmsg_free(struct sk_buff *skb)
 static inline void *
 nla_data(struct nlattr const *nla)
 {
+
 	return __DECONST(char *, nla) + NLA_HDRLEN;
 }
 

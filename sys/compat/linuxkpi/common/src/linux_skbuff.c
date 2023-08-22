@@ -317,6 +317,7 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 	char linkhdr[ETHER_HDR_LEN], *phdr = NULL;
 	uint32_t pflags;
 	size_t hlen = 0;
+	int error;
 
 	/*
 	 * We first gotta see if we're provided a link layer header.
@@ -333,10 +334,13 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 
 	/* If not, figure one out. */
 	if (phdr == NULL) {
-		if (resolve_addr(ifp, m, dst, ro, linkhdr, &pflags) == 0) {
+		error = resolve_addr(ifp, m, dst, ro, linkhdr, &pflags);
+		if (error == 0) {
 			phdr = linkhdr;
 			hlen = sizeof linkhdr;
 		}
+		else if (error == EWOULDBLOCK)
+			return (NULL);
 	}
 
 	/* Add header once/if we've got one. */

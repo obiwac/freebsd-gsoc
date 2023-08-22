@@ -394,7 +394,6 @@ dropped:
 	kfree_skb(skb);
 dropped_freed:
 	batadv_inc_counter(bat_priv, BATADV_CNT_TX_DROPPED);
-	printf("%s: DROPPED\n", __func__);
 end:
 	batadv_hardif_put(primary_if);
 	return NETDEV_TX_OK;
@@ -1353,7 +1352,7 @@ static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 {
 	struct nl_pstate *const npt = ifd->npt;
 	struct nl_parsed_link *const lattrs = ifd->lattrs;
-	struct nl_parsed_batadv_idata attrs = { 0 };
+	struct nl_parsed_batadv_idata attrs = {};
 	int err = 0;
 
 	/* Parse info data attributes. */
