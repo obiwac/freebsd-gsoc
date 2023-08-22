@@ -516,13 +516,10 @@ linuxkpi_netif_rx(struct sk_buff *skb)
 	 * XXX Bit of a hack bc batadv_interface_rx removes the ethernet header.
 	 * This won't work for all calls to netif_rx.
 	 */
-
 	skb_push(skb, ETH_HLEN);
 	len = skb->tail - skb->data;
 
 	/* Create mbuf from skbuff. */
-	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
-
 	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
 	if (m == NULL)
 		return;
@@ -532,6 +529,7 @@ linuxkpi_netif_rx(struct sk_buff *skb)
 	m->m_len = len;
 
 	memcpy(mtod(m, void *), skb->data, len);
+	kfree_skb(skb);
 
 	ifp->if_input(ifp, m);
 }
