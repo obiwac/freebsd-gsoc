@@ -594,23 +594,29 @@ register_netdev(struct net_device *ndev)
 	return (error);
 }
 
-static __inline void
-unregister_netdev(struct net_device *ndev)
+static inline void
+unregister_netdevice_queue(struct net_device *ndev, struct list_head *head)
 {
+
+	if (ndev->priv_destructor)
+		ndev->priv_destructor(ndev);
 	pr_debug("%s: TODO\n", __func__);
 }
 
 static inline void
-unregister_netdevice_queue(struct net_device *dev, struct list_head *head)
-{
-
-	pr_debug("%s: TODO\n", __func__);
-}
-
-static __inline void
 unregister_netdevice(struct net_device *ndev)
 {
-	pr_debug("%s: TODO\n", __func__);
+
+	unregister_netdevice_queue(ndev, NULL);
+}
+
+static inline void
+unregister_netdev(struct net_device *ndev)
+{
+
+	/* lock */
+	unregister_netdevice(ndev);
+	/* unlock */
 }
 
 /* -------------------------------------------------------------------------- */
