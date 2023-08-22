@@ -397,6 +397,7 @@ recv:
 	skb->tail = skb->data + payload_len;
 	skb->len = skb->tail - skb->data;
 	m_copydata(m, 0, payload_len, skb->data);
+	m_free(m);
 
 	/*
 	 * TODO this should really be done only in linuxkpi_alloc_skb, not sure why
