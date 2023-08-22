@@ -377,6 +377,8 @@ linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
 		}
 		else if (error == EWOULDBLOCK)
 			return (NULL);
+		else
+			return (NULL);
 	}
 
 	/* Add header once/if we've got one. */
