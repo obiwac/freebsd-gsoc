@@ -472,13 +472,23 @@ linuxkpi_dev_queue_xmit(struct sk_buff *skb)
 	if_t const ifp = (if_t)dev;
 	struct ethhdr *ethhdr;
 	struct sockaddr dst;
-	struct route ro = {0};
 	size_t const len = skb->tail - skb->data;
 	struct mbuf *m;
+	struct route ro = {
+		.ro_plen = 0,
+		/* Can point to anything, as long as it's not NULL. */
+		.ro_prepend = (void *)0xdeadc0de,
+		.ro_flags = RT_HAS_HEADER,
+	};
+
+	/* Create destination struct. */
+	ethhdr = eth_hdr(skb);
+
+	dst.sa_len = sizeof ethhdr->h_dest;
+	memcpy(dst.sa_data, ethhdr->h_dest, dst.sa_len);
+	dst.sa_family = AF_INET;
 
 	/* Create mbuf from skbuff. */
-	/* TODO Should this be a M_EXT? What is M_PKTHDR for? */
-
 	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
 	if (m == NULL)
 		return (EIO);

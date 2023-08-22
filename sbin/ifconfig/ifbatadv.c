@@ -42,7 +42,6 @@ batadv_create(int s, if_ctx *ctx, struct ifreq *req)
 	struct snl_errmsg_data e;
 
 	/* Create the interface (link). */
-	/* TODO Look at ra. */
 	snl_init_writer(ctx->io_ss, &nw);
 	hdr = snl_create_msg_request(&nw, RTM_NEWLINK);
 	snl_reserve_msg_object(&nw, struct ifinfomsg);
