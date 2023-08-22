@@ -498,39 +498,9 @@ linuxkpi_dev_queue_xmit(struct sk_buff *skb)
 
 	skb_reset_mac_header(skb);
 	memcpy(mtod(m, uint8_t *), skb->data, len);
-	// m->m_ext.ext_size = MCLBYTES;
-	// memcpy(m->m_ext.ext_buf, skb->data, len);
-
-	/* Create destination struct. */
-
-	ethhdr = eth_hdr(skb);
-
-	dst.sa_len = sizeof ethhdr->h_dest;
-	memcpy(dst.sa_data, ethhdr->h_dest, dst.sa_len);
-	dst.sa_family = AF_INET;
-
-	/* Create route struct. */
-	/*
-	 * XXX I don't know how it works atm, so just pass through original.
-	 * I think it's quite simple; look at how bpfwrite does it.
-	 * Not sure this is necessary at all, try just passing in NULL for ro.
-	 */
-
-	ro.ro_plen = 0;
-	ro.ro_prepend = (void *)0xdeadc0de;
-	ro.ro_flags = RT_HAS_HEADER;
-
-	/* XXX Printing for testing.
-
-	ssize_t const l = skb->tail - skb->data;
-	printf("%s: skbuff of size %zd\n", __func__, l);
-	for (ssize_t i = 0; i < l; i++)
-		printf("%x ", ((uint8_t*) skb->data)[i]);
-	printf("\n");
-	*/
+	kfree_skb(skb);
 
 	/* Actually call output function. */
-
 	return (ifp->if_output(ifp, m, &dst, &ro));
 }
 
