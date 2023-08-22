@@ -64,6 +64,7 @@ __FBSDID("$FreeBSD$");
 #ifdef __LP64__
 #include <linux/log2.h>
 #endif
+#include <linux/netdevice.h>
 
 SYSCTL_DECL(_compat_linuxkpi);
 SYSCTL_NODE(_compat_linuxkpi, OID_AUTO, skb, CTLFLAG_RW | CTLFLAG_MPSAFE, 0,
@@ -309,9 +310,10 @@ resolve_addr(struct ifnet *ifp, struct mbuf *m, struct sockaddr const *dst,
 }
 
 struct sk_buff *
-linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
-	struct route *ro)
+linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
+	struct sockaddr const *dst, struct route *ro, int headroom)
 {
+	if_t const ifp = (if_t)dev;
 	size_t payload_len;
 	struct sk_buff *skb;
 	char linkhdr[ETHER_HDR_LEN], *phdr = NULL;
@@ -349,14 +351,13 @@ linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m, struct sockaddr const *dst,
 		return (NULL);
 	if ((pflags & RT_HAS_HEADER) == 0)
 		memcpy(mtod(m, void *), phdr, hlen);
-
-	/* TODO what should this 128 value be exactly? needed_headroom? */
+recv:
 	payload_len = m_length(m, NULL);
-	skb = dev_alloc_skb(128 + payload_len);
+	skb = dev_alloc_skb(headroom + payload_len);
 	if (skb == NULL)
 		return (NULL);
 
-	skb->data = skb->head + 128;
+	skb->data = skb->head + headroom;
 	skb->tail = skb->data + payload_len;
 	skb->len = skb->tail - skb->data;
 	m_copydata(m, 0, payload_len, skb->data);

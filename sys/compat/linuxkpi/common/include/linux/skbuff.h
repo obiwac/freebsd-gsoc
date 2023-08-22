@@ -197,8 +197,8 @@ void linuxkpi_kfree_skb(struct sk_buff *);
 
 struct sk_buff *linuxkpi_skb_copy(struct sk_buff *, gfp_t);
 struct sk_buff *linuxkpi_skb_clone(struct sk_buff *, gfp_t);
-struct sk_buff *linuxkpi_skb_from_mbuf(if_t ifp, struct mbuf *m,
-	struct sockaddr const *dst, struct route *ro);
+struct sk_buff *linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
+	struct sockaddr const *dst, struct route *ro, int headroom);
 
 /* -------------------------------------------------------------------------- */
 

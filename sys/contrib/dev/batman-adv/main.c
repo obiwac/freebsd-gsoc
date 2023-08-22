@@ -505,7 +505,8 @@ int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
 	struct net_device *const dev = (void *)ifp;
 	struct net_device *const orig_dev = (void *)master;
 
-	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(ifp, m, NULL, NULL);
+	/* XXX 28 is enough headroom for BATMAN. */
+	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(dev, m, NULL, NULL, 28);
 	struct packet_type *const ptype = ifp->if_linux_softc;
 
 	if (skb == NULL)
