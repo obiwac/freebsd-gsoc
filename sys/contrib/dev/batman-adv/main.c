@@ -510,7 +510,7 @@ int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
 	struct packet_type *const ptype = ifp->if_linux_softc;
 
 	if (skb == NULL)
-		return -1;
+		return 0;
 	skb->dev = dev;
 
 	// TODO what are the proper calls for this?

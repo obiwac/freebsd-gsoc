@@ -1203,7 +1203,7 @@ static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const 
 	/* XXX 28 is enough headroom for BATMAN. */
 	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(dev, m, dst, ro, 28);
 	if (skb == NULL)
-		return -1;
+		return 0;
 
 	return dev->netdev_ops->ndo_start_xmit(skb, dev);
 }
