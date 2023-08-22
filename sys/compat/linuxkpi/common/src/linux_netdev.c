@@ -433,6 +433,7 @@ linuxkpi_alloc_netdev_ifp(size_t priv_len, u_char type,
 
 	linuxkpi_init_dummy_netdev(ndev);
 	if_fill_domain(ifp, type, IF_NODOM);
+	ndev->has_ifp = true;
 
 	memset(ndev->drv_priv, 0, priv_len);
 	setup_func(ndev);
@@ -444,6 +445,7 @@ void
 linuxkpi_free_netdev(struct net_device *ndev)
 {
 	struct napi_struct *napi, *temp;
+	if_t const ifp = (if_t)ndev;
 
 	NAPI_LOCK(ndev);
 	TAILQ_FOREACH_SAFE(napi, &ndev->napi_head, entry, temp) {
@@ -457,7 +459,10 @@ linuxkpi_free_netdev(struct net_device *ndev)
 
 	/* This needs extending as we support more. */
 
-	free(ndev, M_NETDEV);
+	if (ndev->has_ifp)
+		ether_ifdetach(ifp);
+	else
+		free(ndev, M_NETDEV);
 }
 
 int

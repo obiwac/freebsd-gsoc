@@ -294,6 +294,7 @@ struct net_device {
 	/*
 	 * Extra fields only in struct net_device, not struct ifnet.
 	 */
+	bool				has_ifp;
 	netdev_features_t		features;
 	struct net_device_stats		stats;
 	enum net_device_reg_state	reg_state;
