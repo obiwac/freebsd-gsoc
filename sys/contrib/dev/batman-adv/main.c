@@ -513,8 +513,6 @@ int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master)
 		return 0;
 	skb->dev = dev;
 
-	// TODO what are the proper calls for this?
-
 	skb->mac_len = ETH_HLEN;
 	skb_reset_mac_header(skb);
 	skb->data += skb->mac_len;
