@@ -253,7 +253,7 @@ linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
 
 static int
 resolve_addr(struct ifnet *ifp, struct mbuf *m, struct sockaddr const *dst,
-	struct route *ro, u_char *phdr, uint32_t *pflags)
+	struct route *ro, u_char *phdr, uint32_t *pflags, struct llentry **plle)
 {
 	/*
 	 * XXX This fella is adapted from ether_resolve_addr.
@@ -319,6 +319,8 @@ linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
 	char linkhdr[ETHER_HDR_LEN], *phdr = NULL;
 	uint32_t pflags;
 	size_t hlen = 0;
+	struct llentry *lle = NULL;
+	int addref = 0;
 	int error;
 
 	/*
@@ -329,14 +331,38 @@ linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
 		if (ro->ro_prepend != NULL) {
 			phdr = ro->ro_prepend;
 			hlen = ro->ro_plen;
+		} else if (!(m->m_flags & (M_BCAST | M_MCAST))) {
+			if ((ro->ro_flags & RT_LLE_CACHE) != 0) {
+				lle = ro->ro_lle;
+				if (lle != NULL &&
+				    (lle->la_flags & LLE_VALID) == 0) {
+					LLE_FREE(lle);
+					lle = NULL;	/* redundant */
+					ro->ro_lle = NULL;
+				}
+				if (lle == NULL) {
+					/* if we lookup, keep cache */
+					addref = 1;
+				} else
+					/*
+					 * Notify LLE code that
+					 * the entry was used
+					 * by datapath.
+					 */
+					llentry_provide_feedback(lle);
+			}
+			if (lle != NULL) {
+				phdr = lle->r_linkdata;
+				hlen = lle->r_hdrlen;
+				pflags = lle->r_flags;
+			}
 		}
-
-		/* TODO more stuff here... */
 	}
 
 	/* If not, figure one out. */
 	if (phdr == NULL) {
-		error = resolve_addr(ifp, m, dst, ro, linkhdr, &pflags);
+		error = resolve_addr(ifp, m, dst, ro, linkhdr, &pflags,
+		    addref ? &lle : NULL);
 		if (error == 0) {
 			phdr = linkhdr;
 			hlen = sizeof linkhdr;
