@@ -3188,6 +3188,14 @@ to be master:
 # ifconfig igb0 vhid 1 state master
 .Ed
 .Pp
+Create a
+.Xr batman_adv 4
+interface using the BATMAN_V routing algorithm and set vtnet0 to be it's slave:
+.Bd -literal -offset indent -compact
+# ifconfig batadv create ra BATMAN_V
+# ifconfig vtnet0 master batadv0
+.Ed
+.Pp
 Configure the interface
 .Li xl0 ,
 to use 100baseTX, full duplex Ethernet media options:
