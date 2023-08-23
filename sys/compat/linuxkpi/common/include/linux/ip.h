@@ -41,7 +41,10 @@
 
 #include <linux/skbuff.h>
 
-/* (u) unconfirmed structure field names; using FreeBSD's (struct ip) meanwhile. */
+/*
+ * (u) unconfirmed structure field names;
+ * using FreeBSD's (struct ip) meanwhile.
+ */
 struct iphdr {
 #if BYTE_ORDER == BIG_ENDIAN
 	uint8_t		version:4, ihl:4;
