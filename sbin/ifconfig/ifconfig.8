@@ -28,7 +28,7 @@
 .\"     From: @(#)ifconfig.8	8.3 (Berkeley) 1/5/94
 .\" $FreeBSD$
 .\"
-.Dd May 22, 2023
+.Dd August 23, 2023
 .Dt IFCONFIG 8
 .Os
 .Sh NAME
@@ -3124,6 +3124,13 @@ announcements to.
 Restore the default destination address for (IPv4)
 .Xr carp 4
 announcements, which is ff02::12.
+.Ss BATMAN Parameters
+The following parameters are used to configure
+.Xr batman_adv 4
+interfaces:
+.Bl -tag -width indent
+.It Cm ra Ar algo
+Select the routing algorithm for use when creating a BATMAN interface.
 .El
 .Sh ENVIRONMENT
 The following environment variables affect the execution of

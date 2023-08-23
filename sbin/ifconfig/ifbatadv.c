@@ -14,7 +14,6 @@
  * Since batman_adv anyway depends on netlink, there's no point supporting the
  * ioctl way.
  */
-
 struct batadvreq {
 	char const*	routing_algo;
 };
