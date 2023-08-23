@@ -359,16 +359,13 @@ static inline bool
 bitmap_andnot(unsigned long *dst, const unsigned long *src1,
     const unsigned long *src2, const unsigned int size)
 {
-	unsigned int k;
-	unsigned int lim = size/BITS_PER_LONG;
-	unsigned long result = 0;
+	const unsigned int end = BITS_TO_LONGS(size);
+	unsigned int i;
+	bool res = false;
 
-	for (k = 0; k < lim; k++)
-		result |= (dst[k] = src1[k] & ~src2[k]);
-	if (size % BITS_PER_LONG)
-		result |= (dst[k] = src1[k] & ~src2[k] &
-			   BITMAP_LAST_WORD_MASK(size));
-	return result != 0;
+	for (i = 0; i != end; i++)
+		res |= (dst[i] = src1[i] & ~src2[i]);
+	return (res);
 }
 
 static inline void
