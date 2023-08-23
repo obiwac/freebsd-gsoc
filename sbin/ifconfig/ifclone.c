@@ -187,19 +187,15 @@ ifclonecreate(int s, void *arg)
 		}
 	}
 
-	/* TODO All... this. */
-
-	if (dcp == NULL || dcp->clone_cb == NULL) {
+	if (dcp == NULL || dcp->clone_cb == NULL)
 		/* NB: no parameters */
 	  	ioctl_ifcreate(s, &ifr);
-	} else if (dcp->clone_ct == CT_IOCTL) {
-		dcp->clone_cb(s, &ifr);
-	}
 #if !defined(WITHOUT_NETLINK)
-	else if (dcp->clone_ct == CT_NL) {
+	else if (dcp->clone_ct == CT_NL)
 		dcp->clone_nl_cb(s, ctx, &ifr);
-	}
 #endif
+	else
+		dcp->clone_cb(s, &ifr);
 
 	/*
 	 * If we get a different name back than we put in, update record and
