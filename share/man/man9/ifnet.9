@@ -1200,6 +1200,12 @@ does, with the addition that the ifnet will be tagged with the NUMA
 domain via the
 .Fa numa_domain
 argument passed by the caller.
+.It Fn if_fill_domain
+Initialize
+.Vt "struct ifnet"
+the same way
+.Fn if_alloc_domain ,
+except the allocation is done by the caller.
 .It Fn if_attach
 Link the specified interface
 .Fa ifp
