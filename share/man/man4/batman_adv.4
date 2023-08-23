@@ -25,7 +25,8 @@ code.
 .Sh EXAMPLES
 Configure a
 .Nm
-interface using the BATMAN_V routing algorithm with vtnet0 as a slave:
+interface using the BATMAN_V routing algorithm with vtnet0 as a slave.
+The MTU of vtnet0 is set to 1532 to give room for the BATMAN header:
 .Bd -literal -offset indent
 kldload batman_adv
 ifconfig vtnet0 mtu 1532
