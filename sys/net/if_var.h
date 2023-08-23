@@ -150,6 +150,7 @@ typedef int (*if_sa_cnt_fn_t)(if_t ifp, void *sa,
     uint32_t drv_spi, void *priv, struct seclifetime *lt);
 typedef int (*if_ipsec_hwassist_fn_t)(if_t ifp, void *sav,
     u_int drv_spi,void *priv);
+typedef int (*if_slave_fn_t)(if_t, if_t, struct mbuf *);
 
 struct ifnet_hw_tsomax {
 	u_int	tsomaxbytes;	/* TSO total burst length limit in bytes */
