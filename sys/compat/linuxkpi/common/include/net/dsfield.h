@@ -14,14 +14,15 @@ static inline __u8
 ipv4_get_dsfield(struct iphdr const *iph)
 {
 
-	return iph->tos;
+	return (iph->tos);
 }
 
 static inline __u8
 ipv6_get_dsfield(struct ipv6hdr const *ipv6h)
 {
 
-	return ntohs(*__DECONST(__be16 *, ipv6h)) >> 4;
+	pr_debug("%s: TODO\n", __func__);
+	return (0);
 }
 
 #endif	/* _LINUXKPI_NET_DSFIELD_H */

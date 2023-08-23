@@ -10,7 +10,9 @@
 #include <linux/skbuff.h>
 
 static inline struct sk_buff *
-arp_create(int type, int ptype, __be32 dest_ip, struct net_device *dev, __be32 src_ip, unsigned char const *dest_hw, unsigned char const *src_hw, unsigned char const *target_hw)
+arp_create(int type, int ptype, __be32 dest_ip, struct net_device *dev,
+    __be32 src_ip, unsigned char const *dest_hw, unsigned char const *src_hw,
+    unsigned char const *target_hw)
 {
 
 	pr_debug("%s: TODO\n", __func__);
