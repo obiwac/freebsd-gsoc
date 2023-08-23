@@ -117,15 +117,12 @@ struct net_device_ops {
 };
 
 struct net_device_stats {
-	unsigned long		multicast;
-
-	unsigned long		rx_bytes;
-	unsigned long		rx_errors;
-	unsigned long		rx_packets;
+	unsigned long		tx_packets;
 	unsigned long		tx_bytes;
 	unsigned long		tx_dropped;
-	unsigned long		tx_errors;
-	unsigned long		tx_packets;
+	unsigned long		rx_packets;
+	unsigned long		rx_bytes;
+	unsigned long		rx_dropped;
 };
 
 struct net_device {
