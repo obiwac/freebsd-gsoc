@@ -358,9 +358,7 @@ static inline bool batadv_has_timed_out(unsigned long timestamp,
 static inline void batadv_add_counter(struct batadv_priv *bat_priv, size_t idx,
 				      size_t count)
 {
-#if !defined(__FreeBSD__)
 	this_cpu_add(bat_priv->bat_counters[idx], count);
-#endif
 }
 
 /**

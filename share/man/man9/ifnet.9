@@ -28,7 +28,7 @@
 .\"
 .\" $FreeBSD$
 .\"
-.Dd May 24, 2022
+.Dd August 23, 2023
 .Dt IFNET 9
 .Os
 .Sh NAME
@@ -122,6 +122,10 @@
 .Ft int
 .Fo \*(lp*if_resolvemulti\*(rp
 .Fa "struct ifnet *ifp" "struct sockaddr **retsa" "struct sockaddr *addr"
+.Fc
+.Ft int
+.Fo \*(lp*if_slave_fn_t\*(rp
+.Fa "struct ifnet *ifp" "struct ifnet *slave" "struct mbuf *m"
 .Fc
 .Ss "struct ifaddr member function"
 .Ft void
@@ -452,6 +456,21 @@ using
 .Fn if_alloc_dev
 or
 .Fn if_alloc_domain .
+.It Va if_master
+.Pq Vt "struct ifnet *"
+Reference to the master of this interface. Must be nulled before the
+interface structure is freed.
+.It Va if_linux_softc
+.Pq Vt "void *"
+Private Linux driver data, used by the
+.Vt "struct net_device"
+compatibility in the LinuxKPI.
+.It Va if_linux_dev_addr
+.Pq Vt "uint8_t *"
+Used by the
+.Vt "struct net_device"
+compatibility in the LinuxKPI as an alias to
+.Va dev_addr .
 .El
 .Pp
 References to
@@ -549,6 +568,13 @@ for validity, and if necessary compute a link-layer group which
 corresponds to that address which is returned in
 .Fa *retsa .
 Returns zero on success, or an error code on failure.
+.It Fn if_slavefn
+Forward a packet
+.Fa m
+from the slave
+.Fa ifp
+to its master
+.Fa master .
 .El
 .Ss "Interface Flags"
 Interface flags are used for a number of different purposes.
