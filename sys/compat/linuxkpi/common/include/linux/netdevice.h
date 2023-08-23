@@ -697,9 +697,6 @@ linux_dev_get_by_index(struct net *net, int ifindex)
 	ifp = ifnet_byindex_ref(ifindex);
 	NET_EPOCH_EXIT(et);
 
-	/* TODO explain why we just cast. */
-	/* https://github.com/luigirizzo/netmap/blob/master/LINUX/bsd_glue.h */
-
 	return ((struct net_device *)ifp);
 }
 
@@ -709,12 +706,7 @@ linux_dev_get_by_index(struct net *net, int ifindex)
 #define	NET_XMIT_MASK	0x0F
 
 #define	HH_DATA_MOD	16
-
-// TODO rewrite this
-
-#define	LL_RESERVED_SPACE(dev)						\
-	((((dev)->hard_header_len + READ_ONCE((dev)->needed_headroom))	\
-	& ~(HH_DATA_MOD - 1)) + HH_DATA_MOD)
+#define	LL_RESERVED_SPACE(dev) 0
 
 static inline int
 net_xmit_eval(int e)

@@ -85,7 +85,6 @@ __ethtool_get_link_ksettings(struct net_device *dev, struct ethtool_link_ksettin
 	 * this, but we're not guaranteed dev is a Linux net_device (i.e. could
 	 * be a FreeBSD ifp), so we can't just do that.
 	 */
-
 	return (-EOPNOTSUPP);
 }
 

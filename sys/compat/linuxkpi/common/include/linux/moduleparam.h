@@ -137,10 +137,9 @@
 
 #define	module_param_array(var, type, addr_argc, mode)
 
-// TODO
-
-#define	module_param_cb(name, ops, args, perm) \
-	static void* __attribute__((unused)) ___[] = { __DECONST(void*, ops), __DECONST(void*, args) };
+#define	module_param_cb(name, ops, args, perm)				\
+	static void *const __unused ___[] = { __DECONST(void *, ops),	\
+	    __DECONST(void *, args) }
 
 #define	MODULE_PARM_DESC(name, desc) \
 	const char LINUXKPI_PARAM_DESC(name)[] = { desc }

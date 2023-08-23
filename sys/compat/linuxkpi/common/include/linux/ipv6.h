@@ -26,7 +26,7 @@ static inline struct ipv6hdr *
 ipv6_hdr(struct sk_buff const *skb)
 {
 
-	return (struct ipv6hdr *)(skb_network_header(__DECONST(struct sk_buff *, skb)));
+	return ((struct ipv6hdr *)skb_network_header(__DECONST(struct sk_buff *, skb)));
 }
 
 #endif	/* _LINUXKPI_LINUX_IPV6_H */
