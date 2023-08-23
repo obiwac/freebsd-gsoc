@@ -824,6 +824,7 @@ ether_input(struct ifnet *ifp, struct mbuf *m)
 		}
 	}
 #endif
+
 	/*
 	 * The drivers are allowed to pass in a chain of packets linked with
 	 * m_nextpkt. We split them up into separate packets here and pass
