@@ -247,7 +247,7 @@ int batadv_batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 			   struct packet_type *ptype,
 			   struct net_device *orig_dev);
 #if defined(__FreeBSD__)
-int batadv_batman_m_recv(struct mbuf *m, if_t ifp, if_t master);
+int batadv_batman_m_recv(if_t ifp, if_t slave, struct mbuf *m);
 #endif
 int
 batadv_recv_handler_register(u8 packet_type,

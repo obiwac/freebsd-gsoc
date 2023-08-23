@@ -128,7 +128,7 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 	}
 
 	if (lattrs->ifla_broadcast != NULL) {
-		printf("%s: TODO (IFLA_BROADCAST)\n", __func__);
+		pr_debug("%s: TODO (IFLA_BROADCAST)\n", __func__);
 	}
 
 	if (lattrs->ifla_master != 0) {
@@ -144,19 +144,16 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 			return (ENOENT);
 		}
 
-		// TODO maybe this ifp->if_master field should take the index, not a pointer to the struct??? because otherwise what's the point of ifnet_byindex_ref?
 		NET_EPOCH_ENTER(et);
 		if_setmaster(ifp, ifnet_byindex(lattrs->ifla_master));
 		NET_EPOCH_EXIT(et);
-
 		if (IFT_IS_LINUX(ifp_master->if_type)) {
 			struct net_device *const master = (void *)ifp_master;
-			struct net_device *const slave = (void *)ifp; // TODO not an issue right now but how best to make this conversion?
+			struct net_device *const slave = (void *)ifp;
 
 			if (master->netdev_ops)
 				master->netdev_ops->ndo_add_slave(master, slave, NULL);
 		}
-
 		if_rele(ifp_master);
 	}
 

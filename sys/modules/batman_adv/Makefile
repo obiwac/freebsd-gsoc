@@ -44,7 +44,7 @@ CFLAGS+=	-DCONFIG_BATMAN_ADV_DEBUG
 # CFLAGS+=	-DCONFIG_BATMAN_ADV_MCAST # multicast
 # CFLAGS+=	-DCONFIG_BATMAN_ADV_NC # XXX network coding (need to add network-coding.c to $SRCS)
 
-# Linux KPI sources/flags.
+# LinuxKPI sources/flags.
 
 SRCS+=		${LINUXKPI_GENSRCS}
 CFLAGS+=	${LINUXKPI_INCLUDES}

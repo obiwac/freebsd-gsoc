@@ -903,7 +903,7 @@ if_attach_internal(struct ifnet *ifp, bool vmove)
 		ifa->ifa_ifp = ifp;
 		ifa->ifa_addr = (struct sockaddr *)sdl;
 		sdl = (struct sockaddr_dl *)ifa->ifa_addr;
-		ifp->linux_dev_addr = LLADDR(sdl);
+		ifp->if_linux_dev_addr = LLADDR(sdl);
 		sdl = (struct sockaddr_dl *)(socksize + (caddr_t)sdl);
 		ifa->ifa_netmask = (struct sockaddr *)sdl;
 		sdl->sdl_len = masklen;
@@ -4516,7 +4516,7 @@ if_getmtu_family(const if_t ifp, int family)
 }
 
 int
-if_setmaster(if_t ifp, if_t const master)
+if_setmaster(if_t ifp, if_t master)
 {
 	ifp->if_master = master;
 	return (0);
@@ -4526,6 +4526,32 @@ if_t
 if_getmaster(if_t const ifp)
 {
 	return (ifp->if_master);
+}
+
+int
+if_setslavefn(if_t ifp, if_slave_fn_t slavefn)
+{
+	ifp->if_slavefn = slavefn;
+	return (0);
+}
+
+if_slave_fn_t
+if_getslavefn(if_t ifp)
+{
+	return (ifp->if_slavefn);
+}
+
+int
+if_setlinuxsoftc(if_t ifp, void* linux_softc)
+{
+	ifp->if_linux_softc = linux_softc;
+	return (0);
+}
+
+void*
+if_getlinuxsoftc(if_t ifp)
+{
+	return (ifp->if_linux_softc);
 }
 
 /*

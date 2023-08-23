@@ -604,8 +604,6 @@ int if_setmtu(if_t ifp, int mtu);
 int if_getmtu(const if_t ifp);
 int if_getmtu_family(const if_t ifp, int family);
 void if_notifymtu(if_t ifp);
-int if_setmaster(if_t ifp, if_t const master);
-if_t if_getmaster(if_t const ifp);
 int if_setflagbits(if_t ifp, int set, int clear);
 int if_setflags(if_t ifp, int flags);
 int if_getflags(const if_t ifp);
@@ -646,6 +644,12 @@ uint8_t if_getpcp(if_t ifp);
 void *if_getl2com(if_t ifp);
 struct ifvlantrunk *if_getvlantrunk(if_t ifp);
 bool if_altq_is_enabled(if_t ifp);
+int if_setmaster(if_t ifp, if_t master);
+if_t if_getmaster(if_t const ifp);
+int if_setslavefn(if_t ifp, if_slave_fn_t slavefn);
+if_slave_fn_t if_getslavefn(if_t ifp);
+int if_setlinuxsoftc(if_t ifp, void* linux_softc);
+void* if_getlinuxsoftc(if_t ifp);
 
 void *if_getafdata(if_t ifp, int);
 

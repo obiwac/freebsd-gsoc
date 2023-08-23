@@ -849,16 +849,14 @@ ether_input(struct ifnet *ifp, struct mbuf *m)
 	/*
 	 * If the packet is a BATMAN packet, pass it to the master BATMAN interface.
 	 * Skip if there's no master or it's not BATMAN.
-	 * TODO How do we implement interface masters in FreeBSD? (What about vs. dev_add_pack?)
-	 * TODO Where in this routine should this be done?
 	 */
 	struct ether_header *const eh = mtod(m, struct ether_header *);
 	if (eh->ether_type == htons(ETHERTYPE_BATMAN)) {
 		if_t const master = if_getmaster(ifp);
 
 		if (master != NULL && master->if_type == IFT_BATMAN
-		    && master->if_slavefn)
-			master->if_slavefn(m, ifp, master);
+		    && if_getslavefn(master))
+			if_getslavefn(master)(master, ifp, m);
 		return;
 	}
 	while (m) {
