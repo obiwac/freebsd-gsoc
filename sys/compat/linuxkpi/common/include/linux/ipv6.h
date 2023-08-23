@@ -8,18 +8,22 @@
 
 #include <linux/skbuff.h>
 
+/*
+ * (u) unconfirmed structure field names;
+ * using FreeBSD's (struct ip6_hdr) meanwhile.
+ */
 struct ipv6hdr {
 #if BYTE_ORDER == BIG_ENDIAN
-	uint8_t		version:4, priority:4;
+	uint8_t		version:4, ihl:4;
 #else
-	uint8_t		priority:4, version:4;
+	uint8_t		ihl:4, version:4;
 #endif
-	__u8		flow_lbl[3];
-	__be16		payload_len;
-	__u8		nexthdr;
-	__u8		hop_limit;
-	struct in6_addr	saddr;
-	struct in6_addr	daddr;
+	uint32_t	ip6_un1_flow;	/* (u) */
+	uint16_t	ip6_un1_plen;	/* (u) */
+	uint8_t		nexthdr;
+	uint8_t		ip6_un1_hlim;	/* (u) */
+	struct in6_addr ip6_src;	/* (u) */
+	struct in6_addr ip6_dst;	/* (u) */
 };
 
 static inline struct ipv6hdr *
