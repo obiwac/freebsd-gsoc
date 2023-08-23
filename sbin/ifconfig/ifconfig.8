@@ -810,6 +810,10 @@ The MTU is used to limit the size of packets that are transmitted on an
 interface.
 Not all interfaces support setting the MTU, and some interfaces have
 range restrictions.
+.It Cm master Ar master
+(Netlink only.)
+Set the master interface to
+.Ar master .
 .It Cm netmask Ar mask
 .\" (Inet and ISO.)
 (Inet only.)
@@ -3267,6 +3271,7 @@ requested address is unknown, or the user is not privileged and
 tried to alter an interface's configuration.
 .Sh SEE ALSO
 .Xr netstat 1 ,
+.Xr batman_adv 4 ,
 .Xr carp 4 ,
 .Xr gif 4 ,
 .Xr netintro 4 ,
