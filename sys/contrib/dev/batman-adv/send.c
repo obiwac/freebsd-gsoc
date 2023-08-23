@@ -87,12 +87,11 @@ int batadv_send_skb_packet(struct sk_buff *skb,
 		goto send_skb_err;
 
 	skb_reset_mac_header(skb);
-	ethhdr = eth_hdr(skb);
 
+	ethhdr = eth_hdr(skb);
+	ether_addr_copy(ethhdr->h_source, hard_iface->net_dev->dev_addr);
 	ether_addr_copy(ethhdr->h_dest, dst_addr);
 	ethhdr->h_proto = htons(ETH_P_BATMAN);
-
-	ether_addr_copy(ethhdr->h_source, hard_iface->net_dev->dev_addr);
 
 	skb_set_network_header(skb, ETH_HLEN);
 	skb->protocol = htons(ETH_P_BATMAN);

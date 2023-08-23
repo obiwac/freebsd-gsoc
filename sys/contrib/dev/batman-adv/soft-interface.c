@@ -213,11 +213,12 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 	memset(skb->cb, 0, sizeof(struct batadv_skb_cb));
 
 #if !defined(__FreeBSD__)
-	/* TODO Replace with netdev_start_xmit. */
 	netif_trans_update(soft_iface);
 #endif
 	vid = batadv_get_vid(skb, 0);
+#if defined(__FreeBSD__)
 	KASSERT(vid == BATADV_NO_FLAGS, ("%s: batadv_get_vid not yet tested, returned %u\n", __func__, vid));
+#endif
 
 	skb_reset_mac_header(skb);
 	ethhdr = eth_hdr(skb);
@@ -464,9 +465,7 @@ void batadv_interface_rx(struct net_device *soft_iface,
 
 	/* skb->dev & skb->pkt_type are set here */
 	skb->protocol = eth_type_trans(skb, soft_iface);
-#if !defined(__FreeBSD__)
 	skb_postpull_rcsum(skb, eth_hdr(skb), ETH_HLEN);
-#endif
 
 	batadv_inc_counter(bat_priv, BATADV_CNT_RX);
 	batadv_add_counter(bat_priv, BATADV_CNT_RX_BYTES,
@@ -755,7 +754,11 @@ static int batadv_softif_init_late(struct net_device *dev)
 	/* batadv_interface_stats() needs to be available as soon as
 	 * register_netdevice() has been called
 	 */
-	bat_priv->bat_counters = kmalloc(cnt_len, GFP_KERNEL); // TODO __alloc_percpu(cnt_len, __alignof__(u64));
+#if defined(__FreeBSD__)
+	bat_priv->bat_counters = kmalloc(cnt_len, GFP_KERNEL);
+#else
+	bat_priv->bat_counter = __alloc_percpu(cnt_len, __alignof__(u64));
+#endif
 	if (!bat_priv->bat_counters)
 		return -ENOMEM;
 
@@ -780,7 +783,7 @@ static int batadv_softif_init_late(struct net_device *dev)
 	atomic_set(&bat_priv->orig_interval, 1000);
 	atomic_set(&bat_priv->hop_penalty, 30);
 #ifdef CONFIG_BATMAN_ADV_DEBUG
-	atomic_set(&bat_priv->log_level, 255 /* BATADV_DBG_ALL */);
+	atomic_set(&bat_priv->log_level, 0);
 #endif
 	atomic_set(&bat_priv->fragmentation, 1);
 	atomic_set(&bat_priv->packet_size_max, ETH_DATA_LEN);
@@ -841,9 +844,8 @@ static int batadv_softif_slave_add(struct net_device *dev,
 				   struct net_device *slave_dev,
 				   struct netlink_ext_ack *extack)
 {
-	// TODO in lieu of a better solution...
-
 #if defined(__FreeBSD__)
+	/* XXX In lieu of a better solution... */
 	if_t ifp;
 
 	CK_STAILQ_FOREACH(ifp, &V_ifnet, if_link)
@@ -1170,9 +1172,7 @@ static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
 	struct ifreq *ifr = (void *)data;
 	int err = 0;
 
-	// see dev_ifsioc
-	// printf("%s: %ld\n", __func__, cmd);
-
+	/* See dev_ifsioc. */
 	switch (cmd) {
 	case SIOCSIFMTU:
 		err = dev->netdev_ops->ndo_change_mtu(dev, ifr->ifr_mtu);
@@ -1186,7 +1186,7 @@ static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
 
 static void batadv_softif_init(void *idk)
 {
-	/* XXX This function does nothing, but it's required. */
+	/* This function does nothing, but it's required. */
 }
 
 static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
@@ -1276,7 +1276,6 @@ static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len
 	 * Transmission is handled by batadv_softif_output;
 	 * no need to register an ifp->if_transmit.
 	 */
-
 	if_setoutputfn(ifp, batadv_softif_output);
 	*ifpp = ifp;
 
@@ -1365,18 +1364,11 @@ static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
 
 static int batadv_softif_ifc_modify_nl(if_t ifp, struct ifc_data_nl *ifd)
 {
-	// TODO if we end up not doing anything special in here, replace with ifc_modify_ifp_nl_default
-	//      especially if we anyway do what we were going to do here elsewhere (like in netlink/route/iface_drivers.c calling the ndo callbacks or something idk)
-
-	struct nl_parsed_link *const lattrs = ifd->lattrs;
-
-	return nl_modify_ifp_generic(ifp, lattrs, ifd->bm, ifd->npt);
+	return nl_modify_ifp_generic(ifp, ifd->lattrs, ifd->bm, ifd->npt);
 }
 
 static void batadv_softif_ifc_dump_nl(if_t ifp, struct nl_writer *nw)
 {
-	// TODO if we end up not doing anything special in here, replace with ifc_dump_ifp_nl_default
-	pr_debug("%s: TODO\n", __func__);
 }
 
 static struct if_clone_addreq_v2 batadv_ifc_addreq = {
