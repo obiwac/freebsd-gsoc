@@ -91,7 +91,7 @@ SYSCTL_INT(_compat_linuxkpi_skb, OID_AUTO, mem_limit, CTLFLAG_RDTUN,
     "1=32bit, 2=36bit, other=undef (currently 32bit)");
 #endif
 
-static MALLOC_DEFINE(M_LKPISKB, "lkpiskb", "Linux KPI skbuff compat");
+static MALLOC_DEFINE(M_LKPISKB, "lkpiskb", "LinuxKPI skbuff compat");
 
 struct sk_buff *
 linuxkpi_alloc_skb(size_t size, gfp_t gfp)

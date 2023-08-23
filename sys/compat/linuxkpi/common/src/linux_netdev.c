@@ -40,7 +40,7 @@ __FBSDID("$FreeBSD$");
 #include <linux/list.h>
 #include <linux/netdevice.h>
 
-MALLOC_DEFINE(M_NETDEV, "lkpindev", "Linux KPI netdevice compat");
+MALLOC_DEFINE(M_NETDEV, "lkpindev", "LinuxKPI netdevice compat");
 
 #define	NAPI_LOCK_INIT(_ndev)		\
     mtx_init(&(_ndev)->napi_mtx, "napi_mtx", NULL, MTX_DEF)
