@@ -84,11 +84,6 @@ struct ifnet {
 	struct	task if_linktask;	/* task for link change events */
 	struct	task if_addmultitask;	/* task for SIOCADDMULTI */
 
-	struct ifnet	*if_master;	/* master interface */
-	int		(*if_slavefn)(struct mbuf *, if_t, if_t); /* slave forwarding function */
-	void		*if_linux_softc;	/* TODO Find a better solution for this!!! */
-	uint8_t		*linux_dev_addr;
-
 	/* Addresses of different protocol families assigned to this if. */
 	struct mtx if_addr_lock;	/* lock to protect address lists */
 		/*
@@ -188,6 +183,14 @@ struct ifnet {
 	 */
 	struct debugnet_methods *if_debugnet_methods;
 	struct epoch_context	if_epoch_ctx;
+
+	/*
+	 * LinuxKPI struct net_device compatibility.
+	 */
+	if_t		if_master;		/* master interface */
+	if_slave_fn_t	if_slavefn;		/* slave forwarding function */
+	void		*if_linux_softc;	/* Linux driver data */
+	uint8_t		*if_linux_dev_addr;	/* for use by its alias in struct net_device */
 
 	/*
 	 * Spare fields to be added before branching a stable branch, so

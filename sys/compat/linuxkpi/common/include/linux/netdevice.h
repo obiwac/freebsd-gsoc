@@ -130,163 +130,112 @@ struct net_device {
 	 * struct ifnet, with aliases to struct net_device equivalents,
 	 * plus struct net_device-only fields.
 	 */
+	CK_STAILQ_ENTRY(ifnet) if_link;
+	LIST_ENTRY(ifnet) if_clones;
+	CK_STAILQ_HEAD(, ifg_list) if_groups;
 
-	/* General book keeping of interface lists. */
-	CK_STAILQ_ENTRY(ifnet) if_link; 	/* all struct ifnets are chained (CK_) */
-	LIST_ENTRY(ifnet) if_clones;	/* interfaces of a cloner */
-	CK_STAILQ_HEAD(, ifg_list) if_groups; /* linked list of groups per if (CK_) */
-					/* protected by if_addr_lock */
-	u_char	if_alloctype;		/* if_type at time of allocation */
-	uint8_t	if_numa_domain;		/* NUMA domain of device */
-	/* Driver and protocol specific information that remains stable. */
-	void	*if_softc;		/* pointer to driver state */
-	void	*if_llsoftc;		/* link layer softc */
-	void	*if_l2com;		/* pointer to protocol bits */
-	const char *if_dname;		/* driver name */
-	int	if_dunit;		/* unit or IF_DUNIT_NONE */
-	u_short	ifindex;		/* numeric abbreviation for this if  */
-	u_short	if_idxgen;		/* ... and its generation count */
-	char	name[IFNAMSIZ];		/* external name (name + unit) */
-	char	*if_description;	/* interface description */
+	u_char	if_alloctype;
+	uint8_t	if_numa_domain;
+	void	*if_softc;
+	void	*if_llsoftc;
+	void	*if_l2com;
+	const char *if_dname;
+	int	if_dunit;
+	u_short	ifindex;
+	u_short	if_idxgen;
+	char	name[IFNAMSIZ];
+	char	*if_description;
 
-	/* Variable fields that are touched by the stack and drivers. */
-	int	flags;			/* up/down, broadcast, etc. */
-	int	priv_flags;		/* driver-managed status flags */
-	int	if_capabilities;	/* interface features & capabilities */
-	int	if_capabilities2;	/* part 2 */
-	int	if_capenable;		/* enabled features & capabilities */
-	int	if_capenable2;		/* part 2 */
-	void	*if_linkmib;		/* link-type-specific MIB data */
-	size_t	if_linkmiblen;		/* length of above data */
-	u_int	if_refcount;		/* reference count */
+	int	flags;
+	int	priv_flags;
+	int	if_capabilities;
+	int	if_capabilities2;
+	int	if_capenable;
+	int	if_capenable2;
+	void	*if_linkmib;
+	size_t	if_linkmiblen;
+	u_int	if_refcount;
 
-	/* These fields are shared with struct if_data. */
-	uint8_t		type;		/* ethernet, tokenring, etc */
-	uint8_t		addr_len;	/* media address length */
-	uint8_t		if_hdrlen;	/* media header length */
-	uint8_t		if_link_state;	/* current link state */
-	uint32_t	mtu;		/* maximum transmission unit */
-	uint32_t	if_metric;	/* routing metric (external only) */
-	uint64_t	if_baudrate;	/* linespeed */
-	uint64_t	if_hwassist;	/* HW offload capabilities, see IFCAP */
-	time_t		if_epoch;	/* uptime at attach or stat reset */
-	struct timeval	if_lastchange;	/* time of last administrative change */
+	uint8_t		type;
+	uint8_t		addr_len;
+	uint8_t		if_hdrlen;
+	uint8_t		if_link_state;
+	uint32_t	mtu;
+	uint32_t	if_metric;
+	uint64_t	if_baudrate;
+	uint64_t	if_hwassist;
+	time_t		if_epoch;
+	struct timeval	if_lastchange;
 
-	struct  ifaltq if_snd;		/* output queue (includes altq) */
-	struct	task if_linktask;	/* task for link change events */
-	struct	task if_addmultitask;	/* task for SIOCADDMULTI */
+	struct  ifaltq if_snd;
+	struct	task if_linktask;
+	struct	task if_addmultitask;
 
-	struct ifnet	*if_master;	/* master interface */
-	int		(*if_slavefn)(struct mbuf *, if_t, if_t); /* slave forwarding function */
-	void		*if_linux_softc;
-	uint8_t		*dev_addr;
-
-	/* Addresses of different protocol families assigned to this if. */
-	struct mtx if_addr_lock;	/* lock to protect address lists */
-		/*
-		 * if_addrhead is the list of all addresses associated to
-		 * an interface.
-		 * Some code in the kernel assumes that first element
-		 * of the list has type AF_LINK, and contains sockaddr_dl
-		 * addresses which store the link-level address and the name
-		 * of the interface.
-		 * However, access to the AF_LINK address through this
-		 * field is deprecated. Use if_addr instead.
-		 */
-	struct	ifaddrhead if_addrhead;	/* linked list of addresses per if */
-	struct	ifmultihead if_multiaddrs; /* multicast addresses configured */
-	int	if_amcount;		/* number of all-multicast requests */
-	struct	ifaddr	*if_addr;	/* pointer to link-level address */
-	void	*if_hw_addr;		/* hardware link-level address */
-	const u_int8_t *if_broadcastaddr; /* linklevel broadcast bytestring */
+	struct mtx if_addr_lock;
+	struct	ifaddrhead if_addrhead;
+	struct	ifmultihead if_multiaddrs;
+	int	if_amcount;
+	struct	ifaddr	*if_addr;
+	void	*if_hw_addr;
+	const u_int8_t *if_broadcastaddr;
 	struct	mtx if_afdata_lock;
 	void	*if_afdata[AF_MAX];
 	int	if_afdata_initialized;
 
-	/* Additional features hung off the interface. */
-	u_int	if_fib;			/* interface FIB */
-	struct	vnet *if_vnet;		/* pointer to network stack instance */
-	struct	vnet *if_home_vnet;	/* where this ifnet originates from */
-	struct  ifvlantrunk *if_vlantrunk; /* pointer to 802.1q data */
-	struct	bpf_if *if_bpf;		/* packet filter structure */
-	int	if_pcount;		/* number of promiscuous listeners */
-	void	*if_bridge;		/* bridge glue */
-	void	*if_lagg;		/* lagg glue */
-	void	*if_pf_kif;		/* pf glue */
-	struct	carp_if *if_carp;	/* carp interface structure */
-	struct	label *if_label;	/* interface MAC label */
-	struct	netmap_adapter *if_netmap; /* netmap(4) softc */
+	u_int	if_fib;
+	struct	vnet *if_vnet;
+	struct	vnet *if_home_vnet;
+	struct  ifvlantrunk *if_vlantrunk;
+	struct	bpf_if *if_bpf;
+	int	if_pcount;
+	void	*if_bridge;
+	void	*if_lagg;
+	void	*if_pf_kif;
+	struct	carp_if *if_carp;
+	struct	label *if_label;
+	struct	netmap_adapter *if_netmap;
 
-	/* Various procedures of the layer2 encapsulation and drivers. */
-	if_output_fn_t if_output;	/* output routine (enqueue) */
-	if_input_fn_t if_input;		/* input routine (from h/w driver) */
+	if_output_fn_t if_output;
+	if_input_fn_t if_input;
 	struct mbuf *(*if_bridge_input)(struct ifnet *, struct mbuf *);
 	int	(*if_bridge_output)(struct ifnet *, struct mbuf *, struct sockaddr *,
 		    struct rtentry *);
 	void (*if_bridge_linkstate)(struct ifnet *ifp);
-	if_start_fn_t	if_start;	/* initiate output routine */
-	if_ioctl_fn_t	if_ioctl;	/* ioctl routine */
-	if_init_fn_t	if_init;	/* Init routine */
-	int	(*if_resolvemulti)	/* validate/resolve multicast */
+	if_start_fn_t	if_start;
+	if_ioctl_fn_t	if_ioctl;
+	if_init_fn_t	if_init;
+	int	(*if_resolvemulti)
 		(struct ifnet *, struct sockaddr **, struct sockaddr *);
-	if_qflush_fn_t	if_qflush;	/* flush any queue */
-	if_transmit_fn_t if_transmit;   /* initiate output routine */
+	if_qflush_fn_t	if_qflush;
+	if_transmit_fn_t if_transmit;
 
-	if_reassign_fn_t if_reassign;		/* reassign to vnet routine */
-	if_get_counter_t if_get_counter; /* get counter values */
-	int	(*if_requestencap)	/* make link header from request */
+	if_reassign_fn_t if_reassign;
+	if_get_counter_t if_get_counter;
+	int	(*if_requestencap)
 		(struct ifnet *, struct if_encap_req *);
 
-	/* Statistics. */
 	counter_u64_t	if_counters[IFCOUNTERS];
 
-	/* Stuff that's only temporary and doesn't belong here. */
+	u_int	if_hw_tsomax;
+	u_int	if_hw_tsomaxsegcount;
+	u_int	if_hw_tsomaxsegsize;
 
-	/*
-	 * Network adapter TSO limits:
-	 * ===========================
-	 *
-	 * If the "if_hw_tsomax" field is zero the maximum segment
-	 * length limit does not apply. If the "if_hw_tsomaxsegcount"
-	 * or the "if_hw_tsomaxsegsize" field is zero the TSO segment
-	 * count limit does not apply. If all three fields are zero,
-	 * there is no TSO limit.
-	 *
-	 * NOTE: The TSO limits should reflect the values used in the
-	 * BUSDMA tag a network adapter is using to load a mbuf chain
-	 * for transmission. The TCP/IP network stack will subtract
-	 * space for all linklevel and protocol level headers and
-	 * ensure that the full mbuf chain passed to the network
-	 * adapter fits within the given limits.
-	 */
-	u_int	if_hw_tsomax;		/* TSO maximum size in bytes */
-	u_int	if_hw_tsomaxsegcount;	/* TSO maximum segment count */
-	u_int	if_hw_tsomaxsegsize;	/* TSO maximum segment size in bytes */
-
-	/*
-	 * Network adapter send tag support:
-	 */
 	if_snd_tag_alloc_t *if_snd_tag_alloc;
 
-	/* Ratelimit (packet pacing) */
 	if_ratelimit_query_t *if_ratelimit_query;
 	if_ratelimit_setup_t *if_ratelimit_setup;
 
-	/* Ethernet PCP */
 	uint8_t if_pcp;
 
-	/*
-	 * Debugnet (Netdump) hooks to be called while in db/panic.
-	 */
 	struct debugnet_methods *if_debugnet_methods;
 	struct epoch_context	if_epoch_ctx;
 
-	/*
-	 * Spare fields to be added before branching a stable branch, so
-	 * that structure can be enhanced without changing the kernel
-	 * binary interface.
-	 */
-	int	if_ispare[4];		/* general use */
+	if_t		if_master;
+	if_slave_fn_t	if_slavefn;
+	void		*if_linux_softc;
+	uint8_t		*dev_addr;
+
+	int	if_ispare[4];
 
 	/*
 	 * Extra fields only in struct net_device, not struct ifnet.
