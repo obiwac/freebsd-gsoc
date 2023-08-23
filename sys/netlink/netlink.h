@@ -258,7 +258,7 @@ struct nlattr {
 #define NLA_F_NET_BYTEORDER (1 << 14)
 #define NLA_TYPE_MASK ~(NLA_F_NESTED | NLA_F_NET_BYTEORDER)
 
-#ifndef	_KERNEL
+#ifndef _KERNEL
 #define	NLA_ALIGNTO	NL_ITEM_ALIGN_SIZE
 #define	NLA_ALIGN(_len)	NL_ITEM_ALIGN(_len)
 #define	NLA_HDRLEN	((int)sizeof(struct nlattr))
