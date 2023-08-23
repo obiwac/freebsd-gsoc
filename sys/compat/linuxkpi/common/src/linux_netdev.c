@@ -396,7 +396,7 @@ linuxkpi_init_dummy_netdev(struct net_device *ndev)
 
 struct net_device *
 linuxkpi_alloc_netdev(size_t priv_len, const char *name, uint32_t flags,
-	void(*setup_func)(struct net_device *))
+    void(*setup_func)(struct net_device *))
 {
 	struct net_device *ndev;
 
@@ -421,7 +421,7 @@ linuxkpi_alloc_netdev(size_t priv_len, const char *name, uint32_t flags,
 
 struct net_device *
 linuxkpi_alloc_netdev_ifp(size_t priv_len, u_char type,
-	void(*setup_func)(struct net_device *))
+    void(*setup_func)(struct net_device *))
 {
 	struct net_device *ndev;
 	if_t ifp;

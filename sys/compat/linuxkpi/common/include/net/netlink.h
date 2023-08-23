@@ -191,13 +191,7 @@ nlmsg_free(struct sk_buff *skb)
 	kfree_skb(skb);
 }
 
-#if PAGE_SIZE < 8192
-#define	NLMSG_GOODSIZE	SKB_WITH_OVERHEAD(PAGE_SIZE)
-#else
-#define	NLMSG_GOODSIZE	SKB_WITH_OVERHEAD(8192)
-#endif
-
-#define	NLMSG_DEFAULT_SIZE	(NLMSG_GOODSIZE - NLMSG_HDRLEN)
+#define	NLMSG_DEFAULT_SIZE	(SKB_WITH_OVERHEAD(PAGE_SIZE - NLMSG_HDRLEN))
 
 static inline void *
 nla_data(struct nlattr const *nla)

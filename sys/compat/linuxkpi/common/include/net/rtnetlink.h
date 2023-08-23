@@ -18,8 +18,10 @@ struct rtnl_link_ops {
 	void			(*setup)(struct net_device *);
 	unsigned int		maxtype;
 	struct nla_policy const	*policy;
-	int			(*validate)(struct nlattr *[], struct nlattr *[], struct netlink_ext_ack *);
-	int			(*newlink)(struct net *, struct net_device *, struct nlattr *[], struct nlattr *[], struct netlink_ext_ack *);
+	int			(*validate)(struct nlattr *[], struct nlattr *[],
+	    struct netlink_ext_ack *);
+	int			(*newlink)(struct net *, struct net_device *, struct nlattr *[],
+	    struct nlattr *[], struct netlink_ext_ack *);
 	void			(*dellink)(struct net_device *, struct list_head *);
 
 	/*
@@ -29,7 +31,6 @@ struct rtnl_link_ops {
 	 * around the function pointers in this structure.
 	 * An example may be found in sys/contrib/dev/batman-adv/soft-interface.c
 	 */
-
 	struct if_clone_addreq_v2	*ifc_addreq;
 	struct if_clone			*ifc;
 };
@@ -42,8 +43,9 @@ rtnl_is_locked(void)
 	return (-1);
 }
 
-#define	ASSERT_RTNL()	\
-	WARN_ONCE(!rtnl_is_locked(), "RTNL: assertion failed at %s:%d\n", __FILE__, __LINE__)
+#define	ASSERT_RTNL()								\
+	WARN_ONCE(!rtnl_is_locked(), "RTNL: assertion failed at %s:%d\n", 	\
+	    __FILE__, __LINE__)
 
 static inline int
 rtnl_link_register(struct rtnl_link_ops *ops)
@@ -52,12 +54,12 @@ rtnl_link_register(struct rtnl_link_ops *ops)
 	struct if_clone *ifc;
 
 	if (ops->ifc_addreq == NULL) {
-		pr_debug("ifc_addreq field of struct rtnl_link_ops must be populated on FreeBSD\n");
+		pr_debug("ifc_addreq field of struct rtnl_link_ops must be"
+		    "populated on FreeBSD\n");
 		return (-1);
 	}
 
 	/* Locking is done by if_clone_attach; we don't have to worry about it. */
-
 	ifc = ifc_attach_cloner(name, (struct if_clone_addreq *)ops->ifc_addreq);
 	if (ifc == NULL)
 		return (-1);
