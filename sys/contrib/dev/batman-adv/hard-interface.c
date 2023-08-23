@@ -203,8 +203,11 @@ static bool batadv_is_valid_iface(const struct net_device *net_dev)
 	if (net_dev->addr_len != ETH_ALEN)
 		return false;
 
-	// TODO this is not right, we could have a FreeBSD interface be a descendant of a BATMAN interface, but for now I don't want to deal with all the ifp -> netdev stuff to check this 😛
-
+	/*
+	 * TODO This is not right; we could have a FreeBSD interface be a descendant
+	 * of a BATMAN interface, but for now I don't want to deal with all the
+	 * ifp -> netdev stuff to check this 😛
+	 */
 #if !defined(__FreeBSD__)
 	/* no batman over batman */
 	if (batadv_is_on_batman_iface(net_dev))
