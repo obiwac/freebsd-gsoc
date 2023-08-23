@@ -187,14 +187,6 @@ copy_internal(struct sk_buff *new, struct sk_buff *skb)
 {
 	struct skb_shared_info *shinfo;
 
-	// headroom = skb_headroom(skb);
-	// /* Fixup head and end. */
-	// skb_reserve(new, headroom);	/* data and tail move headroom forward. */
-	// skb_put(new, skb->len);		/* tail and len get adjusted */
-
-	// /* Copy data. */
-	// memcpy(new->head, skb->data - headroom, headroom + skb->len);
-
 	/* Deal with fragments. */
 	shinfo = skb->shinfo;
 	if (shinfo->nr_frags > 0) {
@@ -389,7 +381,7 @@ linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
 		memcpy(mtod(m, void *), phdr, hlen);
 recv:
 	payload_len = m_length(m, NULL);
-	skb = dev_alloc_skb(headroom + payload_len);
+	skb = linuxkpi_dev_alloc_skb(headroom + payload_len, GFP_NOWAIT);
 	if (skb == NULL)
 		return (NULL);
 
@@ -399,11 +391,6 @@ recv:
 	m_copydata(m, 0, payload_len, skb->data);
 	m_free(m);
 
-	/*
-	 * TODO this should really be done only in linuxkpi_alloc_skb, not sure why
-	 * it's not working correctly...
-	 */
-	memset(skb->shinfo, 0, sizeof *skb->shinfo);
 	return (skb);
 }
 
