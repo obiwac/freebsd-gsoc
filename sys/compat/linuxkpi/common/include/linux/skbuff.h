@@ -48,6 +48,7 @@
 #include <linux/ktime.h>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "opt_wlan.h"
 
 /* Currently this is only used for wlan so we can depend on that. */
@@ -60,6 +61,9 @@
 =======
 #define	SKB_DEBUG
 >>>>>>> f833f1da670 (linuxkpi: Too lazy to discover how properly to enable debug logs on these 😛)
+=======
+/* #define	SKB_DEBUG */
+>>>>>>> 039c6ba4d10 (linux/skbuff: Clean up header)
 #ifdef SKB_DEBUG
 #define	DSKB_TODO	0x01
 #define	DSKB_IMPROVE	0x02
@@ -753,12 +757,11 @@ skb_clone(struct sk_buff *skb, gfp_t gfp)
 	struct sk_buff *new;
 
 	/*
-	 * XXX Currently not implemented properly, and might cause problems if
-	 * caller modifies data, expecting it to reflect in other clones.
+	 * XXX-CL Currently not implemented properly, and might cause problems
+	 * if caller modifies data, expecting it to reflect in other clones.
 	 * Once this is properly implemented, don't forget to update all the
 	 * functions with XXX-CL.
 	 */
-
 	new = linuxkpi_skb_copy(__DECONST(struct sk_buff *, skb), gfp);
 	SKB_TRACE2(skb, new);
 	return (new);
@@ -773,7 +776,6 @@ consume_skb(struct sk_buff *skb)
 	 * XXX-CL Until we implement skb_clone properly, we can't really free
 	 * skb's as they may still be in use.
 	 */
-
 	kfree_skb(skb);
 }
 
@@ -1255,7 +1257,6 @@ skb_cow(struct sk_buff *skb, unsigned int headroom)
 	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
 	 * case where the buffer is cloned.
 	 */
-
 	return (__skb_cow(skb, headroom, false));
 }
 
@@ -1266,7 +1267,6 @@ skb_cow_head(struct sk_buff *skb, unsigned int headroom)
 	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
 	 * case where the buffer is cloned.
 	 */
-
 	return (__skb_cow(skb, headroom, false));
 }
 
@@ -1277,7 +1277,6 @@ skb_share_check(struct sk_buff *skb, gfp_t pri)
 	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
 	 * case where the buffer is cloned.
 	 */
-
 	return (skb);
 }
 
@@ -1303,7 +1302,7 @@ static inline void *
 skb_pull_rcsum(struct sk_buff *skb, unsigned int len)
 {
 
-	/* TODO Should also update recv checksum. (skb_postpull_rcsum?) */
+	SKB_TODO(); /* Should also update recv checksum. (skb_postpull_rcsum?) */
 	return (skb_pull(skb, len));
 }
 
