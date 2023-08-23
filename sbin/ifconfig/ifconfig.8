@@ -3181,6 +3181,13 @@ Valid values are 1-255.
 .It Cm vrrpinterval
 Set the VRRPv3 Master Advertisement Interval.
 Values are in centiseconds.
+.Ss BATMAN Parameters
+The following parameters are used to configure
+.Xr batman_adv 4
+interfaces:
+.Bl -tag -width indent
+.It Cm ra Ar algo
+Select the routing algorithm for use when creating a BATMAN interface.
 .El
 .Sh ENVIRONMENT
 The following environment variables affect the execution of
