@@ -488,6 +488,7 @@ setifmaster_nl(if_ctx *ctx, const char *master)
 
 	if (snl_finalize_msg(&nw) == NULL)
 		return;
-
-	snl_send_message(ctx->io_ss, hdr);
+	if (!snl_send_message(ctx->io_ss, hdr))
+		return;
+	snl_read_reply(ctx->io_ss, hdr->nlmsg_seq);
 }
