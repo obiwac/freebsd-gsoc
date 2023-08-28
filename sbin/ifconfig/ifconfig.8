@@ -28,7 +28,7 @@
 .\"     From: @(#)ifconfig.8	8.3 (Berkeley) 1/5/94
 .\" $FreeBSD$
 .\"
-.Dd May 22, 2023
+.Dd August 23, 2023
 .Dt IFCONFIG 8
 .Os
 .Sh NAME
@@ -810,6 +810,10 @@ The MTU is used to limit the size of packets that are transmitted on an
 interface.
 Not all interfaces support setting the MTU, and some interfaces have
 range restrictions.
+.It Cm master Ar master
+(Netlink only.)
+Set the master interface to
+.Ar master .
 .It Cm netmask Ar mask
 .\" (Inet and ISO.)
 (Inet only.)
@@ -3124,6 +3128,13 @@ announcements to.
 Restore the default destination address for (IPv4)
 .Xr carp 4
 announcements, which is ff02::12.
+.Ss BATMAN Parameters
+The following parameters are used to configure
+.Xr batman_adv 4
+interfaces:
+.Bl -tag -width indent
+.It Cm ra Ar algo
+Select the routing algorithm for use when creating a BATMAN interface.
 .El
 .Sh ENVIRONMENT
 The following environment variables affect the execution of
@@ -3179,6 +3190,14 @@ to be master:
 .Bd -literal -offset indent -compact
 # ifconfig igb0 vhid 1 10.0.0.1/24 pass foobar up
 # ifconfig igb0 vhid 1 state master
+.Ed
+.Pp
+Create a
+.Xr batman_adv 4
+interface using the BATMAN_V routing algorithm and set vtnet0 to be it's slave:
+.Bd -literal -offset indent -compact
+# ifconfig batadv create ra BATMAN_V
+# ifconfig vtnet0 master batadv0
 .Ed
 .Pp
 Configure the interface
@@ -3252,6 +3271,7 @@ requested address is unknown, or the user is not privileged and
 tried to alter an interface's configuration.
 .Sh SEE ALSO
 .Xr netstat 1 ,
+.Xr batman_adv 4 ,
 .Xr carp 4 ,
 .Xr gif 4 ,
 .Xr netintro 4 ,

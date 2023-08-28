@@ -6,6 +6,7 @@
  * All rights reserved.
  * Copyright (c) 2020-2021 The FreeBSD Foundation
  * Copyright (c) 2020-2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Portions of this software were developed by Björn Zeeb
  * under sponsorship from the FreeBSD Foundation.
@@ -53,12 +54,13 @@
 #include <net/if_var.h>
 #include <net/if_dl.h>
 
-#include <linux/kernel.h>
 #include <linux/bitops.h>
-#include <linux/list.h>
 #include <linux/device.h>
-#include <linux/net.h>
 #include <linux/if_ether.h>
+#include <linux/kernel.h>
+#include <linux/list.h>
+#include <linux/net.h>
+#include <linux/netlink.h>
 #include <linux/notifier.h>
 #include <linux/random.h>
 #include <linux/rcupdate.h>
@@ -78,7 +80,8 @@ struct wireless_dev;		/* net/cfg80211.h */
 #define	NET_NAME_UNKNOWN	0
 
 enum netdev_tx {
-	NETDEV_TX_OK		= 0,
+	NETDEV_TX_OK		= 0x00,
+	NETDEV_TX_BUSY		= 0x10,
 };
 typedef	enum netdev_tx		netdev_tx_t;
 
@@ -98,42 +101,162 @@ enum net_device_reg_state {
 };
 
 struct net_device_ops {
-	int (*ndo_open)(struct net_device *);
-	int (*ndo_stop)(struct net_device *);
-	int (*ndo_set_mac_address)(struct net_device *,  void *);
-	netdev_tx_t (*ndo_start_xmit)(struct sk_buff *, struct net_device *);
-	void (*ndo_set_rx_mode)(struct net_device *);
+	int			(*ndo_open)(struct net_device *);
+	int			(*ndo_stop)(struct net_device *);
+	int			(*ndo_set_mac_address)(struct net_device *,  void *);
+	netdev_tx_t		(*ndo_start_xmit)(struct sk_buff *, struct net_device *);
+	void			(*ndo_set_rx_mode)(struct net_device *);
+	int			(*ndo_init)(struct net_device *);
+	struct net_device_stats	*(*ndo_get_stats)(struct net_device *);
+	int			(*ndo_vlan_rx_add_vid)(struct net_device *, __be16, u16);
+	int			(*ndo_vlan_rx_kill_vid)(struct net_device *, __be16, u16);
+	int			(*ndo_change_mtu)(struct net_device *, int);
+	int			(*ndo_validate_addr)(struct net_device *);
+	int			(*ndo_add_slave)(struct net_device *, struct net_device *, struct netlink_ext_ack *);
+	int			(*ndo_del_slave)(struct net_device *, struct net_device *);
+};
+
+struct net_device_stats {
+	unsigned long		tx_packets;
+	unsigned long		tx_bytes;
+	unsigned long		tx_dropped;
+	unsigned long		rx_packets;
+	unsigned long		rx_bytes;
+	unsigned long		rx_dropped;
 };
 
 struct net_device {
-	/* net_device fields seen publicly. */
-	/* XXX can we later make some aliases to ifnet? */
-	char				name[IFNAMSIZ];
-	struct wireless_dev		*ieee80211_ptr;
-	uint8_t				dev_addr[ETH_ALEN];
-	struct netdev_hw_addr_list	mc;
-	netdev_features_t		features;
-	struct {
-		unsigned long		multicast;
+	/*
+	 * struct ifnet, with aliases to struct net_device equivalents,
+	 * plus struct net_device-only fields.
+	 */
+	CK_STAILQ_ENTRY(ifnet) if_link;
+	LIST_ENTRY(ifnet) if_clones;
+	CK_STAILQ_HEAD(, ifg_list) if_groups;
 
-		unsigned long		rx_bytes;
-		unsigned long		rx_errors;
-		unsigned long		rx_packets;
-		unsigned long		tx_bytes;
-		unsigned long		tx_dropped;
-		unsigned long		tx_errors;
-		unsigned long		tx_packets;
-	} stats;
+	u_char	if_alloctype;
+	uint8_t	if_numa_domain;
+	void	*if_softc;
+	void	*if_llsoftc;
+	void	*if_l2com;
+	const char *if_dname;
+	int	if_dunit;
+	u_short	ifindex;
+	u_short	if_idxgen;
+	char	name[IFNAMSIZ];
+	char	*if_description;
+
+	int	flags;
+	int	priv_flags;
+	int	if_capabilities;
+	int	if_capabilities2;
+	int	if_capenable;
+	int	if_capenable2;
+	void	*if_linkmib;
+	size_t	if_linkmiblen;
+	u_int	if_refcount;
+
+	uint8_t		type;
+	uint8_t		addr_len;
+	uint8_t		if_hdrlen;
+	uint8_t		if_link_state;
+	uint32_t	mtu;
+	uint32_t	if_metric;
+	uint64_t	if_baudrate;
+	uint64_t	if_hwassist;
+	time_t		if_epoch;
+	struct timeval	if_lastchange;
+
+	struct  ifaltq if_snd;
+	struct	task if_linktask;
+	struct	task if_addmultitask;
+
+	struct mtx if_addr_lock;
+	struct	ifaddrhead if_addrhead;
+	struct	ifmultihead if_multiaddrs;
+	int	if_amcount;
+	struct	ifaddr	*if_addr;
+	void	*if_hw_addr;
+	const u_int8_t *if_broadcastaddr;
+	struct	mtx if_afdata_lock;
+	void	*if_afdata[AF_MAX];
+	int	if_afdata_initialized;
+
+	u_int	if_fib;
+	struct	vnet *if_vnet;
+	struct	vnet *if_home_vnet;
+	struct  ifvlantrunk *if_vlantrunk;
+	struct	bpf_if *if_bpf;
+	int	if_pcount;
+	void	*if_bridge;
+	void	*if_lagg;
+	void	*if_pf_kif;
+	struct	carp_if *if_carp;
+	struct	label *if_label;
+	struct	netmap_adapter *if_netmap;
+
+	if_output_fn_t if_output;
+	if_input_fn_t if_input;
+	struct mbuf *(*if_bridge_input)(struct ifnet *, struct mbuf *);
+	int	(*if_bridge_output)(struct ifnet *, struct mbuf *, struct sockaddr *,
+		    struct rtentry *);
+	void (*if_bridge_linkstate)(struct ifnet *ifp);
+	if_start_fn_t	if_start;
+	if_ioctl_fn_t	if_ioctl;
+	if_init_fn_t	if_init;
+	int	(*if_resolvemulti)
+		(struct ifnet *, struct sockaddr **, struct sockaddr *);
+	if_qflush_fn_t	if_qflush;
+	if_transmit_fn_t if_transmit;
+
+	if_reassign_fn_t if_reassign;
+	if_get_counter_t if_get_counter;
+	int	(*if_requestencap)
+		(struct ifnet *, struct if_encap_req *);
+
+	counter_u64_t	if_counters[IFCOUNTERS];
+
+	u_int	if_hw_tsomax;
+	u_int	if_hw_tsomaxsegcount;
+	u_int	if_hw_tsomaxsegsize;
+
+	if_snd_tag_alloc_t *if_snd_tag_alloc;
+
+	if_ratelimit_query_t *if_ratelimit_query;
+	if_ratelimit_setup_t *if_ratelimit_setup;
+
+	uint8_t if_pcp;
+
+	struct debugnet_methods *if_debugnet_methods;
+	struct epoch_context	if_epoch_ctx;
+
+	if_t		if_master;
+	if_slave_fn_t	if_slavefn;
+	void		*if_linux_softc;
+	uint8_t		*dev_addr;
+
+	int	if_ispare[4];
+
+	/*
+	 * Extra fields only in struct net_device, not struct ifnet.
+	 */
+	bool				has_ifp;
+	netdev_features_t		features;
+	struct net_device_stats		stats;
 	enum net_device_reg_state	reg_state;
+
+	unsigned short			hard_header_len;
+	int				needed_headroom, needed_tailroom;
+
+	uint8_t				internal_dev_addr[ETH_ALEN];
+	struct netdev_hw_addr_list	mc;
+	uint8_t				broadcast[ETH_ALEN];
+
+	const struct rtnl_link_ops	*rtnl_link_ops;
 	const struct ethtool_ops	*ethtool_ops;
 	const struct net_device_ops	*netdev_ops;
 
 	bool				needs_free_netdev;
-	/* Not properly typed as-of now. */
-	int	flags, type;
-	int	name_assign_type, needed_headroom;
-	int	threaded;
-
 	void (*priv_destructor)(struct net_device *);
 
 	/* net_device internal. */
@@ -418,25 +541,32 @@ register_netdev(struct net_device *ndev)
 	return (error);
 }
 
-static __inline void
-unregister_netdev(struct net_device *ndev)
+static inline void
+unregister_netdevice_queue(struct net_device *ndev, struct list_head *head)
 {
+
+	if (ndev->priv_destructor)
+		ndev->priv_destructor(ndev);
 	pr_debug("%s: TODO\n", __func__);
 }
 
-static __inline void
+static inline void
 unregister_netdevice(struct net_device *ndev)
 {
-	pr_debug("%s: TODO\n", __func__);
+
+	unregister_netdevice_queue(ndev, NULL);
+}
+
+static inline void
+unregister_netdev(struct net_device *ndev)
+{
+
+	/* lock */
+	unregister_netdevice(ndev);
+	/* unlock */
 }
 
 /* -------------------------------------------------------------------------- */
-
-static __inline void
-netif_rx(struct sk_buff *skb)
-{
-	pr_debug("%s: TODO\n", __func__);
-}
 
 static __inline void
 netif_rx_ni(struct sk_buff *skb)
@@ -447,7 +577,9 @@ netif_rx_ni(struct sk_buff *skb)
 /* -------------------------------------------------------------------------- */
 
 struct net_device *linuxkpi_alloc_netdev(size_t, const char *, uint32_t,
-    void(*)(struct net_device *));
+	void(*)(struct net_device *));
+struct net_device *linuxkpi_alloc_netdev_ifp(size_t, u_char,
+	void(*)(struct net_device *));
 void linuxkpi_free_netdev(struct net_device *);
 
 #define	alloc_netdev(_l, _n, _f, _func)						\
@@ -462,11 +594,175 @@ netdev_priv(const struct net_device *ndev)
 	return (__DECONST(void *, ndev->drv_priv));
 }
 
+static __inline void
+dev_put(struct net_device *dev)
+{
+	if_t const ifp = (if_t)dev;
+
+	if (ifp == NULL)
+		return;
+	if_rele(ifp);
+}
+
 /* -------------------------------------------------------------------------- */
 /* This is really rtnetlink and probably belongs elsewhere. */
 
 #define	rtnl_lock()		do { } while(0)
 #define	rtnl_unlock()		do { } while(0)
 #define	rcu_dereference_rtnl(x)	READ_ONCE(x)
+
+typedef struct {} netdevice_tracker;
+
+struct packet_type {
+	__be16			type;	/* This is really htons(ether_type). */
+	bool			ignore_outgoing;
+	struct net_device	*dev;	/* NULL is wildcarded here	     */
+	netdevice_tracker	dev_tracker;
+	int			(*func) (struct sk_buff *,
+					 struct net_device *,
+					 struct packet_type *,
+					 struct net_device *);
+	void			(*list_func) (struct list_head *,
+					      struct packet_type *,
+					      struct net_device *);
+	struct net		*af_packet_net;
+	void			*af_packet_priv;
+	struct list_head	list;
+};
+
+#define	NET_RX_SUCCESS	0
+#define	NET_RX_DROP	1
+
+static inline struct net_device *
+linux_dev_get_by_index(struct net *net, int ifindex)
+{
+	struct epoch_tracker et;
+	if_t ifp;
+
+	NET_EPOCH_ENTER(et);
+	ifp = ifnet_byindex_ref(ifindex);
+	NET_EPOCH_EXIT(et);
+
+	return ((struct net_device *)ifp);
+}
+
+#define	NET_XMIT_SUCCESS	0x00
+#define	NET_XMIT_DROP	0x01
+#define	NET_XMIT_CN	0x02
+#define	NET_XMIT_MASK	0x0F
+
+#define	HH_DATA_MOD	16
+#define	LL_RESERVED_SPACE(dev) 0
+
+static inline int
+net_xmit_eval(int e)
+{
+
+	if (e == NET_XMIT_CN)
+		return (0);
+	return (e);
+}
+
+static inline int
+dev_get_iflink(struct net_device const *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (-1);
+}
+
+static inline struct net *
+dev_net(struct net_device const *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
+
+static inline struct net_device *
+__dev_get_by_index(struct net *net, int ifindex)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
+
+static inline void
+dev_hold(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline int
+netdev_master_upper_dev_link(struct net_device *dev, struct net_device *upper_dev, void *upper_priv, void *upper_info, struct netlink_ext_ack *extack)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (0);
+}
+
+static inline void
+netdev_upper_dev_unlink(struct net_device *dev, struct net_device *upper_dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline struct net_device *
+netdev_master_upper_dev_get_rcu(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (NULL);
+}
+
+static inline void
+dev_add_pack(struct packet_type *pt)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline void
+dev_remove_pack(struct packet_type *pt)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline void
+netif_start_queue(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+static inline void
+netif_trans_update(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+}
+
+struct netdev_queue {
+};
+
+static inline void
+netdev_for_each_tx_queue(struct net_device *dev, void (*fn)(struct net_device *, struct netdev_queue *, void *), void *arg)
+{
+
+	pr_debug("%s: TODO -- tx_queues\n", __func__);
+}
+
+#define	IFF_NO_QUEUE	IFF_DRV_OACTIVE
+
+int linuxkpi_dev_queue_xmit(struct sk_buff *);
+void linuxkpi_netif_rx(struct sk_buff *);
+
+#define	dev_queue_xmit(skb)		\
+	linuxkpi_dev_queue_xmit((skb))
+#define netif_rx(skb)			\
+	linuxkpi_netif_rx((skb))
 
 #endif	/* _LINUXKPI_LINUX_NETDEVICE_H */

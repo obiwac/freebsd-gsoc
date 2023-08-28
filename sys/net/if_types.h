@@ -257,6 +257,7 @@ typedef enum {
 	IFT_PFLOG	= 0xf6,		/* PF packet filter logging */
 	IFT_PFSYNC	= 0xf7,		/* PF packet filter synchronization */
 	IFT_WIREGUARD	= 0xf8,		/* WireGuard tunnel */
+	IFT_BATMAN	= 0xf9,		/* B.A.T.M.A.N. interface */
 } ifType;
 
 /*
@@ -273,5 +274,14 @@ typedef enum {
 #define	IFT_IEEE1394	IFT_IEEE1394
 #define	IFT_INFINIBAND	IFT_INFINIBAND
 #endif
+
+#define	IFT_IS_LINUX(ift)	({	\
+	bool is_linux = false;		\
+	switch ((ift)) {		\
+	case IFT_BATMAN:		\
+		is_linux = true;	\
+	}				\
+	is_linux;			\
+})
 
 #endif /* !_NET_IF_TYPES_H_ */

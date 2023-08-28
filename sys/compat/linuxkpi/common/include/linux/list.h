@@ -3,6 +3,7 @@
  * Copyright (c) 2010 iX Systems, Inc.
  * Copyright (c) 2010 Panasas, Inc.
  * Copyright (c) 2013-2016 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,7 +83,6 @@
 #endif
 
 #define LINUX_LIST_HEAD_INIT(name) { &(name), &(name) }
-
 #define LINUX_LIST_HEAD(name) \
 	struct list_head name = LINUX_LIST_HEAD_INIT(name)
 
@@ -503,5 +503,19 @@ extern void list_sort(void *priv, struct list_head *head, int (*cmp)(void *priv,
 extern void list_sort(void *priv, struct list_head *head, int (*cmp)(void *priv,
     struct list_head *a, struct list_head *b));
 #endif
+
+static inline void
+hlist_add_fake(struct hlist_node *n)
+{
+
+	n->pprev = &n->next;
+}
+
+static inline bool
+hlist_fake(struct hlist_node *h)
+{
+
+	return (h->pprev == &h->next);
+}
 
 #endif /* _LINUXKPI_LINUX_LIST_H_ */

@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 2020-2021 The FreeBSD Foundation
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Portions of this software were developed by Björn Zeeb
  * under sponsorship from the FreeBSD Foundation.
@@ -35,14 +36,17 @@
 
 typedef	uint32_t		netdev_features_t;
 
-#define NETIF_F_HIGHDMA         BIT(0)
-#define NETIF_F_SG              BIT(1)
-#define NETIF_F_IP_CSUM         BIT(2)
-#define NETIF_F_IPV6_CSUM       BIT(3)
-#define NETIF_F_TSO             BIT(4)
-#define NETIF_F_TSO6            BIT(5)
-#define NETIF_F_RXCSUM          BIT(6)
-#define	NETIF_F_HW_CSUM		BIT(7)
+#define NETIF_F_HIGHDMA         	BIT(0)
+#define NETIF_F_SG              	BIT(1)
+#define NETIF_F_IP_CSUM         	BIT(2)
+#define NETIF_F_IPV6_CSUM       	BIT(3)
+#define NETIF_F_TSO             	BIT(4)
+#define NETIF_F_TSO6            	BIT(5)
+#define NETIF_F_RXCSUM          	BIT(6)
+#define	NETIF_F_HW_CSUM			BIT(7)
+#define	NETIF_F_HW_VLAN_CTAG_FILTER	BIT(8)
+#define NETIF_F_NETNS_LOCAL		BIT(9)
+#define NETIF_F_LLTX			BIT(10)
 
 #define NETIF_F_CSUM_MASK       (NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM)
 

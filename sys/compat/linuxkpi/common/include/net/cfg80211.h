@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2020-2023 The FreeBSD Foundation
  * Copyright (c) 2021-2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -527,9 +528,10 @@ struct station_del_parameters {
 
 struct station_info {
 	/* TODO FIXME */
-	int     assoc_req_ies_len, connected_time;
+	int	assoc_req_ies_len, connected_time;
 	int	generation, inactive_time, rx_bytes, rx_dropped_misc, rx_packets, signal, tx_bytes, tx_packets;
-	int     filled, rx_beacon, rx_beacon_signal_avg, signal_avg;
+	int	filled, rx_beacon, rx_beacon_signal_avg, signal_avg;
+	uint32_t	expected_throughput;
 	int	rx_duration, tx_duration, tx_failed, tx_retries;
 
 	int					chains;
@@ -1841,5 +1843,18 @@ cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
 #endif
 
 #include <net/mac80211.h>
+
+static __inline int
+cfg80211_get_station(struct net_device *dev, const uint8_t *mac_addr, struct station_info *sinfo)
+{
+	TODO();
+	return (0);
+}
+
+static __inline void
+cfg80211_sinfo_release_content(struct station_info *sinfo)
+{
+	TODO();
+}
 
 #endif	/* _LINUXKPI_NET_CFG80211_H */

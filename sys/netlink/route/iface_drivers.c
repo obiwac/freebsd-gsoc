@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  *
  * Copyright (c) 2022 Alexander V. Chernikov <melifaro@FreeBSD.org>
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,6 +31,9 @@
 __FBSDID("$FreeBSD$");
 #include "opt_inet.h"
 #include "opt_inet6.h"
+#if defined(COMPAT_LINUXKPI)
+#include <linux/netdevice.h>
+#endif
 #include <sys/types.h>
 #include <sys/malloc.h>
 #include <sys/socket.h>
@@ -89,6 +93,11 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 		if_down(ifp);
 	}
 
+	if ((lattrs->ifi_change & IFF_UP) && (lattrs->ifi_flags & IFF_UP) != 0) {
+		/* Request to up the interface */
+		if_up(ifp);
+	}
+
 	if (lattrs->ifla_mtu > 0) {
 		if (nlp_has_priv(npt->nlp, PRIV_NET_SETIFMTU)) {
 			struct ifreq ifr = { .ifr_mtu = lattrs->ifla_mtu };
@@ -105,6 +114,51 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 			nlmsg_report_err_msg(npt, "unable to set promisc");
 			return (error);
 		}
+	}
+
+	if (lattrs->ifla_address != NULL) {
+		struct sockaddr_dl *const sdl = lattrs->ifla_address;
+		if_setlladdr(ifp, LLADDR(sdl), sdl->sdl_alen);
+
+#if defined(COMPAT_LINUXKPI)
+		if (IFT_IS_LINUX(ifp->if_type)) {
+			struct net_device *const dev = (void *)ifp;
+			if (dev->netdev_ops != NULL)
+				dev->netdev_ops->ndo_set_mac_address(dev, sdl);
+		}
+#endif
+	}
+
+	if (lattrs->ifla_broadcast != NULL) {
+		nlmsg_report_err_msg(npt, "%s: TODO (IFLA_BROADCAST)\n", __func__);
+	}
+
+	if (lattrs->ifla_master != 0) {
+		struct epoch_tracker et;
+
+		NET_EPOCH_ENTER(et);
+		if_t const ifp_master = ifnet_byindex_ref(lattrs->ifla_master);
+		NET_EPOCH_EXIT(et);
+
+		if (ifp_master == NULL) {
+			nlmsg_report_err_msg(npt, "unable to find master interface %u",
+			    lattrs->ifla_master);
+			return (ENOENT);
+		}
+
+		NET_EPOCH_ENTER(et);
+		if_setmaster(ifp, ifnet_byindex(lattrs->ifla_master));
+		NET_EPOCH_EXIT(et);
+#if defined(COMPAT_LINUXKPI)
+		if (IFT_IS_LINUX(ifp_master->if_type)) {
+			struct net_device *const master = (void *)ifp_master;
+			struct net_device *const slave = (void *)ifp;
+
+			if (master->netdev_ops)
+				master->netdev_ops->ndo_add_slave(master, slave, NULL);
+		}
+#endif
+		if_rele(ifp_master);
 	}
 
 	return (0);

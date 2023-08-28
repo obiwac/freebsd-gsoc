@@ -42,7 +42,7 @@ struct lockdep_map {
 struct pin_cookie {
 };
 
-#define	lockdep_set_class(lock, key)
+#define	lockdep_set_class(lock, key) ({(void) (key);})
 #define	lockdep_set_subclass(lock, sub)
 #define	lockdep_set_class_and_name(lock, key, name)
 #define	lockdep_set_current_reclaim_state(g) do { } while (0)

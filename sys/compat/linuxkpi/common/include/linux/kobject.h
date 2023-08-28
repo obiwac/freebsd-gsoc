@@ -144,7 +144,7 @@ int	kobject_set_name(struct kobject *kobj, const char *fmt, ...);
 int	kobject_init_and_add(struct kobject *kobj, const struct kobj_type *ktype,
 	    struct kobject *parent, const char *fmt, ...);
 
-static __inline void
+static __inline int
 kobject_uevent_env(struct kobject *kobj, int action, char *envp[])
 {
 
@@ -154,6 +154,8 @@ kobject_uevent_env(struct kobject *kobj, int action, char *envp[])
 	 * Not sure if we do anything related to udev/sysfs at the moment or
 	 * need a shortcut or simply ignore it (for now).
 	 */
+
+	return (0);
 }
 
 #endif /* _LINUXKPI_LINUX_KOBJECT_H_ */

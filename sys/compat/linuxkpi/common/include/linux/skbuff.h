@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2020-2023 The FreeBSD Foundation
  * Copyright (c) 2021-2023 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -152,14 +153,14 @@ struct sk_buff {
 	uint32_t		truesize;	/* The total size of all buffers, incl. frags. */
 	uint16_t		mac_len;	/* Link-layer header length. */
 	__sum16			csum;
-	uint16_t		l3hdroff;	/* network header offset from *head */
-	uint16_t		l4hdroff;	/* transport header offset from *head */
 	uint32_t		priority;
 	uint16_t		qmap;		/* queue mapping */
 	uint16_t		_flags;		/* Internal flags. */
 #define	_SKB_FLAGS_SKBEXTFRAG	0x0001
 	enum sk_buff_pkt_type	pkt_type;
-	uint16_t		mac_header;	/* offset of mac_header */
+	uint16_t		mac_header;		/* link header offset from *head */
+	uint16_t		network_header;		/* network header offset from *head */
+	uint16_t		transport_header;	/* transport header offset from *head */
 
 	/* "Scratch" area for layers to store metadata. */
 	/* ??? I see sizeof() operations so probably an array. */
@@ -176,6 +177,8 @@ struct sk_buff {
 	uint8_t			*end;			/* End of buffer. */
 
 	struct skb_shared_info	*shinfo;
+	int			skb_iif;
+	uint32_t		mark;
 
 	/* FreeBSD specific bandaid (see linuxkpi_kfree_skb). */
 	void			*m;
@@ -193,6 +196,9 @@ struct sk_buff *linuxkpi_build_skb(void *, size_t);
 void linuxkpi_kfree_skb(struct sk_buff *);
 
 struct sk_buff *linuxkpi_skb_copy(struct sk_buff *, gfp_t);
+struct sk_buff *linuxkpi_skb_clone(struct sk_buff *, gfp_t);
+struct sk_buff *linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
+	struct sockaddr const *dst, struct route *ro, int headroom);
 
 /* -------------------------------------------------------------------------- */
 
@@ -530,6 +536,7 @@ static inline void
 skb_queue_head_init(struct sk_buff_head *q)
 {
 	SKB_TRACE(q);
+	spin_lock_init(&q->lock);
 	return (__skb_queue_head_init(q));
 }
 
@@ -575,7 +582,7 @@ __skb_queue_tail(struct sk_buff_head *q, struct sk_buff *new)
 static inline void
 skb_queue_tail(struct sk_buff_head *q, struct sk_buff *new)
 {
-	SKB_TRACE2(q, skb);
+	SKB_TRACE2(q, new);
 	return (__skb_queue_tail(q, new));
 }
 
@@ -720,11 +727,27 @@ skb_queue_prev(struct sk_buff_head *q, struct sk_buff *skb)
 /* -------------------------------------------------------------------------- */
 
 static inline struct sk_buff *
-skb_copy(struct sk_buff *skb, gfp_t gfp)
+skb_copy(struct sk_buff const *skb, gfp_t gfp)
 {
 	struct sk_buff *new;
 
-	new = linuxkpi_skb_copy(skb, gfp);
+	new = linuxkpi_skb_copy(__DECONST(struct sk_buff *, skb), gfp);
+	SKB_TRACE2(skb, new);
+	return (new);
+}
+
+static inline struct sk_buff *
+skb_clone(struct sk_buff *skb, gfp_t gfp)
+{
+	struct sk_buff *new;
+
+	/*
+	 * XXX-CL Currently not implemented properly, and might cause problems
+	 * if caller modifies data, expecting it to reflect in other clones.
+	 * Once this is properly implemented, don't forget to update all the
+	 * functions with XXX-CL.
+	 */
+	new = linuxkpi_skb_copy(__DECONST(struct sk_buff *, skb), gfp);
 	SKB_TRACE2(skb, new);
 	return (new);
 }
@@ -733,7 +756,12 @@ static inline void
 consume_skb(struct sk_buff *skb)
 {
 	SKB_TRACE(skb);
-	SKB_TODO();
+
+	/*
+	 * XXX-CL Until we implement skb_clone properly, we can't really free
+	 * skb's as they may still be in use.
+	 */
+	kfree_skb(skb);
 }
 
 static inline uint16_t
@@ -854,20 +882,12 @@ skb_queue_splice_init(struct sk_buff_head *from, struct sk_buff_head *to)
 	__skb_queue_head_init(from);
 }
 
-static inline void
-skb_reset_transport_header(struct sk_buff *skb)
-{
-
-	SKB_TRACE(skb);
-	skb->l4hdroff = skb->data - skb->head;
-}
-
 static inline uint8_t *
 skb_transport_header(struct sk_buff *skb)
 {
 
 	SKB_TRACE(skb);
-        return (skb->head + skb->l4hdroff);
+        return (skb->head + skb->transport_header);
 }
 
 static inline uint8_t *
@@ -875,7 +895,7 @@ skb_network_header(struct sk_buff *skb)
 {
 
 	SKB_TRACE(skb);
-        return (skb->head + skb->l3hdroff);
+        return (skb->head + skb->network_header);
 }
 
 static inline bool
@@ -937,10 +957,9 @@ static inline uint8_t *
 skb_mac_header(const struct sk_buff *skb)
 {
 	SKB_TRACE(skb);
-	/* Make sure the mac_header was set as otherwise we return garbage. */
-	WARN_ON(skb->mac_header == 0);
 	return (skb->head + skb->mac_header);
 }
+
 static inline void
 skb_reset_mac_header(struct sk_buff *skb)
 {
@@ -954,6 +973,36 @@ skb_set_mac_header(struct sk_buff *skb, const size_t len)
 	SKB_TRACE(skb);
 	skb_reset_mac_header(skb);
 	skb->mac_header += len;
+}
+
+static inline void
+skb_reset_network_header(struct sk_buff *skb)
+{
+	SKB_TRACE(skb);
+	skb->network_header = skb->data - skb->head;
+}
+
+static inline void
+skb_set_network_header(struct sk_buff *skb, int len)
+{
+	SKB_TRACE(skb);
+	skb_reset_network_header(skb);
+	skb->network_header += len;
+}
+
+static inline void
+skb_reset_transport_header(struct sk_buff *skb)
+{
+	SKB_TRACE(skb);
+	skb->transport_header = skb->data - skb->head;
+}
+
+static inline void
+skb_set_transport_header(struct sk_buff *skb, int len)
+{
+	SKB_TRACE(skb);
+	skb_reset_transport_header(skb);
+	skb->transport_header += len;
 }
 
 static inline struct skb_shared_hwtstamps *
@@ -978,9 +1027,17 @@ csum_unfold(__sum16 sum)
 	return (sum);
 }
 
-static __inline void
-skb_postpush_rcsum(struct sk_buff *skb, const void *data, size_t len)
+static inline void
+skb_postpull_rcsum(struct sk_buff *skb, void const *start, unsigned int len)
 {
+
+	SKB_TODO();
+}
+
+static inline void
+skb_postpush_rcsum(struct sk_buff *skb, void const *start, unsigned int len)
+{
+
 	SKB_TODO();
 }
 
@@ -1050,7 +1107,6 @@ static inline struct sk_buff *
 napi_build_skb(void *data, size_t len)
 {
 
-	SKB_TRACE(skb);
 	SKB_TODO();
 	return (NULL);
 }
@@ -1072,5 +1128,152 @@ skb_mark_for_recycle(struct sk_buff *skb)
 
 #define	SKB_WITH_OVERHEAD(_s)						\
 	(_s) - ALIGN(sizeof(struct skb_shared_info), CACHE_LINE_SIZE)
+
+static inline struct sk_buff *
+skb_copy_expand(struct sk_buff const *skb, int newheadroom, int newtailroom, gfp_t priority)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+#define	NET_IP_ALIGN	2
+
+static inline struct sk_buff *
+netdev_alloc_skb_ip_align(struct net_device *dev, unsigned int length)
+{
+	struct sk_buff *const skb = linuxkpi_alloc_skb(length + NET_IP_ALIGN, GFP_ATOMIC);
+
+	SKB_TRACE(skb);
+	if (skb)
+		skb_reserve(skb, NET_IP_ALIGN);
+	return (skb);
+}
+
+static inline void * __must_check
+skb_header_pointer(struct sk_buff const *skb, int offset, int len, void *buffer)
+{
+
+	if (skb_headlen(__DECONST(struct sk_buff *, skb)) - offset >= len)
+		return ((char *)buffer + offset);
+
+	return (buffer);
+}
+
+static inline bool
+pskb_may_pull(struct sk_buff *skb, unsigned int len)
+{
+
+	return (len <= skb_headlen(skb));
+}
+
+static inline struct sk_buff *
+pskb_copy_for_clone(struct sk_buff *skb, gfp_t gfp_mask)
+{
+
+	SKB_TODO();
+	return (NULL);
+}
+
+static inline int
+skb_network_offset(struct sk_buff const *skb)
+{
+
+	return (skb_network_header(__DECONST(struct sk_buff *, skb)) - skb->data);
+}
+
+static inline int
+skb_transport_offset(struct sk_buff const *skb)
+{
+
+	return (skb_transport_header(__DECONST(struct sk_buff *, skb)) - skb->data);
+}
+
+static inline void
+skb_split(struct sk_buff *skb, struct sk_buff *skb1, u32 len)
+{
+
+	SKB_TODO();
+}
+
+static inline bool
+skb_has_frag_list(struct sk_buff const *skb)
+{
+
+	return (skb_shinfo(__DECONST(struct sk_buff *, skb))->frag_list != NULL);
+}
+
+static inline int
+__skb_cow(struct sk_buff *skb, unsigned int headroom, int cloned)
+{
+
+	if (headroom > skb_headroom(skb))
+		return (pskb_expand_head(skb, ALIGN(headroom - skb_headroom(skb), NET_SKB_PAD), 0, GFP_ATOMIC));
+
+	return (0);
+}
+
+static inline int
+skb_cow(struct sk_buff *skb, unsigned int headroom)
+{
+	/*
+	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
+	 * case where the buffer is cloned.
+	 */
+	return (__skb_cow(skb, headroom, false));
+}
+
+static inline int
+skb_cow_head(struct sk_buff *skb, unsigned int headroom)
+{
+	/*
+	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
+	 * case where the buffer is cloned.
+	 */
+	return (__skb_cow(skb, headroom, false));
+}
+
+static inline struct sk_buff *
+skb_share_check(struct sk_buff *skb, gfp_t pri)
+{
+	/*
+	 * XXX-CL skb_clone is not implemented yet, so don't worry about the
+	 * case where the buffer is cloned.
+	 */
+	return (skb);
+}
+
+struct skb_seq_state {
+};
+
+static inline void
+skb_prepare_seq_read(struct sk_buff *skb, unsigned int from, unsigned int to, struct skb_seq_state *st)
+{
+
+	SKB_TODO();
+}
+
+static inline unsigned int
+skb_seq_read(unsigned int consumed, u8 const **data, struct skb_seq_state *st)
+{
+
+	SKB_TODO();
+	return (0);
+}
+
+static inline void *
+skb_pull_rcsum(struct sk_buff *skb, unsigned int len)
+{
+
+	SKB_TODO(); /* Should also update recv checksum. (skb_postpull_rcsum?) */
+	return (skb_pull(skb, len));
+}
+
+static inline void
+nf_reset_ct(struct sk_buff *skb)
+{
+
+	SKB_TODO();
+}
 
 #endif	/* _LINUXKPI_LINUX_SKBUFF_H */

@@ -173,6 +173,7 @@ struct ether_vlan_header {
 
 #define	ETHERTYPE_PCS		0x4242	/* PCS Basic Block Protocol */
 #define	ETHERTYPE_IMLBLDIAG	0x424C	/* Information Modes Little Big LAN diagnostic */
+#define	ETHERTYPE_BATMAN	0x4305	/* B.A.T.M.A.N.-Advanced */
 #define	ETHERTYPE_DIDDLE	0x4321	/* THD - Diddle */
 #define	ETHERTYPE_IMLBL		0x4C42	/* Information Modes Little Big LAN */
 #define	ETHERTYPE_SIMNET	0x5208	/* BBN Simnet Private */

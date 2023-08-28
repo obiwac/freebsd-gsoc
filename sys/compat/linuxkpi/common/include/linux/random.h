@@ -32,6 +32,7 @@
 #ifndef _LINUXKPI_LINUX_RANDOM_H_
 #define	_LINUXKPI_LINUX_RANDOM_H_
 
+#include <linux/kernel.h>
 #include <linux/types.h>
 #include <sys/random.h>
 #include <sys/libkern.h>
@@ -76,6 +77,13 @@ static inline u32
 prandom_u32_max(u32 max)
 {
 	return (arc4random_uniform(max));
+}
+
+static inline u32
+get_random_u32_below(u32 ceil)
+{
+
+	return (arc4random_uniform(ceil));
 }
 
 #endif /* _LINUXKPI_LINUX_RANDOM_H_ */

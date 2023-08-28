@@ -476,7 +476,7 @@ ether_output_frame(struct ifnet *ifp, struct mbuf *m)
 	    !ether_set_pcp(&m, ifp, pcp))
 		return (0);
 
-	if (PFIL_HOOKED_OUT(V_link_pfil_head))
+	if (curthread->td_vnet && PFIL_HOOKED_OUT(V_link_pfil_head))
 		switch (pfil_mbuf_out(V_link_pfil_head, &m, ifp, NULL)) {
 		case PFIL_DROPPED:
 			return (EACCES);
@@ -846,6 +846,19 @@ ether_input(struct ifnet *ifp, struct mbuf *m)
 	CURVNET_SET_QUIET(ifp->if_vnet);
 	if (__predict_false(needs_epoch))
 		NET_EPOCH_ENTER(et);
+	/*
+	 * If the packet is a BATMAN packet, pass it to the master BATMAN interface.
+	 * Skip if there's no master or it's not BATMAN.
+	 */
+	struct ether_header *const eh = mtod(m, struct ether_header *);
+	if (eh->ether_type == htons(ETHERTYPE_BATMAN)) {
+		if_t const master = if_getmaster(ifp);
+
+		if (master != NULL && master->if_type == IFT_BATMAN
+		    && if_getslavefn(master))
+			if_getslavefn(master)(master, ifp, m);
+		return;
+	}
 	while (m) {
 		mn = m->m_nextpkt;
 		m->m_nextpkt = NULL;

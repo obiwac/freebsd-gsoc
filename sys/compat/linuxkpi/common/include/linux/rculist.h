@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2015 François Tigeot
  * Copyright (c) 2016-2020 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -93,9 +94,9 @@ list_del_rcu(struct list_head *entry)
 	__list_del_rcu(entry->prev, entry->next);
 }
 
-#define	hlist_first_rcu(head)	(*((struct hlist_node **)(&(head)->first)))
-#define	hlist_next_rcu(node)	(*((struct hlist_node **)(&(node)->next)))
-#define	hlist_pprev_rcu(node)	(*((struct hlist_node **)((node)->pprev)))
+#define	hlist_first_rcu(head)	(*(__DECONST(struct hlist_node **, &(head)->first)))
+#define	hlist_next_rcu(node)	(*(__DECONST(struct hlist_node **, &(node)->next)))
+#define	hlist_pprev_rcu(node)	(*(__DECONST(struct hlist_node **, (node)->pprev)))
 
 static inline void
 hlist_add_behind_rcu(struct hlist_node *n, struct hlist_node *prev)

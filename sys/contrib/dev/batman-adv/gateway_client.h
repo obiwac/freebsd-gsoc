@@ -10,7 +10,6 @@
 #include "main.h"
 
 #include <linux/kref.h>
-#include <linux/netlink.h>
 #include <linux/skbuff.h>
 #include <linux/types.h>
 #include <uapi/linux/batadv_packet.h>

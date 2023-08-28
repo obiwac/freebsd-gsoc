@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  *
  * Copyright (c) 2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,6 +32,7 @@
 #define	_LINUXKPI_LINUX_ETHTOOL_H_
 
 #include <linux/types.h>
+#include <net/rtnetlink.h>
 
 #define	ETH_GSTRING_LEN	(2 * IF_NAMESIZE)	/* Increase if not large enough */
 
@@ -53,7 +55,45 @@ struct ethtool_drvinfo {
 
 struct net_device;
 struct ethtool_ops {
-	void(*get_drvinfo)(struct net_device *, struct ethtool_drvinfo *);
+	void	(*get_drvinfo)(struct net_device *, struct ethtool_drvinfo *);
+	u32	(*get_link)(struct net_device *);
+	void	(*get_strings)(struct net_device *, u32, u8 *);
+	void	(*get_ethtool_stats)(struct net_device *, struct ethtool_stats *, u64 *);
+	int	(*get_sset_count)(struct net_device *, int);
 };
+
+#define	SPEED_UNKNOWN	-1
+
+#define	DUPLEX_HALF	0x00
+#define	DUPLEX_FULL	0x01
+#define	DUPLEX_UNKNOWN	0xFF
+
+struct ethtool_link_settings {
+	uint32_t	speed;
+	uint8_t		duplex;
+};
+
+struct ethtool_link_ksettings {
+	struct ethtool_link_settings	base;
+};
+
+static inline int
+__ethtool_get_link_ksettings(struct net_device *dev, struct ethtool_link_ksettings *link_ksettings)
+{
+
+	/* XXX Normally we'd wanna call dev->ethtool_ops->get_link_ksettings for
+	 * this, but we're not guaranteed dev is a Linux net_device (i.e. could
+	 * be a FreeBSD ifp), so we can't just do that.
+	 */
+	return (-EOPNOTSUPP);
+}
+
+static inline u32
+ethtool_op_get_link(struct net_device *dev)
+{
+
+	pr_debug("%s: TODO\n", __func__);
+	return (0);
+}
 
 #endif	/* _LINUXKPI_LINUX_ETHTOOL_H_ */

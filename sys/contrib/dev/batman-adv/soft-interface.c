@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Copyright (C) B.A.T.M.A.N. contributors:
  *
- * Marek Lindner, Simon Wunderlich
+ * Marek Lindner, Simon Wunderlich, Aymeric Wibo
  */
+
+#if defined(__FreeBSD__)
+#include "opt_netlink.h"
+#include <sys/sockio.h>
+#include <sys/kassert.h>
+#endif
 
 #include "soft-interface.h"
 #include "main.h"
@@ -206,8 +212,13 @@ static netdev_tx_t batadv_interface_tx(struct sk_buff *skb,
 	/* reset control block to avoid left overs from previous users */
 	memset(skb->cb, 0, sizeof(struct batadv_skb_cb));
 
+#if !defined(__FreeBSD__)
 	netif_trans_update(soft_iface);
+#endif
 	vid = batadv_get_vid(skb, 0);
+#if defined(__FreeBSD__)
+	KASSERT(vid == BATADV_NO_FLAGS, ("%s: batadv_get_vid not yet tested, returned %u\n", __func__, vid));
+#endif
 
 	skb_reset_mac_header(skb);
 	ethhdr = eth_hdr(skb);
@@ -397,7 +408,7 @@ end:
  * @orig_node: originator from which the batman-adv packet was sent
  *
  * Sends an ethernet frame to the receive path of the local @soft_iface.
- * skb->data has still point to the batman-adv header with the size @hdr_size.
+ * skb->data still points to the batman-adv header with the size @hdr_size.
  * The caller has to have parsed this header already and made sure that at least
  * @hdr_size bytes are still available for pull in @skb.
  *
@@ -423,10 +434,12 @@ void batadv_interface_rx(struct net_device *soft_iface,
 	skb_pull_rcsum(skb, hdr_size);
 	skb_reset_mac_header(skb);
 
+#if !defined(__FreeBSD__)
 	/* clean the netfilter state now that the batman-adv header has been
 	 * removed
 	 */
 	nf_reset_ct(skb);
+#endif
 
 	if (unlikely(!pskb_may_pull(skb, ETH_HLEN)))
 		goto dropped;
@@ -741,7 +754,11 @@ static int batadv_softif_init_late(struct net_device *dev)
 	/* batadv_interface_stats() needs to be available as soon as
 	 * register_netdevice() has been called
 	 */
-	bat_priv->bat_counters = __alloc_percpu(cnt_len, __alignof__(u64));
+#if defined(__FreeBSD__)
+	bat_priv->bat_counters = kmalloc(cnt_len, GFP_KERNEL);
+#else
+	bat_priv->bat_counter = __alloc_percpu(cnt_len, __alignof__(u64));
+#endif
 	if (!bat_priv->bat_counters)
 		return -ENOMEM;
 
@@ -827,6 +844,14 @@ static int batadv_softif_slave_add(struct net_device *dev,
 				   struct net_device *slave_dev,
 				   struct netlink_ext_ack *extack)
 {
+#if defined(__FreeBSD__)
+	/* XXX In lieu of a better solution... */
+	if_t ifp;
+
+	CK_STAILQ_FOREACH(ifp, &V_ifnet, if_link)
+		EVENTHANDLER_INVOKE(ifnet_arrival_event, ifp);
+#endif
+
 	struct batadv_hard_iface *hard_iface;
 	int ret = -EINVAL;
 
@@ -1105,6 +1130,13 @@ static void batadv_softif_destroy_netlink(struct net_device *soft_iface,
  */
 bool batadv_softif_is_valid(const struct net_device *net_dev)
 {
+#if defined(__FreeBSD__)
+	if_t const ifp = __DECONST(if_t, net_dev);
+
+	if (!IFT_IS_LINUX(ifp->if_type))
+		return false;
+#endif
+
 	if (net_dev->netdev_ops->ndo_start_xmit == batadv_interface_tx)
 		return true;
 
@@ -1115,6 +1147,10 @@ static const struct nla_policy batadv_ifla_policy[IFLA_BATADV_MAX + 1] = {
 	[IFLA_BATADV_ALGO_NAME]	= { .type = NLA_NUL_STRING },
 };
 
+#if defined(__FreeBSD__)
+static struct if_clone_addreq_v2 batadv_ifc_addreq;
+#endif
+
 struct rtnl_link_ops batadv_link_ops __read_mostly = {
 	.kind		= "batadv",
 	.priv_size	= sizeof(struct batadv_priv),
@@ -1124,4 +1160,225 @@ struct rtnl_link_ops batadv_link_ops __read_mostly = {
 	.validate	= batadv_softif_validate,
 	.newlink	= batadv_softif_newlink,
 	.dellink	= batadv_softif_destroy_netlink,
+#if defined(__FreeBSD__)
+	.ifc_addreq	= &batadv_ifc_addreq,
+#endif
 };
+
+#if defined(__FreeBSD__)
+static int batadv_softif_ioctl(if_t ifp, u_long cmd, caddr_t data)
+{
+	struct net_device *const dev = (void *)ifp;
+	struct ifreq *ifr = (void *)data;
+	int err = 0;
+
+	/* See dev_ifsioc. */
+	switch (cmd) {
+	case SIOCSIFMTU:
+		err = dev->netdev_ops->ndo_change_mtu(dev, ifr->ifr_mtu);
+		break;
+	default:
+		err = ether_ioctl(ifp, cmd, data);
+	}
+
+	return err;
+}
+
+static void batadv_softif_init(void *idk)
+{
+	/* This function does nothing, but it's required. */
+}
+
+static int batadv_softif_output(if_t ifp, struct mbuf *m, struct sockaddr const *dst, struct route *ro)
+{
+	struct net_device *const dev = (void *)ifp;
+	sa_family_t af;
+
+	if (dst->sa_family == AF_UNSPEC)
+		memcpy(&af, &dst->sa_family, sizeof af);
+	else
+		af = RO_GET_FAMILY(ro, dst);
+	m->m_pkthdr.csum_data = af;
+
+	/* XXX 28 is enough headroom for BATMAN. */
+	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(dev, m, dst, ro, 28);
+	if (skb == NULL)
+		return 0;
+
+	return dev->netdev_ops->ndo_start_xmit(skb, dev);
+}
+
+static int batadv_softif_ifc_match_linux(struct if_clone *ifc, char const *name)
+{
+	if (strncmp(name, "bat", 3) != 0)
+		return 0;
+
+	for (char const *cp = name + 3; *cp != '\0'; cp++) {
+		if (*cp < '0' || *cp > '9')
+			return 0;
+	}
+
+	return 1;
+}
+
+static int batadv_softif_ifc_match_fbsd(struct if_clone *ifc, char const *name)
+{
+	if (strncmp(name, "batadv", 6) != 0)
+		return 0;
+
+	for (char const *cp = name + 6; *cp != '\0'; cp++) {
+		if (*cp < '0' || *cp > '9')
+			return 0;
+	}
+
+	return 1;
+}
+
+static int batadv_softif_ifc_match(struct if_clone *ifc, char const *name)
+{
+	bool const matches_linux = batadv_softif_ifc_match_linux(ifc, name);
+	bool const matches_fbsd = batadv_softif_ifc_match_fbsd(ifc, name);
+
+	return matches_linux || matches_fbsd;
+}
+
+static int batadv_softif_ifc_create(struct if_clone *ifc, char *name, size_t len,
+				    struct ifc_data *ifd, if_t *ifpp)
+{
+	struct net_device *dev =
+		linuxkpi_alloc_netdev_ifp(batadv_link_ops.priv_size,
+		IFT_BATMAN, batadv_link_ops.setup);
+	if_t ifp = (void *)dev;
+
+	/*
+	 * We want to be able to use dev_put on the soft interface later, so
+	 * get a reference to it instead of using it directly.
+	 */
+	dev = linux_dev_get_by_index(NULL, dev->ifindex);
+	if (dev->netdev_ops->ndo_init(dev) < 0)
+		return ENOSPC;
+
+	if_initname(ifp, batadv_link_ops.kind, ifd->unit);
+	if_setinitfn(ifp, batadv_softif_init);
+	if_setioctlfn(ifp, batadv_softif_ioctl);
+	if_setslavefn(ifp, batadv_batman_m_recv);
+
+	ifp->if_flags = IFF_BROADCAST;
+#if defined(CONFIG_BATMAN_ADV_MCAST)
+	ifp->if_flags |= IFF_MULTICAST;
+#endif
+
+	ether_ifattach(ifp, dev->dev_addr);
+	eth_broadcast_addr(dev->broadcast);
+	ifp->if_broadcastaddr = dev->broadcast;
+
+	/*
+	 * Transmission is handled by batadv_softif_output;
+	 * no need to register an ifp->if_transmit.
+	 */
+	if_setoutputfn(ifp, batadv_softif_output);
+	*ifpp = ifp;
+
+	return 0;
+}
+
+static int batadv_softif_ifc_destroy(struct if_clone *ifc, if_t ifp,
+				     uint32_t flags)
+{
+	struct net_device *const dev = (struct net_device *)ifp;
+	struct batadv_hard_iface const *hard_iface;
+	if_t hard_ifp;
+
+	/*
+	 * Clear the ifp->if_master field of each hard interface. This is
+	 * because we're going to end up freeing the soft interface (which it
+	 * points to).
+	 */
+	rcu_read_lock();
+	list_for_each_entry_rcu(hard_iface, &batadv_hardif_list, list) {
+		hard_ifp = (if_t)hard_iface->net_dev;
+		hard_ifp->if_master = NULL;
+	}
+	rcu_read_unlock();
+
+	batadv_link_ops.dellink(dev, NULL);
+
+	/* XXX free_netdev seems never to be called by BATMAN (?) */
+	free_netdev(dev);
+
+	return 0;
+}
+
+#include <netlink/route/route_var.h>
+#include <netlink/route/interface.h>
+
+struct nl_parsed_batadv_idata {
+	struct nlattr *unspec;
+	struct nlattr *algo_name;
+};
+
+#define	_OUT(_field)	offsetof(struct nl_parsed_batadv_idata, _field)
+static struct nlattr_parser const nla_p_batadv_idata[] = {
+	{ .type = IFLA_BATADV_UNSPEC, .off = _OUT(unspec), .cb = nlattr_get_nla },
+	{ .type = IFLA_BATADV_ALGO_NAME, .off = _OUT(algo_name), .cb = nlattr_get_nla },
+};
+#undef	_OUT
+NL_DECLARE_ATTR_PARSER(batadv_idata_parser, nla_p_batadv_idata);
+
+static int batadv_softif_ifc_create_nl(struct if_clone *ifc, char *name,
+				       size_t len, struct ifc_data_nl *ifd)
+{
+	struct nl_pstate *const npt = ifd->npt;
+	struct nl_parsed_link *const lattrs = ifd->lattrs;
+	struct nl_parsed_batadv_idata attrs = {};
+	int err = 0;
+
+	/* Parse info data attributes. */
+	if (lattrs->ifla_idata != NULL) {
+		err = nl_parse_nested(lattrs->ifla_idata, &batadv_idata_parser,
+		    npt, &attrs);
+		if (err != 0)
+			return err;
+	}
+
+	/* Create batadv interface itself. */
+	struct ifc_data ifd_new = {
+		.flags = ifd->flags,
+		.unit = ifd->unit,
+		.params = ifd->params,
+	};
+	err = batadv_softif_ifc_create(ifc, name, len, &ifd_new, &ifd->ifp);
+	if (err != 0)
+		return err;
+
+	/* Call the Linux function for creating a new batadv link. */
+	struct net_device *const dev = (struct net_device*)ifd->ifp;
+	struct nlattr *data[IFLA_BATADV_MAX + 1] = {
+		[IFLA_BATADV_UNSPEC] = attrs.unspec,
+		[IFLA_BATADV_ALGO_NAME] = attrs.algo_name,
+	};
+
+	err = batadv_link_ops.newlink(NULL, dev, NULL, data, NULL);
+	return err;
+}
+
+static int batadv_softif_ifc_modify_nl(if_t ifp, struct ifc_data_nl *ifd)
+{
+	return nl_modify_ifp_generic(ifp, ifd->lattrs, ifd->bm, ifd->npt);
+}
+
+static void batadv_softif_ifc_dump_nl(if_t ifp, struct nl_writer *nw)
+{
+}
+
+static struct if_clone_addreq_v2 batadv_ifc_addreq = {
+	.version = 2, /* For netlink callbacks. */
+	.flags = IFC_F_AUTOUNIT,
+	.match_f = batadv_softif_ifc_match,
+	.create_f = batadv_softif_ifc_create,
+	.destroy_f = batadv_softif_ifc_destroy,
+	.create_nl_f = batadv_softif_ifc_create_nl,
+	.modify_nl_f = batadv_softif_ifc_modify_nl,
+	.dump_nl_f = batadv_softif_ifc_dump_nl,
+};
+#endif

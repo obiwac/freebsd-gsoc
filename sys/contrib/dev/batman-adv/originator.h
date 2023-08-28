@@ -13,7 +13,6 @@
 #include <linux/if_ether.h>
 #include <linux/jhash.h>
 #include <linux/kref.h>
-#include <linux/netlink.h>
 #include <linux/skbuff.h>
 #include <linux/types.h>
 

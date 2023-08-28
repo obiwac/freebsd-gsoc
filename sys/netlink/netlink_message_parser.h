@@ -195,6 +195,8 @@ int nlattr_get_nla(struct nlattr *nla, struct nl_pstate *npt,
     const void *arg, void *target);
 int nlattr_get_nested(struct nlattr *nla, struct nl_pstate *npt,
     const void *arg, void *target);
+int nlattr_get_lladdr(struct nlattr *nla, struct nl_pstate *npt,
+    const void *arg, void *target);
 
 bool nlmsg_report_err_msg(struct nl_pstate *npt, const char *fmt, ...);
 

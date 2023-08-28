@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2021 The FreeBSD Foundation
  * Copyright (c) 2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -39,7 +40,7 @@ __FBSDID("$FreeBSD$");
 #include <linux/list.h>
 #include <linux/netdevice.h>
 
-MALLOC_DEFINE(M_NETDEV, "lkpindev", "Linux KPI netdevice compat");
+MALLOC_DEFINE(M_NETDEV, "lkpindev", "LinuxKPI netdevice compat");
 
 #define	NAPI_LOCK_INIT(_ndev)		\
     mtx_init(&(_ndev)->napi_mtx, "napi_mtx", NULL, MTX_DEF)
@@ -382,6 +383,8 @@ linuxkpi_init_dummy_netdev(struct net_device *ndev)
 	ndev->reg_state = NETREG_DUMMY;
 	NAPI_LOCK_INIT(ndev);
 	TAILQ_INIT(&ndev->napi_head);
+
+	ndev->dev_addr = ndev->internal_dev_addr;
 	/* Anything else? */
 
 	ndev->napi_tq = taskqueue_create("tq_ndev_napi", M_WAITOK,
@@ -392,17 +395,20 @@ linuxkpi_init_dummy_netdev(struct net_device *ndev)
 }
 
 struct net_device *
-linuxkpi_alloc_netdev(size_t len, const char *name, uint32_t flags,
+linuxkpi_alloc_netdev(size_t priv_len, const char *name, uint32_t flags,
     void(*setup_func)(struct net_device *))
 {
 	struct net_device *ndev;
 
-	ndev = malloc(sizeof(*ndev) + len, M_NETDEV, M_NOWAIT);
+	ndev = malloc(sizeof(*ndev) + priv_len, M_NETDEV, M_NOWAIT);
 	if (ndev == NULL)
 		return (ndev);
 
 	/* Always first as it zeros! */
 	linuxkpi_init_dummy_netdev(ndev);
+
+	/* Zero out the rest of the structure. */
+	memset(ndev->drv_priv, 0, priv_len);
 
 	strlcpy(ndev->name, name, sizeof(*ndev->name));
 
@@ -413,10 +419,33 @@ linuxkpi_alloc_netdev(size_t len, const char *name, uint32_t flags,
 	return (ndev);
 }
 
+struct net_device *
+linuxkpi_alloc_netdev_ifp(size_t priv_len, u_char type,
+    void(*setup_func)(struct net_device *))
+{
+	struct net_device *ndev;
+	if_t ifp;
+
+	ndev = malloc(sizeof(*ndev) + priv_len, M_NETDEV, M_NOWAIT);
+	if (ndev == NULL)
+		return (ndev);
+	ifp = (if_t)ndev;
+
+	linuxkpi_init_dummy_netdev(ndev);
+	if_fill_domain(ifp, type, IF_NODOM);
+	ndev->has_ifp = true;
+
+	memset(ndev->drv_priv, 0, priv_len);
+	setup_func(ndev);
+
+	return (ndev);
+}
+
 void
 linuxkpi_free_netdev(struct net_device *ndev)
 {
 	struct napi_struct *napi, *temp;
+	if_t const ifp = (if_t)ndev;
 
 	NAPI_LOCK(ndev);
 	TAILQ_FOREACH_SAFE(napi, &ndev->napi_head, entry, temp) {
@@ -430,5 +459,77 @@ linuxkpi_free_netdev(struct net_device *ndev)
 
 	/* This needs extending as we support more. */
 
-	free(ndev, M_NETDEV);
+	if (ndev->has_ifp)
+		ether_ifdetach(ifp);
+	else
+		free(ndev, M_NETDEV);
+}
+
+int
+linuxkpi_dev_queue_xmit(struct sk_buff *skb)
+{
+	struct net_device *const dev = skb->dev;
+	if_t const ifp = (if_t)dev;
+	struct ethhdr *ethhdr;
+	struct sockaddr dst;
+	size_t const len = skb->tail - skb->data;
+	struct mbuf *m;
+	struct route ro = {
+		.ro_plen = 0,
+		/* Can point to anything, as long as it's not NULL. */
+		.ro_prepend = (void *)0xdeadc0de,
+		.ro_flags = RT_HAS_HEADER,
+	};
+
+	/* Create destination struct. */
+	ethhdr = eth_hdr(skb);
+
+	dst.sa_len = sizeof ethhdr->h_dest;
+	memcpy(dst.sa_data, ethhdr->h_dest, dst.sa_len);
+	dst.sa_family = AF_INET;
+
+	/* Create mbuf from skbuff. */
+	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
+	if (m == NULL)
+		return (EIO);
+	m->m_next = NULL;
+	m->m_pkthdr.len = len;
+	m->m_len = len;
+
+	skb_reset_mac_header(skb);
+	memcpy(mtod(m, uint8_t *), skb->data, len);
+	kfree_skb(skb);
+
+	/* Actually call output function. */
+	return (ifp->if_output(ifp, m, &dst, &ro));
+}
+
+void
+linuxkpi_netif_rx(struct sk_buff *skb)
+{
+	struct net_device *const dev = skb->dev;
+	if_t const ifp = (if_t)dev;
+	size_t len;
+	struct mbuf *m;
+
+	/*
+	 * XXX Bit of a hack bc batadv_interface_rx removes the ethernet header.
+	 * This won't work for all calls to netif_rx.
+	 */
+	skb_push(skb, ETH_HLEN);
+	len = skb->tail - skb->data;
+
+	/* Create mbuf from skbuff. */
+	m = m_get3(len, M_NOWAIT, MT_DATA, M_PKTHDR);
+	if (m == NULL)
+		return;
+	m->m_next = NULL;
+	m->m_pkthdr.rcvif = ifp;
+	m->m_pkthdr.len = len;
+	m->m_len = len;
+
+	memcpy(mtod(m, void *), skb->data, len);
+	kfree_skb(skb);
+
+	ifp->if_input(ifp, m);
 }

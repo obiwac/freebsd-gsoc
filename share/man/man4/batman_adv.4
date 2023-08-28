@@ -1,0 +1,63 @@
+.\" SPDX-License-Identifier: BSD-2-Clause
+.\" Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
+.Dd August 23, 2023
+.Dt BATMAN_ADV 4
+.Os
+.Sh NAME
+.Nm batman_adv
+.Nd B.A.T.M.A.N.-adv network driver
+.Sh SYNOPSIS
+The
+.Nm
+driver provides support for creating B.A.T.M.A.N. (IV or V) mesh networks.
+.Sh DESCRIPTION
+The
+.Nm
+driver is ported from the Linux
+.Em batman-adv
+driver.
+.Pp
+It uses the
+.Em linuxkpi
+compat framework to do most of the work translating the Linux calls to
+.Fx
+code.
+.Sh EXAMPLES
+Configure a
+.Nm
+interface using the BATMAN_V routing algorithm with vtnet0 as a slave.
+The MTU of vtnet0 is set to 1532 to give room for the BATMAN header:
+.Bd -literal -offset indent
+kldload batman_adv
+ifconfig vtnet0 mtu 1532
+ifconfig batadv create ra BATMAN_V
+ifconfig vtnet0 master batadv0
+ifconfig batadv0 inet 10.0.0.68/24
+.Ed
+.Sh BUGS
+None of the extensions (BLA, DAT, multicast, NC) are currently supported.
+.Pp
+The only interfaces which are supported as slaves are ones which inherit
+mostly from \fBsys/net/if_ethersubr.c\fP; others aren't
+guaranteed to (and probably won't!) work.
+.Sh SEE ALSO
+.Xr ifconfig 8
+.Sh HISTORY
+The
+.Nm
+driver first appeared in
+.Fx 14.0 .
+.Sh AUTHORS
+.An -nosplit
+The Linux
+.Nm
+driver was written by
+.An Marek Lindner Aq mareklindner@neomailbox.ch
+and
+.An Simon Wunderlich Aq sw@simonwunderlich.de .
+.Pp
+It was ported to
+.Fx
+by
+.An Aymeric Wibo Aq obiwac@freebsd.org
+as part of GSoC 2023.

@@ -44,4 +44,9 @@
 #define	ipv4_is_multicast(be)	IN_MULTICAST(ntohl(be))
 #define	ipv4_is_lbcast(be)	((be) == INADDR_BROADCAST)
 
+#define	ipv4_is_local_multicast(be)	({		\
+	pr_debug("ipv4_is_local_multicast: TODO\n");	\
+	0;						\
+})
+
 #endif	/* _LINUXKPI_LINUX_IN_H_ */

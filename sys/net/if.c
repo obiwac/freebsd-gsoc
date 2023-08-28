@@ -4,6 +4,7 @@
  * Copyright (c) 2010 Bjoern A. Zeeb <bz@FreeBSD.org>
  * Copyright (c) 1980, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -527,23 +528,15 @@ VNET_SYSUNINIT(vnet_if_return, SI_SUB_VNET_DONE, SI_ORDER_ANY,
 #endif
 
 /*
- * Allocate a struct ifnet and an index for an interface.  A layer 2
- * common structure will also be allocated if an allocation routine is
- * registered for the passed type.
+ * Fill members for a struct ifnet and allocate an index for an interface.
+ * A layer 2 common structure will also be allocated if an allocation routine
+ * is registered for the passed type.
  */
-static struct ifnet *
-if_alloc_domain(u_char type, int numa_domain)
+void
+if_fill_domain(struct ifnet *ifp, u_char type, int numa_domain)
 {
-	struct ifnet *ifp;
 	u_short idx;
 
-	KASSERT(numa_domain <= IF_NODOM, ("numa_domain too large"));
-	if (numa_domain == IF_NODOM)
-		ifp = malloc(sizeof(struct ifnet), M_IFNET,
-		    M_WAITOK | M_ZERO);
-	else
-		ifp = malloc_domainset(sizeof(struct ifnet), M_IFNET,
-		    DOMAINSET_PREF(numa_domain), M_WAITOK | M_ZERO);
 	ifp->if_type = type;
 	ifp->if_alloctype = type;
 	ifp->if_numa_domain = numa_domain;
@@ -607,7 +600,22 @@ if_alloc_domain(u_char type, int numa_domain)
 	ifp->if_idxgen = ifindex_table[idx].ife_gencnt;
 	ck_pr_store_ptr(&ifindex_table[idx].ife_ifnet, ifp);
 	IFNET_WUNLOCK();
+}
 
+static struct ifnet *
+if_alloc_domain(u_char type, int numa_domain)
+{
+	struct ifnet *ifp;
+
+	KASSERT(numa_domain <= IF_NODOM, ("numa_domain too large"));
+	if (numa_domain == IF_NODOM)
+		ifp = malloc(sizeof(struct ifnet), M_IFNET,
+		    M_WAITOK | M_ZERO);
+	else
+		ifp = malloc_domainset(sizeof(struct ifnet), M_IFNET,
+		    DOMAINSET_PREF(numa_domain), M_WAITOK | M_ZERO);
+
+	if_fill_domain(ifp, type, numa_domain);
 	return (ifp);
 }
 
@@ -894,6 +902,8 @@ if_attach_internal(struct ifnet *ifp, bool vmove)
 		ifp->if_addr = ifa;
 		ifa->ifa_ifp = ifp;
 		ifa->ifa_addr = (struct sockaddr *)sdl;
+		sdl = (struct sockaddr_dl *)ifa->ifa_addr;
+		ifp->if_linux_dev_addr = LLADDR(sdl);
 		sdl = (struct sockaddr_dl *)(socksize + (caddr_t)sdl);
 		ifa->ifa_netmask = (struct sockaddr *)sdl;
 		sdl->sdl_len = masklen;
@@ -3928,6 +3938,7 @@ if_setlladdr(struct ifnet *ifp, const u_char *lladdr, int len)
 	case IFT_L2VLAN:
 	case IFT_BRIDGE:
 	case IFT_IEEE8023ADLAG:
+	case IFT_BATMAN:
 		bcopy(lladdr, LLADDR(sdl), len);
 		break;
 	default:
@@ -4502,6 +4513,45 @@ if_getmtu_family(const if_t ifp, int family)
 	}
 
 	return (ifp->if_mtu);
+}
+
+int
+if_setmaster(if_t ifp, if_t master)
+{
+	ifp->if_master = master;
+	return (0);
+}
+
+if_t
+if_getmaster(if_t const ifp)
+{
+	return (ifp->if_master);
+}
+
+int
+if_setslavefn(if_t ifp, if_slave_fn_t slavefn)
+{
+	ifp->if_slavefn = slavefn;
+	return (0);
+}
+
+if_slave_fn_t
+if_getslavefn(if_t ifp)
+{
+	return (ifp->if_slavefn);
+}
+
+int
+if_setlinuxsoftc(if_t ifp, void* linux_softc)
+{
+	ifp->if_linux_softc = linux_softc;
+	return (0);
+}
+
+void*
+if_getlinuxsoftc(if_t ifp)
+{
+	return (ifp->if_linux_softc);
 }
 
 /*

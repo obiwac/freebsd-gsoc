@@ -714,7 +714,11 @@ int batadv_hardif_neigh_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;
@@ -731,7 +735,11 @@ int batadv_hardif_neigh_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	hard_ifindex = batadv_netlink_get_ifindex(cb->nlh,
 						  BATADV_ATTR_HARD_IFINDEX);
 	if (hard_ifindex) {
+#if defined(__FreeBSD__)
+		hard_iface = linux_dev_get_by_index(net, hard_ifindex);
+#else
 		hard_iface = dev_get_by_index(net, hard_ifindex);
+#endif
 		if (hard_iface)
 			hardif = batadv_hardif_get_by_netdev(hard_iface);
 
@@ -1298,7 +1306,11 @@ int batadv_orig_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;
@@ -1315,7 +1327,11 @@ int batadv_orig_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	hard_ifindex = batadv_netlink_get_ifindex(cb->nlh,
 						  BATADV_ATTR_HARD_IFINDEX);
 	if (hard_ifindex) {
+#if defined(__FreeBSD__)
+		hard_iface = linux_dev_get_by_index(net, hard_ifindex);
+#else
 		hard_iface = dev_get_by_index(net, hard_ifindex);
+#endif
 		if (hard_iface)
 			hardif = batadv_hardif_get_by_netdev(hard_iface);
 

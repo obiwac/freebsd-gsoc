@@ -54,6 +54,13 @@ typedef enum {
 	MT_FILTER,
 } clone_match_type;
 
+typedef enum {
+	CT_IOCTL,
+#if !defined(WITHOUT_NETLINK)
+	CT_NL,
+#endif
+} clone_callback_type;
+
 static void
 list_cloners(void)
 {
@@ -79,8 +86,14 @@ struct clone_defcb {
 		char ifprefix[IFNAMSIZ];
 		clone_match_func *ifmatch;
 	};
-	clone_match_type clone_mt;
-	clone_callback_func *clone_cb;
+	clone_match_type	clone_mt;
+	clone_callback_type	clone_ct;
+	union {
+		clone_callback_func	*clone_cb;
+#if !defined(WITHOUT_NETLINK)
+		clone_nl_callback_func	*clone_nl_cb;
+#endif
+	};
 	SLIST_ENTRY(clone_defcb) next;
 };
 
@@ -95,6 +108,7 @@ clone_setdefcallback_prefix(const char *ifprefix, clone_callback_func *p)
 	dcp = malloc(sizeof(*dcp));
 	strlcpy(dcp->ifprefix, ifprefix, IFNAMSIZ-1);
 	dcp->clone_mt = MT_PREFIX;
+	dcp->clone_ct = CT_IOCTL;
 	dcp->clone_cb = p;
 	SLIST_INSERT_HEAD(&clone_defcbh, dcp, next);
 }
@@ -107,9 +121,38 @@ clone_setdefcallback_filter(clone_match_func *filter, clone_callback_func *p)
 	dcp = malloc(sizeof(*dcp));
 	dcp->ifmatch  = filter;
 	dcp->clone_mt = MT_FILTER;
+	dcp->clone_ct = CT_IOCTL;
 	dcp->clone_cb = p;
 	SLIST_INSERT_HEAD(&clone_defcbh, dcp, next);
 }
+
+#if !defined(WITHOUT_NETLINK)
+void
+clone_nl_setdefcallback_prefix(const char *ifprefix, clone_nl_callback_func *p)
+{
+	struct clone_defcb *dcp;
+
+	dcp = malloc(sizeof(*dcp));
+	strlcpy(dcp->ifprefix, ifprefix, IFNAMSIZ-1);
+	dcp->clone_mt = MT_PREFIX;
+	dcp->clone_ct = CT_NL;
+	dcp->clone_nl_cb = p;
+	SLIST_INSERT_HEAD(&clone_defcbh, dcp, next);
+}
+
+void
+clone_nl_setdefcallback_filter(clone_match_func *filter, clone_nl_callback_func *p)
+{
+	struct clone_defcb *dcp;
+
+	dcp = malloc(sizeof(*dcp));
+	dcp->ifmatch  = filter;
+	dcp->clone_mt = MT_FILTER;
+	dcp->clone_ct = CT_NL;
+	dcp->clone_nl_cb = p;
+	SLIST_INSERT_HEAD(&clone_defcbh, dcp, next);
+}
+#endif
 
 /*
  * Do the actual clone operation.  Any parameters must have been
@@ -120,6 +163,7 @@ clone_setdefcallback_filter(clone_match_func *filter, clone_callback_func *p)
 static void
 ifclonecreate(int s, void *arg)
 {
+	if_ctx *const ctx = arg;
 	struct ifreq ifr;
 	struct clone_defcb *dcp;
 
@@ -143,12 +187,15 @@ ifclonecreate(int s, void *arg)
 		}
 	}
 
-	if (dcp == NULL || dcp->clone_cb == NULL) {
+	if (dcp == NULL || dcp->clone_cb == NULL)
 		/* NB: no parameters */
 	  	ioctl_ifcreate(s, &ifr);
-	} else {
+#if !defined(WITHOUT_NETLINK)
+	else if (dcp->clone_ct == CT_NL)
+		dcp->clone_nl_cb(s, ctx, &ifr);
+#endif
+	else
 		dcp->clone_cb(s, &ifr);
-	}
 
 	/*
 	 * If we get a different name back than we put in, update record and
@@ -161,9 +208,9 @@ ifclonecreate(int s, void *arg)
 }
 
 static void
-clone_create(if_ctx *ctx __unused, const char *cmd __unused, int d __unused)
+clone_create(if_ctx *ctx, const char *cmd __unused, int d __unused)
 {
-	callback_register(ifclonecreate, NULL);
+	callback_register(ifclonecreate, __DECONST(void *, ctx));
 }
 
 static void

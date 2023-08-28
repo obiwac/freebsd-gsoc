@@ -1,6 +1,7 @@
 /*-
  * Copyright (c) 2020-2022 The FreeBSD Foundation
  * Copyright (c) 2021-2022 Bjoern A. Zeeb
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * This software was developed by Björn Zeeb under sponsorship from
  * the FreeBSD Foundation.
@@ -44,7 +45,14 @@ __FBSDID("$FreeBSD$");
 #include <sys/types.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
+#include <sys/socket.h>
 #include <sys/sysctl.h>
+
+#include <net/if.h>
+#include <net/if_dl.h>
+#include <net/if_var.h>
+#include <net/if_llatbl.h>
+#include <netinet/if_ether.h>
 
 #ifdef DDB
 #include <ddb/ddb.h>
@@ -56,6 +64,7 @@ __FBSDID("$FreeBSD$");
 #ifdef __LP64__
 #include <linux/log2.h>
 #endif
+#include <linux/netdevice.h>
 
 SYSCTL_DECL(_compat_linuxkpi);
 SYSCTL_NODE(_compat_linuxkpi, OID_AUTO, skb, CTLFLAG_RW | CTLFLAG_MPSAFE, 0,
@@ -82,7 +91,7 @@ SYSCTL_INT(_compat_linuxkpi_skb, OID_AUTO, mem_limit, CTLFLAG_RDTUN,
     "1=32bit, 2=36bit, other=undef (currently 32bit)");
 #endif
 
-static MALLOC_DEFINE(M_LKPISKB, "lkpiskb", "Linux KPI skbuff compat");
+static MALLOC_DEFINE(M_LKPISKB, "lkpiskb", "LinuxKPI skbuff compat");
 
 struct sk_buff *
 linuxkpi_alloc_skb(size_t size, gfp_t gfp)
@@ -128,6 +137,7 @@ linuxkpi_alloc_skb(size_t size, gfp_t gfp)
 	skb->prev = skb->next = skb;
 
 	skb->shinfo = (struct skb_shared_info *)(skb->end);
+	memset(skb->shinfo, 0, sizeof *skb->shinfo);
 
 	SKB_TRACE_FMT(skb, "data %p size %zu", (skb) ? skb->data : NULL, size);
 	return (skb);
@@ -172,28 +182,10 @@ linuxkpi_build_skb(void *data, size_t fragsz)
 	return (skb);
 }
 
-struct sk_buff *
-linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
+static struct sk_buff *
+copy_internal(struct sk_buff *new, struct sk_buff *skb)
 {
-	struct sk_buff *new;
 	struct skb_shared_info *shinfo;
-	size_t len;
-	unsigned int headroom;
-
-	/* Full buffer size + any fragments. */
-	len = skb->end - skb->head + skb->data_len;
-
-	new = linuxkpi_alloc_skb(len, gfp);
-	if (new == NULL)
-		return (NULL);
-
-	headroom = skb_headroom(skb);
-	/* Fixup head and end. */
-	skb_reserve(new, headroom);	/* data and tail move headroom forward. */
-	skb_put(new, skb->len);		/* tail and len get adjusted */
-
-	/* Copy data. */
-	memcpy(new->head, skb->data - headroom, headroom + skb->len);
 
 	/* Deal with fragments. */
 	shinfo = skb->shinfo;
@@ -207,7 +199,199 @@ linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
 	memcpy(new->cb, skb->cb, sizeof(skb->cb));
 	SKB_IMPROVE("more header fields to copy?");
 
+	new->mac_header = skb->mac_header;
+	new->network_header = skb->network_header;
+	new->transport_header = skb->transport_header;
+
 	return (new);
+}
+
+struct sk_buff *
+linuxkpi_skb_clone(struct sk_buff *skb, gfp_t gfp)
+{
+	struct sk_buff *new;
+
+	new = linuxkpi_alloc_skb(0, gfp);
+	if (new == NULL)
+		return (NULL);
+
+	new = copy_internal(skb, new);
+	return (new);
+}
+
+struct sk_buff *
+linuxkpi_skb_copy(struct sk_buff *skb, gfp_t gfp)
+{
+	struct sk_buff *new;
+	size_t len;
+
+	/* Full buffer size + any fragments. */
+	len = skb->end - skb->head + skb->data_len;
+
+	new = linuxkpi_alloc_skb(len, gfp);
+	if (new == NULL)
+		return (NULL);
+
+	new = copy_internal(new, skb);
+	if (new == NULL)
+		return (NULL);
+
+	new->data = new->head + (skb->data - skb->head);
+	new->tail = new->head + (skb->tail - skb->head);
+
+	memcpy(new->head, skb->head, skb->end - skb->head);
+	return (new);
+}
+
+static int
+resolve_addr(struct ifnet *ifp, struct mbuf *m, struct sockaddr const *dst,
+	struct route *ro, u_char *phdr, uint32_t *pflags, struct llentry **plle)
+{
+	/*
+	 * XXX This fella is adapted from ether_resolve_addr.
+	 * Make this more permanent and less lobotomized.
+	 */
+
+	uint32_t lleflags = 0;
+	int error = 0;
+	struct ether_header *eh = (struct ether_header *)phdr;
+	uint16_t etype;
+
+	if (dst == NULL)
+		return (ENOTSUP);
+
+	switch (dst->sa_family) {
+	case AF_INET:
+		if ((m->m_flags & (M_BCAST | M_MCAST)) == 0)
+			error = arpresolve(ifp, 0, m, dst, phdr, &lleflags,
+			    NULL);
+		else {
+			if (m->m_flags & M_BCAST)
+				memcpy(eh->ether_dhost, ifp->if_broadcastaddr,
+				    ETHER_ADDR_LEN);
+			else {
+				const struct in_addr *a;
+				a = &(((const struct sockaddr_in *)dst)->sin_addr);
+				ETHER_MAP_IP_MULTICAST(a, eh->ether_dhost);
+			}
+			etype = htons(ETHERTYPE_IP);
+			memcpy(&eh->ether_type, &etype, sizeof(etype));
+			memcpy(eh->ether_shost, IF_LLADDR(ifp), ETHER_ADDR_LEN);
+		}
+		break;
+	default:
+		if_printf(ifp, "can't handle af%d\n", dst->sa_family);
+		if (m != NULL)
+			m_freem(m);
+		return (EAFNOSUPPORT);
+	}
+
+	if (error == EHOSTDOWN) {
+		if (ro != NULL && (ro->ro_flags & RT_HAS_GW) != 0)
+			error = EHOSTUNREACH;
+	}
+
+	if (error != 0)
+		return (error);
+
+	*pflags = RT_MAY_LOOP;
+	if (lleflags & LLE_IFADDR)
+		*pflags |= RT_L2_ME;
+
+	return (error);
+}
+
+struct sk_buff *
+linuxkpi_skb_from_mbuf(struct net_device *dev, struct mbuf *m,
+	struct sockaddr const *dst, struct route *ro, int headroom)
+{
+	if_t const ifp = (if_t)dev;
+	size_t payload_len;
+	struct sk_buff *skb;
+	char linkhdr[ETHER_HDR_LEN], *phdr = NULL;
+	uint32_t pflags;
+	size_t hlen = 0;
+	struct llentry *lle = NULL;
+	int addref = 0;
+	int error;
+
+	/*
+	 * If dst == NULL, the mbuf we're passed was received, i.e., we don't
+	 * intend for the resulting skb to be transmitted. This means we can
+	 * skip the whole header prepending stuff.
+	 */
+	if (dst == NULL)
+		goto recv;
+
+	/*
+	 * We first gotta see if we're provided a link layer header.
+	 * XXX Take a look at ether_output. This is probably what we wanna do.
+	 */
+	if (ro != NULL) {
+		if (ro->ro_prepend != NULL) {
+			phdr = ro->ro_prepend;
+			hlen = ro->ro_plen;
+		} else if (!(m->m_flags & (M_BCAST | M_MCAST))) {
+			if ((ro->ro_flags & RT_LLE_CACHE) != 0) {
+				lle = ro->ro_lle;
+				if (lle != NULL &&
+				    (lle->la_flags & LLE_VALID) == 0) {
+					LLE_FREE(lle);
+					lle = NULL;	/* redundant */
+					ro->ro_lle = NULL;
+				}
+				if (lle == NULL) {
+					/* if we lookup, keep cache */
+					addref = 1;
+				} else
+					/*
+					 * Notify LLE code that
+					 * the entry was used
+					 * by datapath.
+					 */
+					llentry_provide_feedback(lle);
+			}
+			if (lle != NULL) {
+				phdr = lle->r_linkdata;
+				hlen = lle->r_hdrlen;
+				pflags = lle->r_flags;
+			}
+		}
+	}
+
+	/* If not, figure one out. */
+	if (phdr == NULL) {
+		error = resolve_addr(ifp, m, dst, ro, linkhdr, &pflags,
+		    addref ? &lle : NULL);
+		if (error == 0) {
+			phdr = linkhdr;
+			hlen = sizeof linkhdr;
+		}
+		else if (error == EWOULDBLOCK)
+			return (NULL);
+		else
+			return (NULL);
+	}
+
+	/* Add header once/if we've got one. */
+	M_PREPEND(m, hlen, M_NOWAIT);
+	if (m == NULL)
+		return (NULL);
+	if ((pflags & RT_HAS_HEADER) == 0)
+		memcpy(mtod(m, void *), phdr, hlen);
+recv:
+	payload_len = m_length(m, NULL);
+	skb = linuxkpi_dev_alloc_skb(headroom + payload_len, GFP_NOWAIT);
+	if (skb == NULL)
+		return (NULL);
+
+	skb->data = skb->head + headroom;
+	skb->tail = skb->data + payload_len;
+	skb->len = skb->tail - skb->data;
+	m_copydata(m, 0, payload_len, skb->data);
+	m_free(m);
+
+	return (skb);
 }
 
 void
@@ -291,8 +475,8 @@ DB_SHOW_COMMAND(skb, db_show_skb)
 	db_printf("\t_alloc_len %u len %u data_len %u truesize %u mac_len %u\n",
 	    skb->_alloc_len, skb->len, skb->data_len, skb->truesize,
 	    skb->mac_len);
-	db_printf("\tcsum %#06x l3hdroff %u l4hdroff %u priority %u qmap %u\n",
-	    skb->csum, skb->l3hdroff, skb->l4hdroff, skb->priority, skb->qmap);
+	db_printf("\tcsum %#06x network_header %u transport_header %u priority %u qmap %u\n",
+	    skb->csum, skb->network_header, skb->transport_header, skb->priority, skb->qmap);
 	db_printf("\tpkt_type %d dev %p sk %p\n",
 	    skb->pkt_type, skb->dev, skb->sk);
 	db_printf("\tcsum_offset %d csum_start %d ip_summed %d protocol %d\n",

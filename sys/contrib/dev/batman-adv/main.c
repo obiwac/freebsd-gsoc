@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Copyright (C) B.A.T.M.A.N. contributors:
  *
- * Marek Lindner, Simon Wunderlich
+ * Marek Lindner, Simon Wunderlich, Aymeric Wibo
  */
 
 #include "main.h"
@@ -499,6 +499,28 @@ err_out:
 	return NET_RX_DROP;
 }
 
+#if defined(__FreeBSD__)
+int batadv_batman_m_recv(if_t ifp, if_t slave, struct mbuf *m)
+{
+	struct net_device *const dev = (void *)slave;
+	struct net_device *const orig_dev = (void *)ifp;
+
+	/* XXX 28 is enough headroom for BATMAN. */
+	struct sk_buff *const skb = linuxkpi_skb_from_mbuf(dev, m, NULL, NULL, 28);
+	struct packet_type *const ptype = if_getlinuxsoftc(slave);
+
+	if (skb == NULL)
+		return 0;
+	skb->dev = dev;
+
+	skb->mac_len = ETH_HLEN;
+	skb_reset_mac_header(skb);
+	skb->data += skb->mac_len;
+
+	return batadv_batman_skb_recv(skb, dev, ptype, orig_dev);
+}
+#endif
+
 static void batadv_recv_handler_init(void)
 {
 	int i;
@@ -723,9 +745,17 @@ module_init(batadv_init);
 module_exit(batadv_exit);
 
 MODULE_LICENSE("GPL");
-
 MODULE_AUTHOR(BATADV_DRIVER_AUTHOR);
 MODULE_DESCRIPTION(BATADV_DRIVER_DESC);
+
+#if defined(__linux__)
 MODULE_VERSION(BATADV_SOURCE_VERSION);
 MODULE_ALIAS_RTNL_LINK("batadv");
 MODULE_ALIAS_GENL_FAMILY(BATADV_NL_NAME);
+#endif
+
+#if defined(__FreeBSD__)
+MODULE_VERSION(batman_adv, 20231);
+MODULE_DEPEND(batman_adv, linuxkpi, 1, 1, 1);
+MODULE_DEPEND(batman_adv, netlink, 1, 1, 1);
+#endif

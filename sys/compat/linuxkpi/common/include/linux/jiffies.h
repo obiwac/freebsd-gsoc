@@ -3,6 +3,7 @@
  * Copyright (c) 2010 iX Systems, Inc.
  * Copyright (c) 2010 Panasas, Inc.
  * Copyright (c) 2013-2016 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +41,7 @@
 
 #define	jiffies			ticks
 #define	jiffies_64		ticks
-#define	jiffies_to_msecs(x)     (((int64_t)(int)(x)) * 1000 / hz)
+#define	jiffies_to_msecs(x)     ((unsigned int)(((int64_t)(int)(x)) * 1000 / hz))
 
 #define	MAX_JIFFY_OFFSET	((INT_MAX >> 1) - 1)
 
@@ -52,6 +53,8 @@
 #define	time_before_eq(a, b)	time_after_eq(b, a)
 #define	time_in_range(a,b,c)	\
 	(time_after_eq(a,b) && time_before_eq(a,c))
+#define	time_is_before_eq_jiffies(a) time_before_eq(a, jiffies)
+#define	time_is_before_jiffies(a) time_before(a, jiffies)
 #define	time_is_after_eq_jiffies(a) time_after_eq(a, jiffies)
 #define	time_is_after_jiffies(a) time_after(a, jiffies)
 

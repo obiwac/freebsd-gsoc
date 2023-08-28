@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  *
  * Copyright (c) 2022 Alexander V. Chernikov <melifaro@FreeBSD.org>
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,7 +37,9 @@ __FBSDID("$FreeBSD$");
 
 #include <machine/stdarg.h>
 
+#include <net/ethernet.h>
 #include <net/if.h>
+#include <net/if_dl.h>
 #include <net/route.h>
 #include <net/route/nhop.h>
 
@@ -475,6 +478,27 @@ nlattr_get_nested(struct nlattr *nla, struct nl_pstate *npt, const void *arg, vo
 	/* Assumes target points to the beginning of the structure */
 	error = nl_parse_header(NLA_DATA(nla), NLA_DATA_LEN(nla), p, npt, target);
 	return (error);
+}
+
+int
+nlattr_get_lladdr(struct nlattr *nla, struct nl_pstate *npt, const void *arg, void *target)
+{
+	size_t const len = NLA_DATA_LEN(nla);
+	struct sockaddr_dl *sdl;
+
+	if (len > ETHER_ADDR_LEN)
+		return (EINVAL);
+
+	sdl = npt_alloc(npt, sizeof *sdl);
+	if (sdl == NULL)
+		return (ENOMEM);
+
+	sdl->sdl_alen = len;
+	void *const data = NLA_DATA(nla);
+	memcpy(LLADDR(sdl), data, len);
+
+	*((struct sockaddr_dl **)target) = sdl;
+	return (0);
 }
 
 int

@@ -41,10 +41,17 @@
 
 #include <linux/skbuff.h>
 
-/* (u) unconfirmed structure field names; using FreeBSD's meanwhile. */
+/*
+ * (u) unconfirmed structure field names;
+ * using FreeBSD's (struct ip) meanwhile.
+ */
 struct iphdr {
-	uint8_t		ip_hl:4, ip_ver:4;	/* (u) */
-	uint8_t		ip_tos;			/* (u) */
+#if BYTE_ORDER == BIG_ENDIAN
+	uint8_t		version:4, ihl:4;
+#else
+	uint8_t		ihl:4, version:4;
+#endif
+	uint8_t		tos;
 	uint16_t	ip_len;			/* (u) */
 	uint16_t	id;
 	uint16_t	ip_off;			/* (u) */

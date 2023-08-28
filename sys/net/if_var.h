@@ -134,6 +134,7 @@ typedef void (*if_qflush_fn_t)(if_t);
 typedef int (*if_transmit_fn_t)(if_t, struct mbuf *);
 typedef	uint64_t (*if_get_counter_t)(if_t, ift_counter);
 typedef	void (*if_reassign_fn_t)(if_t, struct vnet *, char *);
+typedef int (*if_slave_fn_t)(if_t, if_t, struct mbuf *);
 
 struct ifnet_hw_tsomax {
 	u_int	tsomaxbytes;	/* TSO total burst length limit in bytes */
@@ -495,6 +496,7 @@ int	if_addgroup(if_t, const char *);
 int	if_delgroup(if_t, const char *);
 int	if_addmulti(if_t, struct sockaddr *, struct ifmultiaddr **);
 int	if_allmulti(if_t, int);
+void	if_fill_domain(if_t, u_char, int);
 if_t	if_alloc(u_char);
 if_t	if_alloc_dev(u_char, device_t dev);
 void	if_attach(if_t);
@@ -642,6 +644,12 @@ uint8_t if_getpcp(if_t ifp);
 void *if_getl2com(if_t ifp);
 struct ifvlantrunk *if_getvlantrunk(if_t ifp);
 bool if_altq_is_enabled(if_t ifp);
+int if_setmaster(if_t ifp, if_t master);
+if_t if_getmaster(if_t const ifp);
+int if_setslavefn(if_t ifp, if_slave_fn_t slavefn);
+if_slave_fn_t if_getslavefn(if_t ifp);
+int if_setlinuxsoftc(if_t ifp, void* linux_softc);
+void* if_getlinuxsoftc(if_t ifp);
 
 void *if_getafdata(if_t ifp, int);
 
