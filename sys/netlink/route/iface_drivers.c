@@ -31,7 +31,9 @@
 __FBSDID("$FreeBSD$");
 #include "opt_inet.h"
 #include "opt_inet6.h"
-#include <linux/netdevice.h> // TODO what to do w/ this?
+#if defined(COMPAT_LINUXKPI)
+#include <linux/netdevice.h>
+#endif
 #include <sys/types.h>
 #include <sys/malloc.h>
 #include <sys/socket.h>
@@ -60,8 +62,6 @@ __FBSDID("$FreeBSD$");
 #define	DEBUG_MAX_LEVEL	LOG_DEBUG3
 #include <netlink/netlink_debug.h>
 _DECLARE_DEBUG(LOG_INFO);
-
-// TODO update the comment description of _nl_modify_ifp_generic
 
 /*
  * Generic modification interface handler.
@@ -120,15 +120,17 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 		struct sockaddr_dl *const sdl = lattrs->ifla_address;
 		if_setlladdr(ifp, LLADDR(sdl), sdl->sdl_alen);
 
+#if defined(COMPAT_LINUXKPI)
 		if (IFT_IS_LINUX(ifp->if_type)) {
 			struct net_device *const dev = (void *)ifp;
 			if (dev->netdev_ops != NULL)
 				dev->netdev_ops->ndo_set_mac_address(dev, sdl);
 		}
+#endif
 	}
 
 	if (lattrs->ifla_broadcast != NULL) {
-		pr_debug("%s: TODO (IFLA_BROADCAST)\n", __func__);
+		nlmsg_report_err_msg(npt, "%s: TODO (IFLA_BROADCAST)\n", __func__);
 	}
 
 	if (lattrs->ifla_master != 0) {
@@ -147,6 +149,7 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 		NET_EPOCH_ENTER(et);
 		if_setmaster(ifp, ifnet_byindex(lattrs->ifla_master));
 		NET_EPOCH_EXIT(et);
+#if defined(COMPAT_LINUXKPI)
 		if (IFT_IS_LINUX(ifp_master->if_type)) {
 			struct net_device *const master = (void *)ifp_master;
 			struct net_device *const slave = (void *)ifp;
@@ -154,6 +157,7 @@ _nl_modify_ifp_generic(struct ifnet *ifp, struct nl_parsed_link *lattrs,
 			if (master->netdev_ops)
 				master->netdev_ops->ndo_add_slave(master, slave, NULL);
 		}
+#endif
 		if_rele(ifp_master);
 	}
 
