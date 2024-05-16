@@ -523,7 +523,7 @@ setifmaster_nl(if_ctx *ctx, const char *master)
 	hdr->nlmsg_flags |= NLM_F_DUMP;
 	snl_reserve_msg_object(&nw, struct ifinfomsg);
 
-	snl_add_msg_attr_string(&nw, IFLA_IFNAME, name);
+	snl_add_msg_attr_string(&nw, IFLA_IFNAME, master); // TODO This was 'name', I don't know if this is right, I need to check it.
 
 	uint32_t const master_index = if_nametoindex(master);
 	snl_add_msg_attr_u32(&nw, IFLA_MASTER, master_index);
