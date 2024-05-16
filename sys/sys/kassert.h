@@ -32,6 +32,7 @@
 #define	_SYS_KASSERT_H_
 
 #include <sys/cdefs.h>
+#include <sys/types.h>
 
 #ifdef _KERNEL
 extern const char *panicstr;	/* panic message */

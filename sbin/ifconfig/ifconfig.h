@@ -269,6 +269,12 @@ typedef void clone_callback_func(if_ctx *, struct ifreq *);
 void	clone_setdefcallback_prefix(const char *, clone_callback_func *);
 void	clone_setdefcallback_filter(clone_match_func *, clone_callback_func *);
 
+#if !defined(WITHOUT_NETLINK)
+typedef void clone_nl_callback_func(if_ctx *, struct ifreq *);
+void	clone_nl_setdefcallback_prefix(const char *, clone_nl_callback_func *);
+void	clone_nl_setdefcallback_filter(clone_match_func *, clone_nl_callback_func *);
+#endif
+
 void	sfp_status(if_ctx *ctx);
 
 struct sockaddr_dl;
@@ -288,6 +294,7 @@ void	list_interfaces_nl(struct ifconfig_args *args);
 int	ifconfig_nl(if_ctx *ctx, int iscreate,
 		const struct afswtch *uafp);
 uint32_t if_nametoindex_nl(struct snl_state *ss, const char *ifname);
+void	setifmaster_nl(if_ctx *ctx, const char *master);
 
 /*
  * XXX expose this so modules that need to know of any pending
