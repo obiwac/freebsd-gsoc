@@ -5,7 +5,6 @@
  */
 
 #if defined(__FreeBSD__)
-#include "opt_netlink.h"
 #include <sys/sockio.h>
 #include <sys/kassert.h>
 #endif
