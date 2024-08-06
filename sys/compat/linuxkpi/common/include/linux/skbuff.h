@@ -47,8 +47,6 @@
 #include <linux/spinlock.h>
 #include <linux/ktime.h>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 #include "opt_wlan.h"
 
 /* Currently this is only used for wlan so we can depend on that. */
@@ -58,12 +56,6 @@
 
 /* #define	SKB_DEBUG */
 
-=======
-#define	SKB_DEBUG
->>>>>>> f833f1da670 (linuxkpi: Too lazy to discover how properly to enable debug logs on these 😛)
-=======
-/* #define	SKB_DEBUG */
->>>>>>> 039c6ba4d10 (linux/skbuff: Clean up header)
 #ifdef SKB_DEBUG
 #define	DSKB_TODO	0x01
 #define	DSKB_IMPROVE	0x02
