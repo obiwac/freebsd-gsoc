@@ -17,7 +17,6 @@
 #include <linux/list.h>
 #include <linux/minmax.h>
 #include <linux/netdevice.h>
-#include <linux/netlink.h>
 #include <linux/rculist.h>
 #include <linux/rcupdate.h>
 #include <linux/skbuff.h>
@@ -29,6 +28,7 @@
 #include <net/netlink.h>
 #include <uapi/linux/batadv_packet.h>
 #include <uapi/linux/batman_adv.h>
+#include <netlink/netlink_generic.h>
 
 #include "bat_algo.h"
 #include "bat_v_elp.h"

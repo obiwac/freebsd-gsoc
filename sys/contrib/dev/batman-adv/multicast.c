@@ -555,7 +555,11 @@ static int batadv_mcast_mla_bridge_get(struct net_device *dev,
 				       struct hlist_head *mcast_list,
 				       struct batadv_mcast_mla_flags *flags)
 {
+#if defined(__FreeBSD__)
+	struct list_head bridge_mcast_list = LINUX_LIST_HEAD_INIT(bridge_mcast_list);
+#else
 	struct list_head bridge_mcast_list = LIST_HEAD_INIT(bridge_mcast_list);
+#endif
 	struct br_ip_list *br_ip_entry, *tmp;
 	u8 tvlv_flags = flags->tvlv_flags;
 	struct batadv_hw_addr *new;
@@ -2007,7 +2011,11 @@ batadv_mcast_netlink_get_primary(struct netlink_callback *cb,
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;

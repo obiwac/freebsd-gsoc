@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013-2017 Mellanox Technologies, Ltd.
+ * Copyright (c) 2023 Aymeric Wibo <obiwac@freebsd.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +28,9 @@
 #ifndef _LINUXKPI_LINUX_BITMAP_H_
 #define	_LINUXKPI_LINUX_BITMAP_H_
 
+#include <linux/pr_debug.h>
 #include <linux/bitops.h>
+#include <linux/find.h>
 #include <linux/slab.h>
 
 static inline void
@@ -48,7 +51,7 @@ bitmap_fill(unsigned long *addr, const unsigned int size)
 }
 
 static inline int
-bitmap_full(unsigned long *addr, const unsigned int size)
+bitmap_full(const unsigned long *addr, const unsigned int size)
 {
 	const unsigned int end = BIT_WORD(size);
 	const unsigned int tail = size & (BITS_PER_LONG - 1);
@@ -69,7 +72,7 @@ bitmap_full(unsigned long *addr, const unsigned int size)
 }
 
 static inline int
-bitmap_empty(unsigned long *addr, const unsigned int size)
+bitmap_empty(const unsigned long *addr, const unsigned int size)
 {
 	const unsigned int end = BIT_WORD(size);
 	const unsigned int tail = size & (BITS_PER_LONG - 1);
@@ -202,7 +205,7 @@ bitmap_release_region(unsigned long *bitmap, int pos, int order)
 }
 
 static inline unsigned int
-bitmap_weight(unsigned long *addr, const unsigned int size)
+bitmap_weight(const unsigned long *addr, const unsigned int size)
 {
 	const unsigned int end = BIT_WORD(size);
 	const unsigned int tail = size & (BITS_PER_LONG - 1);
@@ -216,6 +219,26 @@ bitmap_weight(unsigned long *addr, const unsigned int size)
 		const unsigned long mask = BITMAP_LAST_WORD_MASK(tail);
 
 		retval += hweight_long(addr[end] & mask);
+	}
+	return (retval);
+}
+
+static inline unsigned int
+bitmap_weight_and(const unsigned long *addr1,
+    const unsigned long *addr2, unsigned int size)
+{
+	const unsigned int end = BIT_WORD(size);
+	const unsigned int tail = size & (BITS_PER_LONG - 1);
+	unsigned int retval = 0;
+	unsigned int i;
+
+	for (i = 0; i != end; i++)
+		retval += hweight_long(addr1[i] & addr2[i]);
+
+	if (tail) {
+		const unsigned long mask = BITMAP_LAST_WORD_MASK(tail);
+
+		retval += hweight_long((addr1[end] & addr2[end]) & mask);
 	}
 	return (retval);
 }
@@ -361,26 +384,30 @@ bitmap_or(unsigned long *dst, const unsigned long *src1,
 		dst[i] = src1[i] | src2[i];
 }
 
-static inline void
+static inline bool
 bitmap_and(unsigned long *dst, const unsigned long *src1,
     const unsigned long *src2, const unsigned int size)
 {
 	const unsigned int end = BITS_TO_LONGS(size);
 	unsigned int i;
+	bool res = false;
 
 	for (i = 0; i != end; i++)
-		dst[i] = src1[i] & src2[i];
+		res |= (dst[i] = src1[i] & src2[i]);
+	return (res);
 }
 
-static inline void
+static inline bool
 bitmap_andnot(unsigned long *dst, const unsigned long *src1,
     const unsigned long *src2, const unsigned int size)
 {
 	const unsigned int end = BITS_TO_LONGS(size);
 	unsigned int i;
+	bool res = false;
 
 	for (i = 0; i != end; i++)
-		dst[i] = src1[i] & ~src2[i];
+		res |= (dst[i] = src1[i] & ~src2[i]);
+	return (res);
 }
 
 static inline void
@@ -445,6 +472,21 @@ static inline void
 bitmap_free(const unsigned long *bitmap)
 {
 	kfree(bitmap);
+}
+
+static inline void
+bitmap_shift_left(unsigned long *dst, unsigned long const *src,
+    unsigned int shift, unsigned int const size)
+{
+	size_t const long_count = BITS_TO_LONGS(size);
+	size_t const long_shift = shift / BITS_PER_LONG;
+	size_t const bit_shift = shift % BITS_PER_LONG;
+
+	for (size_t i = long_shift; i < long_count; i++) {
+		dst[i - long_shift] |= src[i] << bit_shift;
+		if (i - long_shift > 0)
+			dst[i - long_shift - 1] |= src[i] >> (BITS_PER_LONG - bit_shift);
+	}
 }
 
 #endif					/* _LINUXKPI_LINUX_BITMAP_H_ */

@@ -185,6 +185,14 @@ struct ifnet {
 	struct epoch_context	if_epoch_ctx;
 
 	/*
+	 * LinuxKPI struct net_device compatibility.
+	 */
+	if_t		if_master;		/* master interface */
+	if_slave_fn_t	if_slavefn;		/* slave forwarding function */
+	void		*if_linux_softc;	/* Linux driver data */
+	uint8_t		*if_linux_dev_addr;	/* for use by its alias in struct net_device */
+
+	/*
 	 * Spare fields to be added before branching a stable branch, so
 	 * that structure can be enhanced without changing the kernel
 	 * binary interface.

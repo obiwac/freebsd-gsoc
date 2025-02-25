@@ -19,7 +19,7 @@
 #include <linux/kref.h>
 #include <linux/mutex.h>
 #include <linux/netdevice.h>
-#include <linux/netlink.h>
+#include <net/netlink.h>
 #include <linux/sched.h> /* for linux/wait.h */
 #include <linux/skbuff.h>
 #include <linux/spinlock.h>

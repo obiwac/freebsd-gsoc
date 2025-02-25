@@ -638,7 +638,12 @@ bool batadv_tt_local_add(struct net_device *soft_iface, const u8 *addr,
 	struct batadv_priv *bat_priv = netdev_priv(soft_iface);
 	struct batadv_tt_local_entry *tt_local;
 	struct batadv_tt_global_entry *tt_global = NULL;
+#if defined(__FreeBSD__)
+	/* TODO This is for net namespaces (VNET's for FreeBSD). */
+	struct net *net = NULL;
+#else
 	struct net *net = dev_net(soft_iface);
+#endif
 	struct batadv_softif_vlan *vlan;
 	struct net_device *in_dev = NULL;
 	struct batadv_hard_iface *in_hardif = NULL;
@@ -651,7 +656,11 @@ bool batadv_tt_local_add(struct net_device *soft_iface, const u8 *addr,
 	u32 match_mark;
 
 	if (ifindex != BATADV_NULL_IFINDEX)
+#if defined(__FreeBSD__)
+		in_dev = linux_dev_get_by_index(net, ifindex);
+#else
 		in_dev = dev_get_by_index(net, ifindex);
+#endif
 
 	if (in_dev)
 		in_hardif = batadv_hardif_get_by_netdev(in_dev);
@@ -1179,7 +1188,11 @@ int batadv_tt_local_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;
@@ -1956,7 +1969,11 @@ int batadv_tt_global_dump(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface || !batadv_softif_is_valid(soft_iface)) {
 		ret = -ENODEV;
 		goto out;
@@ -3785,7 +3802,7 @@ static void batadv_tt_update_orig(struct batadv_priv *bat_priv,
 	bool full_table = true;
 	bool has_tt_init;
 
-	tt_vlan = (struct batadv_tvlv_tt_vlan_data *)tt_buff;
+	tt_vlan = __DECONST(struct batadv_tvlv_tt_vlan_data *, tt_buff);
 	has_tt_init = test_bit(BATADV_ORIG_CAPA_HAS_TT,
 			       &orig_node->capa_initialized);
 

@@ -980,7 +980,11 @@ batadv_netlink_dump_hardif(struct sk_buff *msg, struct netlink_callback *cb)
 	if (!ifindex)
 		return -EINVAL;
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface)
 		return -ENODEV;
 
@@ -1170,7 +1174,11 @@ batadv_get_softif_from_info(struct net *net, struct genl_info *info)
 
 	ifindex = nla_get_u32(info->attrs[BATADV_ATTR_MESH_IFINDEX]);
 
+#if defined(__FreeBSD__)
+	soft_iface = linux_dev_get_by_index(net, ifindex);
+#else
 	soft_iface = dev_get_by_index(net, ifindex);
+#endif
 	if (!soft_iface)
 		return ERR_PTR(-ENODEV);
 
@@ -1207,7 +1215,11 @@ batadv_get_hardif_from_info(struct batadv_priv *bat_priv, struct net *net,
 
 	hardif_index = nla_get_u32(info->attrs[BATADV_ATTR_HARD_IFINDEX]);
 
+#if defined(__FreeBSD__)
+	hard_dev = linux_dev_get_by_index(net, hardif_index);
+#else
 	hard_dev = dev_get_by_index(net, hardif_index);
+#endif
 	if (!hard_dev)
 		return ERR_PTR(-ENODEV);
 
@@ -1507,7 +1519,11 @@ void __init batadv_netlink_register(void)
 {
 	int ret;
 
+#if defined(__FreeBSD__)
+	ret = linux_genl_register_family(&batadv_netlink_family);
+#else
 	ret = genl_register_family(&batadv_netlink_family);
+#endif
 	if (ret)
 		pr_warn("unable to register netlink family");
 }
@@ -1517,5 +1533,9 @@ void __init batadv_netlink_register(void)
  */
 void batadv_netlink_unregister(void)
 {
+#if defined(__FreeBSD__)
+	linux_genl_unregister_family(&batadv_netlink_family);
+#else
 	genl_unregister_family(&batadv_netlink_family);
+#endif
 }

@@ -74,8 +74,8 @@ struct clone_defcb {
 		char ifprefix[IFNAMSIZ];
 		clone_match_func *ifmatch;
 	};
-	clone_match_type clone_mt;
-	clone_callback_func *clone_cb;
+	clone_match_type	clone_mt;
+	clone_callback_func	*clone_cb;
 	SLIST_ENTRY(clone_defcb) next;
 };
 
@@ -137,18 +137,17 @@ ifclonecreate(if_ctx *ctx, void *arg __unused)
 		}
 	}
 
-	if (dcp == NULL || dcp->clone_cb == NULL) {
+	if (dcp == NULL || dcp->clone_cb == NULL)
 		/* NB: no parameters */
 		ifcreate_ioctl(ctx, &ifr);
-	} else {
+	else
 		dcp->clone_cb(ctx, &ifr);
-	}
 }
 
 static void
-clone_create(if_ctx *ctx __unused, const char *cmd __unused, int d __unused)
+clone_create(if_ctx *ctx, const char *cmd __unused, int d __unused)
 {
-	callback_register(ifclonecreate, NULL);
+	callback_register(ifclonecreate, __DECONST(void *, ctx));
 }
 
 static void

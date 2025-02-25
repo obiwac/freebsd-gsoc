@@ -147,7 +147,12 @@ static bool batadv_mutual_parents(const struct net_device *dev1,
  */
 static bool batadv_is_on_batman_iface(const struct net_device *net_dev)
 {
+#if defined(__FreeBSD__)
+	/* TODO This is for net namespaces (VNET's for FreeBSD). */
+	struct net *net = NULL;
+#else
 	struct net *net = dev_net(net_dev);
+#endif
 	struct net_device *parent_dev;
 	struct net *parent_net;
 	int iflink;
@@ -188,15 +193,26 @@ static bool batadv_is_valid_iface(const struct net_device *net_dev)
 	if (net_dev->flags & IFF_LOOPBACK)
 		return false;
 
+#if defined(__FreeBSD__)
+	if (net_dev->type != IFT_ETHER)
+#else
 	if (net_dev->type != ARPHRD_ETHER)
+#endif
 		return false;
 
 	if (net_dev->addr_len != ETH_ALEN)
 		return false;
 
+	/*
+	 * TODO This is not right; we could have a FreeBSD interface be a descendant
+	 * of a BATMAN interface, but for now I don't want to deal with all the
+	 * ifp -> netdev stuff to check this 😛
+	 */
+#if !defined(__FreeBSD__)
 	/* no batman over batman */
 	if (batadv_is_on_batman_iface(net_dev))
 		return false;
+#endif
 
 	return true;
 }
@@ -235,7 +251,12 @@ static struct net_device *batadv_get_real_netdevice(struct net_device *netdev)
 	if (!hard_iface || !hard_iface->soft_iface)
 		goto out;
 
+#if defined(__FreeBSD__)
+	/* TODO This is for net namespaces (VNET's for FreeBSD). */
+	net = NULL;
+#else
 	net = dev_net(hard_iface->soft_iface);
+#endif
 	real_net = batadv_getlink_net(netdev, net);
 
 	/* iflink to itself, most likely physical device */
@@ -245,7 +266,11 @@ static struct net_device *batadv_get_real_netdevice(struct net_device *netdev)
 		goto out;
 	}
 
+#if defined(__FreeBSD__)
+	real_netdev = linux_dev_get_by_index(real_net, iflink);
+#else
 	real_netdev = dev_get_by_index(real_net, iflink);
+#endif
 
 out:
 	batadv_hardif_put(hard_iface);
@@ -729,6 +754,11 @@ int batadv_hardif_enable_interface(struct batadv_hard_iface *hard_iface,
 	hard_iface->batman_adv_ptype.func = batadv_batman_skb_recv;
 	hard_iface->batman_adv_ptype.dev = hard_iface->net_dev;
 	dev_add_pack(&hard_iface->batman_adv_ptype);
+
+#if defined(__FreeBSD__)
+	if_t const ifp = (void *)hard_iface->net_dev;
+	if_setlinuxsoftc(ifp, &hard_iface->batman_adv_ptype);
+#endif
 
 	batadv_info(hard_iface->soft_iface, "Adding interface: %s\n",
 		    hard_iface->net_dev->name);

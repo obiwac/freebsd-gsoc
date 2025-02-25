@@ -560,11 +560,6 @@ inline unsigned long compare_ether_header(void *a, void *b)
 	       (a32[1] ^ b32[1]) | (a32[2] ^ b32[2]);
 }
 
-struct vlan_hdr {
-	__be16	h_vlan_TCI;
-	__be16	h_vlan_encapsulated_proto;
-};
-
 inline uint16_t
 crc16(uint16_t crc, const void *buffer, unsigned int len)
 {

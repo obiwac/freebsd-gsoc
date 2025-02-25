@@ -57,6 +57,7 @@ SUBDIR=	\
 	${_autofs} \
 	axgbe \
 	backlight \
+	batman_adv \
 	${_bce} \
 	${_bcm283x_clkman} \
 	${_bcm283x_pwm} \
