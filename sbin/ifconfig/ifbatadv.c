@@ -33,7 +33,7 @@ enum batadv_ifla_attrs {
 };
 
 static void
-batadv_create(int s, if_ctx *ctx, struct ifreq *req)
+batadv_create(if_ctx *ctx, struct ifreq *req)
 {
 	struct snl_writer nw;
 	struct nlmsghdr *hdr;
@@ -52,11 +52,11 @@ batadv_create(int s, if_ctx *ctx, struct ifreq *req)
 		int const off = snl_add_msg_attr_nested(&nw, IFLA_LINKINFO);
 		snl_add_msg_attr_string(&nw, IFLA_INFO_KIND, req->ifr_name);
 		if (params.routing_algo != NULL) {
-			int const off = snl_add_msg_attr_nested(&nw,
+			int const off2 = snl_add_msg_attr_nested(&nw,
 			    IFLA_INFO_DATA);
 			snl_add_msg_attr_string(&nw, IFLA_BATADV_ALGO_NAME,
 			    params.routing_algo);
-			snl_end_attr_nested(&nw, off);
+			snl_end_attr_nested(&nw, off2);
 		}
 		snl_end_attr_nested(&nw, off);
 	}
@@ -88,7 +88,7 @@ batadv_create(int s, if_ctx *ctx, struct ifreq *req)
 }
 
 static void
-setra(if_ctx *ctx, char const *val, int dummy __unused)
+setra(if_ctx *ctx __unused, char const *val, int dummy __unused)
 {
 
 	params.routing_algo = val;
@@ -105,5 +105,5 @@ batadv_ctor(void)
 
 	for (i = 0; i < nitems(batadv_cmds); i++)
 		cmd_register(&batadv_cmds[i]);
-	clone_nl_setdefcallback_prefix("batadv", batadv_create);
+	clone_setdefcallback_prefix("batadv", batadv_create);
 }

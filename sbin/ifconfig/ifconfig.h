@@ -162,11 +162,7 @@ enum {
 	ADDR = 1,
 	MASK = 2,
 	DSTADDR = 3,
-#ifdef WITHOUT_NETLINK
-	BRDADDR = 3,
-#else
 	BRDADDR = 4,
-#endif
 };
 
 struct snl_parsed_addr;
@@ -270,12 +266,6 @@ typedef int  clone_match_func(const char *);
 typedef void clone_callback_func(if_ctx *, struct ifreq *);
 void	clone_setdefcallback_prefix(const char *, clone_callback_func *);
 void	clone_setdefcallback_filter(clone_match_func *, clone_callback_func *);
-
-#if !defined(WITHOUT_NETLINK)
-typedef void clone_nl_callback_func(int, if_ctx *, struct ifreq *);
-void	clone_nl_setdefcallback_prefix(const char *, clone_nl_callback_func *);
-void	clone_nl_setdefcallback_filter(clone_match_func *, clone_nl_callback_func *);
-#endif
 
 void	sfp_status(if_ctx *ctx);
 
